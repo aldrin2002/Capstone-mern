@@ -1,17 +1,12 @@
-import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
-export const verifyToken = (req, res, next) => {
-	const token = req.cookies.token;
-	if (!token) return res.status(401).json({ success: false, message: "Unauthorized - no token provided" });
+export const connectDB = async () => {
 	try {
-		const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-		if (!decoded) return res.status(401).json({ success: false, message: "Unauthorized - invalid token" });
-
-		req.userId = decoded.userId;
-		next();
+		console.log("mongo_uri: ", process.env.MONGO_URI);
+		const conn = await mongoose.connect(process.env.MONGO_URI);
+		console.log(`MongoDB Connected: ${conn.connection.host}`);
 	} catch (error) {
-		console.log("Error in verifyToken ", error);
-		return res.status(500).json({ success: false, message: "Server error" });
+		console.log("Error connection to MongoDB: ", error.message);
+		process.exit(1); // 1 is failure, 0 status code is success
 	}
 };
