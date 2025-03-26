@@ -34,7 +34,7 @@ const LoginPage = () => {
             <div className='max-w-md w-full mx-4 bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-lg shadow-lg overflow-hidden border border-gray-200'>
                 <div className='p-8'>
                     <h2 className='text-3xl font-bold mb-6 text-center text-white'>
-                        Welcome Back
+                        Welcome Admin!
                     </h2>
                     <div className='h-1 w-20 bg-blue-500 mx-auto mb-8'></div>
 
