@@ -1,9 +1,13 @@
-import React from "react";
-import { Users, ShoppingBag, Image, Phone, ShoppingCart, Home, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Users, ShoppingBag, Image, Phone, ShoppingCart, Home, LogOut, Plus } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
+import { useNavigate } from "react-router-dom";
 
 const SideNav = ({ active, setActive }) => {
     const { logout } = useAuthStore();
+    const navigate = useNavigate();
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const navItems = [
         { id: "dashboard", label: "Dashboard", icon: Home },
@@ -14,10 +18,81 @@ const SideNav = ({ active, setActive }) => {
         { id: "orders", label: "Orders", icon: ShoppingCart },
     ];
 
+    // Handle logout
     const handleLogout = () => {
         logout();
+        navigate("/LandingPage");
     };
 
+    // Toggle floating menu expansion
+    const toggleExpand = () => {
+        setIsExpanded(!isExpanded);
+    };
+
+    // Handle window resize
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Mobile view
+    if (isMobile) {
+        return (
+            <>
+                {/* Floating Expandable Button */}
+                <div className="fixed right-4 bottom-20 z-50 flex flex-col-reverse items-center space-y-reverse space-y-2">
+                    {/* Logout Button - Only visible when expanded */}
+                    {isExpanded && (
+                        <button
+                            onClick={handleLogout}
+                            className="bg-red-500 text-white p-3 rounded-full shadow-lg hover:bg-red-600 transition-all transform animate-fadeIn"
+                        >
+                            <LogOut size={24} />
+                        </button>
+                    )}
+                    
+                    {/* Main Toggle Button */}
+                    <button
+                        onClick={toggleExpand}
+                        className={`p-4 rounded-full shadow-lg transition-all transform ${
+                            isExpanded 
+                                ? "bg-gray-700 text-white rotate-45" 
+                                : "bg-blue-600 text-white"
+                        }`}
+                    >
+                        <Plus size={24} />
+                    </button>
+                </div>
+                
+                {/* Bottom Navigation */}
+                <div className="fixed bottom-0 left-0 right-0 bg-blue-800 text-white z-40 shadow-lg">
+                    <div className="flex justify-around items-center h-16">
+                        {navItems.map((item) => {
+                            const IconComponent = item.icon;
+                            return (
+                                <button 
+                                    key={item.id} 
+                                    onClick={() => setActive(item.id)}
+                                    className={`flex flex-col items-center justify-center w-full h-full ${
+                                        active === item.id ? "text-blue-300" : "text-white"
+                                    }`}
+                                >
+                                    <IconComponent className="h-5 w-5 mb-1" />
+                                    <span className="text-xs">{item.label}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            </>
+        );
+    }
+
+    // Desktop view
     return (
         <div className="h-screen w-64 bg-blue-800 bg-opacity-90 backdrop-filter backdrop-blur-lg text-white flex flex-col shadow-xl">
             <div className="p-6 border-b border-blue-700">

@@ -23,34 +23,38 @@ const API_BASE_URL =
 const ProductManager = () => {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("All");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
+  // Form state
   const [formData, setFormData] = useState({
     name: "",
     price: "",
     description: "",
-    category: "Coffee",
-    stock: 0,
+    category: "coffee",
     image: null,
-    featured: false,
   });
 
   const [imagePreview, setImagePreview] = useState(null);
 
-  const categories = [
-    "All",
-    "Coffee",
-    "Tea",
-    "Pastry",
-    "Sandwich",
-    "Dessert",
-    "Other",
-  ];
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
 
-  // Fetch all products
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Fetch products on component mount
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  // Fetch products from API
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
@@ -58,437 +62,323 @@ const ProductManager = () => {
       setProducts(response.data);
     } catch (error) {
       console.error("Error fetching products:", error);
-      toast.error("Failed to fetch products");
+      toast.error("Failed to load products");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Initial fetch
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  // Filter products based on search and category
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (categoryFilter === "All" || product.category === categoryFilter)
-  );
-
   // Handle form input changes
   const handleChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
+    const { name, value, type, files } = e.target;
 
     if (type === "file") {
-      const file = files[0];
-      setFormData((prev) => ({
-        ...prev,
-        [name]: file,
-      }));
+      setFormData({
+        ...formData,
+        [name]: files[0],
+      });
 
-      // Create preview for image
-      if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setImagePreview(reader.result);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setImagePreview(null);
+      // Create image preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      if (files[0]) {
+        reader.readAsDataURL(files[0]);
       }
-    } else if (type === "checkbox") {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: checked,
-      }));
     } else {
-      setFormData((prev) => ({
-        ...prev,
+      setFormData({
+        ...formData,
         [name]: value,
-      }));
+      });
     }
   };
 
-  // Reset form
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      price: "",
-      description: "",
-      category: "Coffee",
-      stock: 0,
-      image: null,
-      featured: false,
-    });
-    setImagePreview(null);
-    setEditingProduct(null);
-    setIsAddingProduct(false);
-  };
-
-  // Handle form submission for adding or updating product
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
+    // Create form data object for file upload
+    const productData = new FormData();
+    productData.append("name", formData.name);
+    productData.append("price", formData.price);
+    productData.append("description", formData.description);
+    productData.append("category", formData.category);
+    if (formData.image) {
+      productData.append("image", formData.image);
+    }
+
     try {
-      // Create FormData object for file upload
-      const productData = new FormData();
-      productData.append("name", formData.name);
-      productData.append("price", formData.price);
-      productData.append("description", formData.description);
-      productData.append("category", formData.category);
-      productData.append("stock", formData.stock.toString());
-
-      // Only append file if it exists (for new products or when updating image)
-      if (formData.image) {
-        productData.append("image", formData.image);
-      }
-
       if (editingProduct) {
         // Update existing product
-        productData.append("featured", formData.featured);
         await axios.put(`${API_URL}/${editingProduct._id}`, productData, {
           withCredentials: true,
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
         });
         toast.success("Product updated successfully");
       } else {
-        // Add new product
-        await axios.post(API_URL, productData, {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
+        // Create new product
+        await axios.post(API_URL, productData, { withCredentials: true });
         toast.success("Product added successfully");
       }
-
-      // Refresh products and reset form
-      fetchProducts();
       resetForm();
+      fetchProducts();
     } catch (error) {
       console.error("Error saving product:", error);
       toast.error(
-        editingProduct ? "Failed to update product" : "Failed to add product"
+        error.response?.data?.message || "Failed to save product"
       );
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle product edit
+  // Reset form and close modal
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      price: "",
+      description: "",
+      category: "coffee",
+      image: null,
+    });
+    setImagePreview(null);
+    setEditingProduct(null);
+    setShowModal(false);
+  };
+
+  // Edit product
   const handleEdit = (product) => {
     setEditingProduct(product);
     setFormData({
       name: product.name,
       price: product.price.toString(),
-      description: product.description || "",
+      description: product.description,
       category: product.category,
-      stock: product.stock || 0,
-      image: null, // Don't set the file object, just leave it null
-      featured: product.featured || false,
+      image: null,
     });
-
-    // Set image preview from the current product image
-    setImagePreview(product.image ? `${API_BASE_URL}${product.image}` : null);
-
-    setIsAddingProduct(true);
+    setImagePreview(
+      product.image ? `${API_BASE_URL}${product.image}` : null
+    );
+    setShowModal(true);
   };
 
-  // Handle product delete
+  // Delete product
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this product?")) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await axios.delete(`${API_URL}/${id}`);
-      toast.success("Product deleted successfully");
-      fetchProducts();
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      toast.error("Failed to delete product");
-    } finally {
-      setIsLoading(false);
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      setIsLoading(true);
+      try {
+        await axios.delete(`${API_URL}/${id}`, { withCredentials: true });
+        toast.success("Product deleted successfully");
+        fetchProducts();
+      } catch (error) {
+        console.error("Error deleting product:", error);
+        toast.error("Failed to delete product");
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
+
+  // Filter products based on search term
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="p-6 h-full">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-blue-800">
-          Products Management
-        </h2>
+    <div className={`p-6 ${isMobile ? 'pb-28' : ''}`}>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div className="relative mb-4 md:mb-0 md:w-64">
+          <input
+            type="text"
+            placeholder="Search products..."
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+        </div>
         <button
-          onClick={() => setIsAddingProduct(true)}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          disabled={isLoading}
+          onClick={() => setShowModal(true)}
+          className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          <PlusCircle className="w-4 h-4 mr-2" />
+          <PlusCircle className="h-5 w-5 mr-2" />
           Add Product
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search products..."
-            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <select
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center items-center py-10">
-          <Loader className="w-10 h-10 text-blue-500 animate-spin" />
+      {isLoading && !showModal ? (
+        <div className="flex justify-center my-12">
+          <Loader className="h-8 w-8 text-blue-600 animate-spin" />
         </div>
       ) : (
-        <>
-          {filteredProducts.length === 0 ? (
-            <div className="text-center py-10">
-              <p className="text-gray-500">No products found.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
-                <div
-                  key={product._id}
-                  className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow"
-                >
-                  <div className="h-40 bg-gray-200 flex items-center justify-center">
-                    {product.image ? (
-                      <img
-                        src={`${API_BASE_URL}${product.image}`}
-                        alt={product.name}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <Coffee className="h-16 w-16 text-gray-400" />
-                    )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProducts.map((product) => (
+            <div
+              key={product._id}
+              className="bg-white rounded-lg shadow-md overflow-hidden"
+            >
+              <div className="h-48 bg-gray-200 relative">
+                {product.image ? (
+                  <img
+                    src={`${API_BASE_URL}${product.image}`}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Coffee className="h-12 w-12 text-gray-400" />
                   </div>
-                  <div className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold text-gray-800">
-                          {product.name}
-                        </h3>
-                        <span className="text-sm text-gray-500">
-                          {product.category}
-                        </span>
-                      </div>
-                      <div className="flex items-center text-green-600 font-semibold">
-                        <span className="h-4 w-4 mr-1"></span>
-                        {product.price.toFixed(2)}
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center mt-4">
-                      <span className="text-sm text-gray-600">
-                        Stock: {product.stock}
-                      </span>
-                      <div className="flex space-x-2">
-                        <button
-                          className="p-1 text-blue-600 hover:text-blue-800"
-                          onClick={() => handleEdit(product)}
-                        >
-                          <Edit2 className="h-5 w-5" />
-                        </button>
-                        <button
-                          className="p-1 text-red-600 hover:text-red-800"
-                          onClick={() => handleDelete(product._id)}
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                )}
+                <div className="absolute top-2 right-2 flex space-x-2">
+                  <button
+                    onClick={() => handleEdit(product)}
+                    className="p-2 bg-white rounded-full shadow hover:bg-gray-100"
+                  >
+                    <Edit2 className="h-4 w-4 text-blue-600" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(product._id)}
+                    className="p-2 bg-white rounded-full shadow hover:bg-gray-100"
+                  >
+                    <Trash2 className="h-4 w-4 text-red-600" />
+                  </button>
                 </div>
-              ))}
+              </div>
+              <div className="p-4">
+                <div className="flex justify-between items-start">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {product.name}
+                  </h3>
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded">
+                    {product.price.toFixed(2)}
+                  </span>
+                </div>
+                <p className="mt-2 text-gray-600 text-sm line-clamp-2">
+                  {product.description}
+                </p>
+                <div className="mt-2">
+                  <span className="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded">
+                    {product.category}
+                  </span>
+                </div>
+              </div>
             </div>
-          )}
-        </>
+          ))}
+        </div>
       )}
 
       {/* Add/Edit Product Modal */}
-      {isAddingProduct && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-xl font-semibold mb-4">
-              {editingProduct ? "Edit Product" : "Add New Product"}
-            </h3>
-
-            <form onSubmit={handleSubmit}>
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-lg font-medium text-gray-900">
+                {editingProduct ? "Edit Product" : "Add New Product"}
+              </h3>
+              <button
+                onClick={resetForm}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                &times;
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6">
               <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="name"
-                >
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Product Name
                 </label>
                 <input
                   type="text"
-                  id="name"
                   name="name"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.name}
                   onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
               </div>
-
               <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="category"
-                >
-                  Category
-                </label>
-                <select
-                  id="category"
-                  name="category"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.category}
-                  onChange={handleChange}
-                >
-                  {categories
-                    .filter((category) => category !== "All")
-                    .map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
-                </select>
-              </div>
-
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="price"
-                >
-                  Price
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Price ($)
                 </label>
                 <input
                   type="number"
-                  id="price"
                   name="price"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.price}
                   onChange={handleChange}
                   step="0.01"
                   min="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
               </div>
-
               <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="stock"
-                >
-                  Stock
-                </label>
-                <input
-                  type="number"
-                  id="stock"
-                  name="stock"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={formData.stock}
-                  onChange={handleChange}
-                  min="0"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="description"
-                >
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Description
                 </label>
                 <textarea
-                  id="description"
                   name="description"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={formData.description}
                   onChange={handleChange}
                   rows="3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  required
                 ></textarea>
               </div>
-
               <div className="mb-4">
-                <label
-                  className="block text-gray-700 text-sm font-bold mb-2"
-                  htmlFor="image"
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Category
+                </label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  required
                 >
+                  <option value="coffee">Coffee</option>
+                  <option value="tea">Tea</option>
+                  <option value="pastry">Pastry</option>
+                  <option value="sandwich">Sandwich</option>
+                  <option value="dessert">Dessert</option>
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Product Image
                 </label>
                 <input
                   type="file"
-                  id="image"
                   name="image"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   onChange={handleChange}
                   accept="image/*"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
                 {imagePreview && (
-                  <div className="mt-2">
+                  <div className="mt-2 relative">
                     <img
                       src={imagePreview}
-                      alt="Product preview"
-                      className="h-32 object-contain border rounded"
+                      alt="Preview"
+                      className="h-32 w-auto object-contain"
                     />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setFormData({ ...formData, image: null });
+                      }}
+                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                    >
+                      &times;
+                    </button>
                   </div>
                 )}
-                {editingProduct && !formData.image && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    Leave empty to keep the current image
-                  </p>
-                )}
               </div>
-
-              {editingProduct && (
-                <div className="mb-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="featured"
-                      className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                      checked={formData.featured}
-                      onChange={handleChange}
-                    />
-                    <span className="ml-2 text-gray-700">Featured product</span>
-                  </label>
-                </div>
-              )}
-
-              <div className="flex justify-end space-x-3">
+              <div className={`flex justify-end ${isMobile ? 'sticky bottom-0 bg-white py-4 border-t mt-4' : ''}`}>
                 <button
                   type="button"
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-100"
                   onClick={resetForm}
+                  className="mr-2 px-4 py-2 text-gray-500 hover:text-gray-700 text-sm font-medium"
                 >
                   Cancel
                 </button>

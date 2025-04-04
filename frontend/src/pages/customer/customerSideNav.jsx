@@ -101,17 +101,17 @@ const CustomerSideNav = () => {
                 
                 {/* Bottom Navigation */}
                 <div className="fixed bottom-0 left-0 right-0 bg-blue-900 text-white z-40">
-                    <div className="flex justify-around items-center py-3">
+                    <div className="flex justify-around items-center h-16">
                         {navItems.map((item) => (
-                            <Link
-                                key={item.path}
+                            <Link 
+                                key={item.path} 
                                 to={item.path}
-                                className={`flex flex-col items-center ${
+                                className={`flex flex-col items-center justify-center w-full h-full ${
                                     isActive(item.path) ? "text-yellow-400" : "text-white"
                                 }`}
                             >
-                                {item.icon}
-                                <span className="text-xs mt-1">{item.label}</span>
+                                <div className="mb-1">{item.icon}</div>
+                                <span className="text-xs">{item.label}</span>
                             </Link>
                         ))}
                     </div>

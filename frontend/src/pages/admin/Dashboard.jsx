@@ -13,6 +13,17 @@ import { toast } from "react-hot-toast";
 const DashboardPage = () => {
     const { user } = useAuthStore();
     const [activeComponent, setActiveComponent] = useState("dashboard");
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    // Handle window resize
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const renderComponent = () => {
         switch (activeComponent) {
@@ -27,7 +38,7 @@ const DashboardPage = () => {
             case "orders":
                 return <OrderManager />;
             default:
-                return <DashboardHome user={user} setActiveComponent={setActiveComponent} />;
+                return <DashboardHome user={user} setActiveComponent={setActiveComponent} isMobile={isMobile} />;
         }
     };
 
@@ -53,7 +64,7 @@ const DashboardPage = () => {
                         </div>
                     </div>
                 </header>
-                <main className="flex-1 overflow-y-auto bg-gray-50">
+                <main className={`flex-1 overflow-y-auto bg-gray-50 ${isMobile ? 'pb-24' : ''}`}>
                     {renderComponent()}
                 </main>
             </div>
@@ -61,7 +72,7 @@ const DashboardPage = () => {
     );
 };
 
-const DashboardHome = ({ user, setActiveComponent }) => {
+const DashboardHome = ({ user, setActiveComponent, isMobile }) => {
     const [stats, setStats] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     
@@ -159,89 +170,79 @@ const DashboardHome = ({ user, setActiveComponent }) => {
     };
 
     const formatDate = (dateString) => {
-        if (!dateString) return "Not available";
-        return new Date(dateString).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-        });
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString(undefined, options);
     };
 
     if (isLoading) {
         return (
-            <div className="p-6 h-full flex justify-center items-center">
-                <Loader className="h-10 w-10 text-blue-500 animate-spin" />
+            <div className="flex items-center justify-center h-full">
+                <Loader className="w-8 h-8 text-blue-600 animate-spin" />
             </div>
         );
     }
 
     return (
         <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                {stats.map((stat, index) => (
-                    <div key={index} className="bg-white p-6 rounded-lg shadow-md">
-                        <p className="text-sm font-medium text-gray-500">{stat.label}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {stats && stats.map((stat, index) => (
+                    <div key={index} className="bg-white rounded-lg shadow-md p-6">
+                        <h3 className="text-lg font-medium text-gray-700">{stat.label}</h3>
                         <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                        <div className={`flex items-center mt-2 ${
-                            stat.changeType === 'positive' ? 'text-green-600' : 
-                            stat.changeType === 'negative' ? 'text-red-600' : 'text-gray-600'
-                        }`}>
-                            <span>{stat.change}</span>
-                            <span className="text-xs ml-1">since last month</span>
+                        <div className="flex items-center mt-2">
+                            <p className={`text-sm ${stat.changeType === 'positive' ? 'text-green-500' : 'text-red-500'}`}>
+                                {stat.change} since last month
+                            </p>
                         </div>
                     </div>
                 ))}
             </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-4">Welcome Back, {user.name}!</h2>
-                    <div className="border-t border-gray-200 pt-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-sm text-gray-500">Email</p>
-                                <p className="font-medium">{user.email}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Joined</p>
-                                <p className="font-medium">{formatDate(user.createdAt)}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500">Last Login</p>
-                                <p className="font-medium">{formatDate(user.lastLogin)}</p>
-                            </div>
-                        </div>
+            
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Welcome Back, {user.name}!</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <p className="text-sm text-gray-500">Email</p>
+                        <p className="font-medium">{user.email}</p>
+                    </div>
+                    <div>
+                        <p className="text-sm text-gray-500">Joined</p>
+                        <p className="font-medium">{formatDate(user.createdAt)}</p>
+                    </div>
+                    <div>
+                        <p className="text-sm text-gray-500">Last Login</p>
+                        <p className="font-medium">{formatDate(user.lastLogin)}</p>
                     </div>
                 </div>
+            </div>
 
-                <div className="bg-white p-6 rounded-lg shadow-md">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h2>
-                    <div className="grid grid-cols-2 gap-4">
-                        <button 
-                            onClick={() => setActiveComponent("orders")}
-                            className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg flex flex-col items-center justify-center transition-colors"
-                        >
-                            <span className="text-blue-800 font-medium">Manage Orders</span>
-                        </button>
-                        <button 
-                            onClick={() => setActiveComponent("products")}
-                            className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg flex flex-col items-center justify-center transition-colors"
-                        >
-                            <span className="text-blue-800 font-medium">Add Products</span>
-                        </button>
-                        <button 
-                            onClick={() => setActiveComponent("gallery")}
-                            className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg flex flex-col items-center justify-center transition-colors"
-                        >
-                            <span className="text-blue-800 font-medium">Update Gallery</span>
-                        </button>
-                        <button 
-                            onClick={() => setActiveComponent("contact")}
-                            className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg flex flex-col items-center justify-center transition-colors"
-                        >
-                            <span className="text-blue-800 font-medium">Contact Info</span>
-                        </button>
-                    </div>
+            <div className={`bg-white p-6 rounded-lg shadow-md ${isMobile ? 'mb-20' : ''}`}>
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h2>
+                <div className="grid grid-cols-2 gap-4">
+                    <button 
+                        onClick={() => setActiveComponent("orders")}
+                        className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg flex flex-col items-center justify-center transition-colors"
+                    >
+                        <span className="text-blue-800 font-medium">Manage Orders</span>
+                    </button>
+                    <button 
+                        onClick={() => setActiveComponent("products")}
+                        className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg flex flex-col items-center justify-center transition-colors"
+                    >
+                        <span className="text-blue-800 font-medium">Add Products</span>
+                    </button>
+                    <button 
+                        onClick={() => setActiveComponent("gallery")}
+                        className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg flex flex-col items-center justify-center transition-colors"
+                    >
+                        <span className="text-blue-800 font-medium">Update Gallery</span>
+                    </button>
+                    <button 
+                        onClick={() => setActiveComponent("contact")}
+                        className="p-4 bg-blue-50 hover:bg-blue-100 rounded-lg flex flex-col items-center justify-center transition-colors"
+                    >
+                        <span className="text-blue-800 font-medium">Contact Info</span>
+                    </button>
                 </div>
             </div>
         </div>

@@ -22,31 +22,46 @@ const ContactManager = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState(contactInfo);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    
+    // Handle window resize
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
     
     // Fetch contact information
     const fetchContactInfo = async () => {
         setIsLoading(true);
         try {
             const response = await axios.get(API_URL);
-            setContactInfo(response.data);
-            setFormData(response.data);
+            if (response.data) {
+                setContactInfo(response.data);
+                setFormData(response.data);
+            }
         } catch (error) {
-            console.error("Error fetching contact information:", error);
+            console.error("Error fetching contact info:", error);
             toast.error("Failed to load contact information");
         } finally {
             setIsLoading(false);
         }
     };
     
-    // Initial fetch
+    // Initial fetch on component mount
     useEffect(() => {
         fetchContactInfo();
     }, []);
     
+    // Handle form input changes
     const handleChange = (e) => {
         const { name, value } = e.target;
-        if (name.includes(".")) {
-            const [parent, child] = name.split(".");
+        
+        if (name.includes('.')) {
+            const [parent, child] = name.split('.');
             setFormData({
                 ...formData,
                 [parent]: {
@@ -62,54 +77,57 @@ const ContactManager = () => {
         }
     };
     
+    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         
         try {
-            const response = await axios.put(API_URL, formData);
+            const response = await axios.put(API_URL, formData, {
+                withCredentials: true
+            });
             setContactInfo(response.data);
             setIsEditing(false);
             toast.success("Contact information updated successfully");
         } catch (error) {
-            console.error("Error updating contact information:", error);
+            console.error("Error updating contact info:", error);
             toast.error("Failed to update contact information");
         } finally {
             setIsLoading(false);
         }
     };
     
+    // Cancel editing
     const handleCancel = () => {
         setFormData(contactInfo);
         setIsEditing(false);
     };
     
-    if (isLoading && !isEditing) {
-        return (
-            <div className="p-6 h-full flex justify-center items-center">
-                <Loader className="h-10 w-10 text-blue-500 animate-spin" />
-            </div>
-        );
-    }
-    
     return (
-        <div className="p-6 h-full">
+        <div className={`p-6 ${isMobile ? 'pb-28' : ''}`}>
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-blue-800">Contact Information</h2>
-                <button 
-                    onClick={isEditing ? handleCancel : () => setIsEditing(true)}
-                    className={`px-4 py-2 ${isEditing ? 'bg-gray-500' : 'bg-blue-600'} text-white rounded-lg hover:${isEditing ? 'bg-gray-600' : 'bg-blue-700'} transition-colors`}
-                    disabled={isLoading}
-                >
-                    {isEditing ? "Cancel" : "Edit Information"}
-                </button>
+                <h2 className="text-xl font-bold text-gray-800">Contact Information</h2>
+                {!isEditing && (
+                    <button
+                        onClick={() => setIsEditing(true)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                        Edit Information
+                    </button>
+                )}
             </div>
             
-            {isEditing ? (
-                <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-gray-700 font-medium mb-2">Phone Number</label>
+            {isLoading && !isEditing ? (
+                <div className="flex justify-center my-12">
+                    <Loader className="h-8 w-8 text-blue-600 animate-spin" />
+                </div>
+            ) : isEditing ? (
+                <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg overflow-hidden">
+                    <div className="p-6">
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Phone Number
+                            </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <Phone className="h-5 w-5 text-gray-400" />
@@ -119,8 +137,8 @@ const ContactManager = () => {
                                     name="phone"
                                     value={formData.phone}
                                     onChange={handleChange}
-                                    className="pl-10 w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
-                                    required
+                                    className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="+1 (123) 456-7890"
                                 />
                             </div>
                         </div>
@@ -231,28 +249,31 @@ const ContactManager = () => {
                         </div>
                     </div>
                     
-                    <div className="mt-6 flex justify-end">
+                    <div className={`mt-6 flex justify-end ${isMobile ? 'sticky bottom-0 bg-white py-4 border-t' : ''}`}>
+                        <button
+                            type="button"
+                            onClick={handleCancel}
+                            className="mr-3 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                            disabled={isLoading}
+                        >
+                            Cancel
+                        </button>
                         <button
                             type="submit"
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
                             disabled={isLoading}
                         >
                             {isLoading ? (
-                                <>
-                                    <Loader className="h-4 w-4 mr-2 animate-spin" />
-                                    Saving...
-                                </>
+                                <Loader className="h-5 w-5 mr-2 animate-spin" />
                             ) : (
-                                <>
-                                    <Save className="h-4 w-4 mr-2" />
-                                    Save Changes
-                                </>
+                                <Save className="h-5 w-5 mr-2" />
                             )}
+                            Save Changes
                         </button>
                     </div>
                 </form>
             ) : (
-                <div className="bg-white shadow-md rounded-lg p-6">
+                <div className="bg-white shadow-md rounded-lg overflow-hidden">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex items-start">
                             <Phone className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />

@@ -14,11 +14,23 @@ export default {
 			700: '#CC068E',
 			800: '#99046B',
 			900: '#660347'
+		  },
+		  brown: {
+			600: '#7d5d4f',
+			700: '#6b4c3e',
+			800: '#5a3d2f',
+			900: '#483225'
+		  },
+		  cream: {
+			100: '#e8e0d5',
+			200: '#d8cfc2',
+			300: '#c8beaf'
 		  }
 		},
 		animation: {
 		  'meteor': 'meteor 1.5s linear infinite',
 		  'meteor-slow': 'meteor 2s linear infinite',
+		  'fadeIn': 'fadeIn 0.3s ease-in-out',
 		},
 		keyframes: {
 		  meteor: {
@@ -30,6 +42,10 @@ export default {
 			  transform: 'rotate(-45deg) translateX(-200vh)',
 			  opacity: 0 
 			},
+		  },
+		  fadeIn: {
+			'0%': { opacity: 0 },
+			'100%': { opacity: 1 }
 		  }
 		}
 	  },
