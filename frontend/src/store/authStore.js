@@ -13,16 +13,52 @@ export const useAuthStore = create((set) => ({
     isCheckingAuth: true,
     message: null,
 
+    // Admin signup
     signup: async (email, password, name, phone) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.post(`${API_URL}/signup`, { email, password, name, phone });
+            const response = await axios.post(`${API_URL}/signup`, { 
+                email, 
+                password, 
+                name, 
+                phone,
+                role: "admin" 
+            });
             set({ user: response.data.user, isAuthenticated: true, isLoading: false });
         } catch (error) {
             set({ error: error.response.data.message || "Error signing up", isLoading: false });
             throw error;
         }
     },
+
+    // Customer signup
+    customerSignup: async (email, password, name, phone) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await axios.post(`${API_URL}/costumerSignup`, { 
+                email, 
+                password, 
+                name, 
+                phone,
+                role: "customer"
+            });
+            
+            if (response.data.success) {
+                set({ message: "Signup successful" });
+                return true;
+            }
+        } catch (error) {
+            set({ 
+                error: error.response?.data?.message || "Error signing up", 
+                isLoading: false 
+            });
+            throw error;
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    // Admin login
     login: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
@@ -39,6 +75,24 @@ export const useAuthStore = create((set) => ({
         }
     },
 
+    // Customer login
+    customerLogin: async (email, password) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await axios.post(`${API_URL}/costumerLogin`, { email, password });
+            set({
+                isAuthenticated: true,
+                user: response.data.user,
+                error: null,
+                isLoading: false,
+            });
+        } catch (error) {
+            set({ error: error.response?.data?.message || "Error logging in", isLoading: false });
+            throw error;
+        }
+    },
+
+    // Common logout for both admin and customer
     logout: async () => {
         set({ isLoading: true, error: null });
         try {

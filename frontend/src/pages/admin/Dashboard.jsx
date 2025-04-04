@@ -1,11 +1,11 @@
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../../store/authStore";
 import React, { useState, useEffect } from "react";
-import SideNav from "../components/SideNav";
-import UsersManager from "../components/UsersManager";
-import ProductManager from "../components/ProductManager";
-import GalleryManager from "../components/GalleryManager";
-import ContactManager from "../components/ContactManager";
-import OrderManager from "../components/OrderManager";
+import SideNav from "../../components/AdminPage/SideNav";
+import UsersManager from "../../components/AdminPage/UsersManager";
+import ProductManager from "../../components/AdminPage/ProductManager";
+import GalleryManager from "../../components/AdminPage/GalleryManager";
+import ContactManager from "../../components/AdminPage/ContactManager";
+import OrderManager from "../../components/AdminPage/OrderManager";
 import { User, Loader } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -125,7 +125,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                 },
                 { 
                     label: "Revenue", 
-                    value: `$${totalRevenue.toFixed(2)}`, 
+                    value: `${totalRevenue.toFixed(2)}`, 
                     change: revenueChange, 
                     changeType: "positive" 
                 },
@@ -149,7 +149,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
             // Set fallback stats
             setStats([
                 { label: "Total Orders", value: "0", change: "0%", changeType: "neutral" },
-                { label: "Revenue", value: "$0.00", change: "0%", changeType: "neutral" },
+                { label: "Revenue", value: "0.00", change: "0%", changeType: "neutral" },
                 { label: "Products", value: "0", change: "0", changeType: "neutral" },
                 { label: "Users", value: "0", change: "0", changeType: "neutral" },
             ]);

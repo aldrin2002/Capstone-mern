@@ -1,31 +1,35 @@
 import { Loader, Lock, Mail, User, Phone } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Input from "../components/Input";
-import PasswordStrengthMeter from "../components/PasswordStrengthMeter";
-import { useAuthStore } from "../store/authStore";
+import Input from "../../components/Input";
+import PasswordStrengthMeter from "../../components/PasswordStrengthMeter";
+import { useAuthStore } from "../../store/authStore";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 
-const SignUpPage = () => {
+const CostumerSignUpPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const navigate = useNavigate();
 
-  const { signup, error, isLoading } = useAuthStore();
+  const { customerSignup, error, isLoading } = useAuthStore();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
 
+    if (!email || !password || !name || !phone) {
+      toast.error("All fields are required");
+      return;
+    }
+
     try {
-      await signup(email, password, name, phone);
+      await customerSignup(email, password, name, phone);
       toast.success("Account created successfully!");
-      navigate("/"); // Navigate to homepage or dashboard
+      navigate("/costumerLogin");
     } catch (error) {
-      console.log(error);
-      toast.error("Failed to create account");
+      toast.error(error.response?.data?.message || "Failed to create account");
     }
   };
 
@@ -39,7 +43,7 @@ const SignUpPage = () => {
       <div className="max-w-md w-full mx-4 bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-lg shadow-lg overflow-hidden border border-gray-200">
         <div className="p-8">
           <h2 className="text-3xl font-bold text-center text-white">
-            Create Account
+            Create Customer Account
           </h2>
           <div className="h-1 w-20 bg-blue-500 mx-auto mb-8"></div>
 
@@ -96,7 +100,7 @@ const SignUpPage = () => {
           <p className="text-sm text-white">
             Already have an account?{" "}
             <Link
-              to={"/login"}
+              to="/costumerLogin"
               className="text-blue-300 font-medium hover:underline"
             >
               Login
@@ -108,4 +112,4 @@ const SignUpPage = () => {
   );
 };
 
-export default SignUpPage;
+export default CostumerSignUpPage; // Fixed export name

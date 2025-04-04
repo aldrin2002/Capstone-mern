@@ -17,7 +17,8 @@ const API_URL =
     : "/api/products";
 
 // Add API base URL for images
-const API_BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5000" : "";
+const API_BASE_URL =
+  import.meta.env.MODE === "development" ? "http://localhost:5000" : "";
 
 const ProductManager = () => {
   const [products, setProducts] = useState([]);
@@ -300,7 +301,7 @@ const ProductManager = () => {
                         </span>
                       </div>
                       <div className="flex items-center text-green-600 font-semibold">
-                        <span className="h-4 w-4 mr-1">₱</span>
+                        <span className="h-4 w-4 mr-1"></span>
                         {product.price.toFixed(2)}
                       </div>
                     </div>

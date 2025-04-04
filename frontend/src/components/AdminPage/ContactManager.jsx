@@ -171,75 +171,80 @@ const ContactManager = () => {
                                     value={formData.hours}
                                     onChange={handleChange}
                                     className="pl-10 w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Mon-Fri: 8am-8pm, Sat-Sun: 9am-5pm"
                                     required
                                 />
                             </div>
                         </div>
                         
-                        <div>
+                        <div className="md:col-span-2">
                             <label className="block text-gray-700 font-medium mb-2">Website</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <Globe className="h-5 w-5 text-gray-400" />
                                 </div>
                                 <input
-                                    type="text"
+                                    type="url"
                                     name="website"
                                     value={formData.website}
                                     onChange={handleChange}
                                     className="pl-10 w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="https://example.com"
                                 />
                             </div>
                         </div>
-                    </div>
-                    
-                    <div className="mt-6">
-                        <h3 className="text-lg font-medium text-gray-800 mb-3">Social Media Links</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <label className="block text-gray-700 text-sm mb-1">Facebook</label>
-                                <input
-                                    type="text"
-                                    name="socialMedia.facebook"
-                                    value={formData.socialMedia.facebook}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-gray-700 text-sm mb-1">Instagram</label>
-                                <input
-                                    type="text"
-                                    name="socialMedia.instagram"
-                                    value={formData.socialMedia.instagram}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-gray-700 text-sm mb-1">Twitter</label>
-                                <input
-                                    type="text"
-                                    name="socialMedia.twitter"
-                                    value={formData.socialMedia.twitter}
-                                    onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
-                                />
-                            </div>
+                        
+                        <div>
+                            <label className="block text-gray-700 font-medium mb-2">Facebook</label>
+                            <input
+                                type="text"
+                                name="socialMedia.facebook"
+                                value={formData.socialMedia.facebook}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="https://facebook.com/yourpage"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-gray-700 font-medium mb-2">Instagram</label>
+                            <input
+                                type="text"
+                                name="socialMedia.instagram"
+                                value={formData.socialMedia.instagram}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="https://instagram.com/yourhandle"
+                            />
+                        </div>
+                        
+                        <div className="md:col-span-2">
+                            <label className="block text-gray-700 font-medium mb-2">Twitter</label>
+                            <input
+                                type="text"
+                                name="socialMedia.twitter"
+                                value={formData.socialMedia.twitter}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="https://twitter.com/yourhandle"
+                            />
                         </div>
                     </div>
                     
                     <div className="mt-6 flex justify-end">
                         <button
                             type="submit"
-                            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
                             disabled={isLoading}
                         >
                             {isLoading ? (
-                                <Loader className="w-5 h-5 animate-spin" />
+                                <>
+                                    <Loader className="h-4 w-4 mr-2 animate-spin" />
+                                    Saving...
+                                </>
                             ) : (
                                 <>
-                                    <Save className="w-4 h-4 mr-2" />
+                                    <Save className="h-4 w-4 mr-2" />
                                     Save Changes
                                 </>
                             )}
@@ -281,31 +286,67 @@ const ContactManager = () => {
                             </div>
                         </div>
                         
-                        <div className="flex items-start">
-                            <Globe className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
-                            <div>
-                                <h3 className="font-medium text-gray-800">Website</h3>
-                                <p className="text-gray-600">{contactInfo.website}</p>
+                        {contactInfo.website && (
+                            <div className="flex items-start md:col-span-2">
+                                <Globe className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
+                                <div>
+                                    <h3 className="font-medium text-gray-800">Website</h3>
+                                    <a 
+                                        href={contactInfo.website} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 hover:underline"
+                                    >
+                                        {contactInfo.website}
+                                    </a>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div className="mt-8 border-t border-gray-200 pt-6">
-                        <h3 className="font-medium text-gray-800 mb-3">Social Media</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
-                                <h4 className="text-sm font-medium text-gray-700">Facebook</h4>
-                                <p className="text-gray-600 text-sm">{contactInfo.socialMedia.facebook}</p>
+                        )}
+                        
+                        {(contactInfo.socialMedia.facebook || contactInfo.socialMedia.instagram || contactInfo.socialMedia.twitter) && (
+                            <div className="flex items-start md:col-span-2">
+                                <div className="h-5 w-5 text-blue-600 mr-3 mt-0.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="font-medium text-gray-800">Social Media</h3>
+                                    <div className="flex flex-wrap gap-3 mt-2">
+                                        {contactInfo.socialMedia.facebook && (
+                                            <a 
+                                                href={contactInfo.socialMedia.facebook} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:underline"
+                                            >
+                                                Facebook
+                                            </a>
+                                        )}
+                                        {contactInfo.socialMedia.instagram && (
+                                            <a 
+                                                href={contactInfo.socialMedia.instagram} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="text-pink-600 hover:underline"
+                                            >
+                                                Instagram
+                                            </a>
+                                        )}
+                                        {contactInfo.socialMedia.twitter && (
+                                            <a 
+                                                href={contactInfo.socialMedia.twitter} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="text-blue-400 hover:underline"
+                                            >
+                                                Twitter
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <h4 className="text-sm font-medium text-gray-700">Instagram</h4>
-                                <p className="text-gray-600 text-sm">{contactInfo.socialMedia.instagram}</p>
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-medium text-gray-700">Twitter</h4>
-                                <p className="text-gray-600 text-sm">{contactInfo.socialMedia.twitter}</p>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             )}

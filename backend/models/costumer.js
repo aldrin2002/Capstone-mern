@@ -1,11 +1,12 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const userSchema = new mongoose.Schema(
+const customerSchema = new mongoose.Schema(
     {
         email: {
             type: String,
             required: true,
             unique: true,
+            trim: true
         },
         password: {
             type: String,
@@ -14,10 +15,12 @@ const userSchema = new mongoose.Schema(
         name: {
             type: String,
             required: true,
+            trim: true
         },
         phone: {
             type: String,
             required: true,
+            trim: true
         },
         role: {
             type: String,
@@ -26,10 +29,14 @@ const userSchema = new mongoose.Schema(
         },
         lastLogin: {
             type: Date,
-            default: Date.now,
+            default: Date.now
         },
+        isActive: {
+            type: Boolean,
+            default: true
+        }
     },
-    { timestamps: true }
+    { timestamps: true,}
 );
 
-export const User = mongoose.model("User", userSchema);
+export const Customer = mongoose.model("Customer", customerSchema);

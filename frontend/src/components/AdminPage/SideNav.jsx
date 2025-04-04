@@ -1,6 +1,6 @@
 import React from "react";
 import { Users, ShoppingBag, Image, Phone, ShoppingCart, Home, LogOut } from "lucide-react";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../../store/authStore";
 
 const SideNav = ({ active, setActive }) => {
     const { logout } = useAuthStore();
