@@ -33,7 +33,8 @@ const ProductManager = () => {
     name: "",
     price: "",
     description: "",
-    category: "coffee",
+    category: "Coffee",
+    stock: "0", // Add stock field
     image: null,
   });
 
@@ -105,6 +106,7 @@ const ProductManager = () => {
     productData.append("price", formData.price);
     productData.append("description", formData.description);
     productData.append("category", formData.category);
+    productData.append("stock", formData.stock); // Add stock
     if (formData.image) {
       productData.append("image", formData.image);
     }
@@ -139,7 +141,8 @@ const ProductManager = () => {
       name: "",
       price: "",
       description: "",
-      category: "coffee",
+      category: "Coffee",
+      stock: "0", // Add stock
       image: null,
     });
     setImagePreview(null);
@@ -155,6 +158,7 @@ const ProductManager = () => {
       price: product.price.toString(),
       description: product.description,
       category: product.category,
+      stock: product.stock.toString(), // Add stock
       image: null,
     });
     setImagePreview(
@@ -262,6 +266,15 @@ const ProductManager = () => {
                     {product.category}
                   </span>
                 </div>
+                <div className="mt-1">
+                  <span className={`px-2 py-1 text-xs rounded ${
+                    product.stock > 0 
+                      ? "bg-green-100 text-green-800" 
+                      : "bg-red-100 text-red-800"
+                  }`}>
+                    {product.stock > 0 ? `Stock: ${product.stock}` : "Out of stock"}
+                  </span>
+                </div>
               </div>
             </div>
           ))}
@@ -336,12 +349,28 @@ const ProductManager = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   required
                 >
-                  <option value="coffee">Coffee</option>
-                  <option value="tea">Tea</option>
-                  <option value="pastry">Pastry</option>
-                  <option value="sandwich">Sandwich</option>
-                  <option value="dessert">Dessert</option>
+                  <option value="Coffee">Coffee</option>
+                  <option value="Tea">Tea</option>
+                  <option value="Pastry">Pastry</option>
+                  <option value="Sandwich">Sandwich</option>
+                  <option value="Dessert">Dessert</option>
+                  <option value="Other">Other</option>
                 </select>
+              </div>
+              {/* Stock field - Add this before or after the Category field */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Stock Quantity
+                </label>
+                <input
+                  type="number"
+                  name="stock"
+                  value={formData.stock}
+                  onChange={handleChange}
+                  min="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  required
+                />
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">

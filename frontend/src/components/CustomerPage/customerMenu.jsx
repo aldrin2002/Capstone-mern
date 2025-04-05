@@ -3,7 +3,7 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import CustomerSideNav from "../../pages/customer/customerSideNav";
 import { useNavigate } from "react-router-dom";
-import { Coffee } from "lucide-react";
+import { Coffee, CheckCircle2 } from "lucide-react";
 
 const CustomerMenu = () => {
   const [products, setProducts] = useState([]);
@@ -98,7 +98,7 @@ const CustomerMenu = () => {
                   className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                 >
                   <div className="flex flex-col h-auto">
-                    <div className="h-24 bg-gray-100 flex items-center justify-center overflow-hidden">
+                    <div className="h-36 bg-gray-100 flex items-center justify-center overflow-hidden">
                       {product.image ? (
                         <img
                           src={`http://localhost:5000${product.image}`}
@@ -116,13 +116,29 @@ const CustomerMenu = () => {
                           ₱{product.price.toFixed(2)}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">{product.description}</p>
-                      {product.stock <= 5 && product.stock > 0 && (
-                        <p className="text-xs text-orange-600 mt-1">Only {product.stock} left!</p>
-                      )}
-                      {product.stock === 0 && (
-                        <p className="text-xs text-red-600 mt-1">Out of stock</p>
-                      )}
+                      <p className="text-xs text-gray-600 mt-1 mb-2 line-clamp-2">{product.description}</p>
+                      
+                      {/* Stock display section */}
+                      <div className="flex items-center mt-2 text-xs">
+                        {product.stock > 5 && (
+                          <div className="flex items-center text-green-600">
+                            <CheckCircle2 size={14} className="mr-1" />
+                            <span>In Stock ({product.stock})</span>
+                          </div>
+                        )}
+                        {product.stock <= 5 && product.stock > 0 && (
+                          <div className="flex items-center text-orange-600">
+                            <span className="w-2 h-2 bg-orange-500 rounded-full mr-1.5"></span>
+                            <span>Only {product.stock} left!</span>
+                          </div>
+                        )}
+                        {product.stock === 0 && (
+                          <div className="flex items-center text-red-600">
+                            <span className="w-2 h-2 bg-red-500 rounded-full mr-1.5"></span>
+                            <span>Out of stock</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
