@@ -217,6 +217,7 @@ const OrderManager = () => {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -233,12 +234,21 @@ const OrderManager = () => {
                                         <div className="text-sm text-gray-900">{formatDate(order.createdAt)}</div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-900">${order.total.toFixed(2)}</div>
+                                        <div className="text-sm text-gray-900">₱{order.total.toFixed(2)}</div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full items-center ${getStatusClass(order.status)}`}>
                                             {getStatusIcon(order.status)}
                                             <span className="ml-1">{order.status}</span>
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                            order.paymentMethod === "GCash" 
+                                                ? "bg-blue-100 text-blue-800" 
+                                                : "bg-gray-100 text-gray-800"
+                                        }`}>
+                                            {order.paymentMethod}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -303,6 +313,43 @@ const OrderManager = () => {
                                 </div>
                             </div>
                             
+                            {/* Delivery Address */}
+                            {selectedOrder.deliveryAddress && (
+                                <div className="mb-6 p-3 bg-gray-50 rounded-lg">
+                                    <p className="text-sm text-gray-500 font-medium">Delivery Address</p>
+                                    <p className="text-gray-700">{selectedOrder.deliveryAddress}</p>
+                                </div>
+                            )}
+                            
+                            {/* GCash Payment Details */}
+                            {selectedOrder.paymentMethod === "GCash" && (
+                                <div className="mb-6 p-3 bg-blue-50 rounded-lg">
+                                    <p className="text-sm text-blue-800 font-medium">GCash Payment Details</p>
+                                    {selectedOrder.gcashReferenceNumber && (
+                                        <p className="text-gray-700">
+                                            <span className="font-medium">Reference Number:</span> {selectedOrder.gcashReferenceNumber}
+                                        </p>
+                                    )}
+                                    {selectedOrder.gcashProofImage && (
+                                        <div className="mt-2">
+                                            <p className="text-sm text-gray-500 mb-1">Proof of Payment:</p>
+                                            <a 
+                                                href={`http://localhost:5000${selectedOrder.gcashProofImage}`} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="inline-block"
+                                            >
+                                                <img 
+                                                    src={`http://localhost:5000${selectedOrder.gcashProofImage}`} 
+                                                    alt="Payment Proof" 
+                                                    className="max-h-32 rounded-md border border-gray-200" 
+                                                />
+                                            </a>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                            
                             {selectedOrder.notes && (
                                 <div className="mb-6">
                                     <p className="text-sm text-gray-500">Notes</p>
@@ -326,15 +373,15 @@ const OrderManager = () => {
                                             <tr key={index}>
                                                 <td className="py-3 text-sm">{item.name}</td>
                                                 <td className="py-3 text-sm text-right">{item.quantity}</td>
-                                                <td className="py-3 text-sm text-right">${item.price.toFixed(2)}</td>
-                                                <td className="py-3 text-sm text-right">${(item.price * item.quantity).toFixed(2)}</td>
+                                                <td className="py-3 text-sm text-right">₱{item.price.toFixed(2)}</td>
+                                                <td className="py-3 text-sm text-right">₱{(item.price * item.quantity).toFixed(2)}</td>
                                             </tr>
                                         ))}
                                     </tbody>
                                     <tfoot>
                                         <tr>
                                             <td colSpan="3" className="py-3 text-right font-medium">Total:</td>
-                                            <td className="py-3 text-right font-medium">${selectedOrder.total.toFixed(2)}</td>
+                                            <td className="py-3 text-right font-medium">₱{selectedOrder.total.toFixed(2)}</td>
                                         </tr>
                                     </tfoot>
                                 </table>

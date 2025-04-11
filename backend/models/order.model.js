@@ -56,13 +56,26 @@ const orderSchema = new mongoose.Schema(
         },
         paymentMethod: {
             type: String,
-            enum: ["Cash", "Credit Card", "Debit Card", "Online Payment"],
-            default: "Cash"
+            enum: ["Cash on Delivery", "GCash"],
+            default: "Cash on Delivery"
         },
         paymentStatus: {
             type: String,
             enum: ["Pending", "Paid", "Failed"],
             default: "Pending"
+        },
+        // Fields for GCash payment
+        gcashReferenceNumber: {
+            type: String,
+            default: ""
+        },
+        gcashProofImage: {
+            type: String,
+            default: ""
+        },
+        deliveryAddress: {
+            type: String,
+            default: ""
         }
     },
     { timestamps: true }

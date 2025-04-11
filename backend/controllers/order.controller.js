@@ -44,11 +44,29 @@ export const getOrderById = async (req, res) => {
 // Create new order
 export const createOrder = async (req, res) => {
     try {
-        const { customer, items, notes, paymentMethod } = req.body;
+        const { 
+            customer, 
+            items, 
+            notes, 
+            paymentMethod, 
+            gcashReferenceNumber, 
+            gcashProofImage,
+            deliveryAddress
+        } = req.body;
         
         // Validate required fields
         if (!customer || !customer.name || !customer.email || !items || items.length === 0) {
             return res.status(400).json({ message: "Customer details and at least one item are required" });
+        }
+        
+        // Validate payment method details
+        if (paymentMethod === "GCash" && (!gcashReferenceNumber || !gcashProofImage)) {
+            return res.status(400).json({ message: "GCash reference number and proof image are required for GCash payments" });
+        }
+        
+        // Validate delivery address for all orders
+        if (!deliveryAddress) {
+            return res.status(400).json({ message: "Delivery address is required" });
         }
         
         // Calculate total and validate items
@@ -84,7 +102,11 @@ export const createOrder = async (req, res) => {
             items: orderItems,
             total,
             notes: notes || "",
-            paymentMethod: paymentMethod || "Cash"
+            paymentMethod: paymentMethod || "Cash on Delivery",
+            paymentStatus: paymentMethod === "GCash" ? "Pending" : "Pending",
+            gcashReferenceNumber: gcashReferenceNumber || "",
+            gcashProofImage: gcashProofImage || "",
+            deliveryAddress: deliveryAddress
         });
         
         const savedOrder = await newOrder.save();

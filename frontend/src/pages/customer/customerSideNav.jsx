@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Home, Info, Image, Coffee, Phone, ShoppingBag, LogOut, Plus } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useNavigate } from "react-router-dom";
+import logoImage from "../../assets/1.png";
 
 const CustomerSideNav = () => {
     const [contactInfo, setContactInfo] = useState(null);
@@ -126,10 +127,13 @@ const CustomerSideNav = () => {
             <div className="p-6">
                 {/* Logo */}
                 <div className="mb-8">
-                    <div className="bg-gray-300 w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center">
-                        <span className="text-sm text-gray-700">Insert Logo Here</span>
+                    <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+                        <img 
+                            src={logoImage} 
+                            alt="CafeX Logo"
+                            className="w-full h-full object-contain rounded-full" 
+                        />
                     </div>
-                    <h1 className="text-center text-xl font-bold">Cafe Name</h1>
                 </div>
 
                 {/* Navigation Links */}
