@@ -19,21 +19,25 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const __dirname = path.resolve();
 
-
-// Set up paths
+// Set up paths - combining both approaches
 const __filename = fileURLToPath(import.meta.url);
-const rootDir = path.resolve(__dirname, '../'); // Go up one level to project root
+const __dirname = path.dirname(__filename);      // For ES modules support
+const projectRoot = path.resolve();              // For absolute project root
 
-// Ensure uploads directory exists in project root
-const uploadsDir = path.join(rootDir, 'uploads');
+// Create path to uploads - in the project root
+const uploadsDir = path.join(projectRoot, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
     console.log('Created uploads directory at:', uploadsDir);
 }
 
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(cors({ 
+    origin: "http://localhost:5173", 
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -57,10 +61,12 @@ app.get('/test', (req, res) => {
 });
 
 if (process.env.NODE_ENV === "production") {
-    app.use(express.static(path.join(__dirname, "/frontend/dist")));
+    // Use the __dirname for relative paths within the backend
+    // and projectRoot for absolute paths from project root
+    app.use(express.static(path.join(projectRoot, "/frontend/dist")));
 
     app.get("*", (req, res) => {
-        res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+        res.sendFile(path.resolve(projectRoot, "frontend", "dist", "index.html"));
     });
 }
 
