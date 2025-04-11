@@ -19,10 +19,11 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const __dirname = path.resolve();
+
 
 // Set up paths
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '../'); // Go up one level to project root
 
 // Ensure uploads directory exists in project root
@@ -32,12 +33,7 @@ if (!fs.existsSync(uploadsDir)) {
     console.log('Created uploads directory at:', uploadsDir);
 }
 
-app.use(cors({ 
-    origin: "http://localhost:5173", 
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
