@@ -107,23 +107,23 @@ const UsersManager = () => {
                     <p className="text-gray-500">No users found</p>
                 </div>
             ) : (
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
+                <div className="overflow-x-auto rounded-lg shadow bg-white">
+                    <table className="min-w-full divide-y divide-gray-200 table-fixed md:table-auto">
                         <thead className="bg-gray-50">
                             <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[25%]">
                                     Name
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[30%]">
                                     Email
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[20%]">
                                     Registered
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">
                                     Role
                                 </th>
-                                <th scope="col" className="relative px-6 py-3">
+                                <th scope="col" className="relative px-6 py-3 w-[10%]">
                                     <span className="sr-only">View</span>
                                 </th>
                             </tr>
@@ -135,7 +135,7 @@ const UsersManager = () => {
                                         <div className="text-sm font-medium text-gray-900">{user.name}</div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className={`text-sm text-gray-500 ${isMobile ? "max-w-[120px] truncate" : ""}`} title={user.email}>
+                                        <div className="text-sm text-gray-500 truncate" title={user.email}>
                                             {user.email}
                                         </div>
                                     </td>
@@ -150,21 +150,24 @@ const UsersManager = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button 
-                                            className="text-blue-600 hover:text-blue-900"
+                                            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition-colors"
                                             onClick={() => getUserDetails(user._id)}
                                         >
-                                            <Eye className="h-5 w-5" />
+                                            View
                                         </button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
+                    <div className="h-8"></div>
                 </div>
             )}
             
+            <div className="h-16"></div>
+            
             {selectedUser && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
                     <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
                         <div className="border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 bg-white">
                             <h3 className="text-lg font-medium text-gray-900">User Profile</h3>

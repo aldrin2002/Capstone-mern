@@ -208,7 +208,7 @@ const OrderManager = () => {
                     <p className="text-gray-500">No orders found.</p>
                 </div>
             ) : (
-                <div className="bg-white shadow rounded-lg overflow-hidden">
+                <div className="bg-white shadow rounded-lg overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
@@ -254,9 +254,9 @@ const OrderManager = () => {
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <button 
                                             onClick={() => getOrderDetails(order._id)}
-                                            className="text-blue-600 hover:text-blue-900"
+                                            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md transition-colors"
                                         >
-                                            <Eye className="h-5 w-5" />
+                                            View
                                         </button>
                                     </td>
                                 </tr>
@@ -267,8 +267,8 @@ const OrderManager = () => {
             )}
             
             {selectedOrder && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                         <div className="border-b border-gray-200 px-6 py-4 flex justify-between items-center">
                             <h3 className="text-lg font-medium text-gray-900">Order Details - {selectedOrder._id}</h3>
                             <button 
@@ -280,7 +280,7 @@ const OrderManager = () => {
                         </div>
                         
                         <div className="px-6 py-4">
-                            <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                                 <div>
                                     <p className="text-sm text-gray-500">Customer</p>
                                     <p className="font-medium">{selectedOrder.customer.name}</p>
@@ -388,11 +388,11 @@ const OrderManager = () => {
                             </div>
                         </div>
                         
-                        <div className="border-t border-gray-200 px-6 py-4 flex justify-end">
+                        <div className="border-t border-gray-200 px-6 py-4 flex flex-wrap gap-3 justify-end">
                             {selectedOrder.status === "Pending" && (
                                 <>
                                     <button 
-                                        className="mr-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                                         onClick={() => updateOrderStatus(selectedOrder._id, "Processing")}
                                         disabled={isLoading}
                                     >

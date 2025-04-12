@@ -104,13 +104,13 @@ const ContactManager = () => {
     };
     
     return (
-        <div className={`p-6 ${isMobile ? 'pb-28' : ''}`}>
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-800">Contact Information</h2>
+        <div className="p-6 h-full">
+            <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-bold text-blue-800">Contact Information</h2>
                 {!isEditing && (
                     <button
                         onClick={() => setIsEditing(true)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                         Edit Information
                     </button>
@@ -123,9 +123,9 @@ const ContactManager = () => {
                 </div>
             ) : isEditing ? (
                 <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg overflow-hidden">
-                    <div className="p-6">
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Phone Number
                             </label>
                             <div className="relative">
@@ -249,18 +249,18 @@ const ContactManager = () => {
                         </div>
                     </div>
                     
-                    <div className={`mt-6 flex justify-end ${isMobile ? 'sticky bottom-0 bg-white py-4 border-t' : ''}`}>
+                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-4">
                         <button
                             type="button"
                             onClick={handleCancel}
-                            className="mr-3 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                             disabled={isLoading}
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
                             disabled={isLoading}
                         >
                             {isLoading ? (
@@ -274,44 +274,44 @@ const ContactManager = () => {
                 </form>
             ) : (
                 <div className="bg-white shadow-md rounded-lg overflow-hidden">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="flex items-start">
-                            <Phone className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
+                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="flex items-start p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <Phone className="h-6 w-6 text-blue-600 mr-4 mt-0.5" />
                             <div>
-                                <h3 className="font-medium text-gray-800">Phone</h3>
+                                <h3 className="font-medium text-gray-800 text-lg mb-1">Phone</h3>
                                 <p className="text-gray-600">{contactInfo.phone}</p>
                             </div>
                         </div>
                         
-                        <div className="flex items-start">
-                            <Mail className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
+                        <div className="flex items-start p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                            <Mail className="h-6 w-6 text-blue-600 mr-4 mt-0.5" />
                             <div>
-                                <h3 className="font-medium text-gray-800">Email</h3>
-                                <p className="text-gray-600">{contactInfo.email}</p>
+                                <h3 className="font-medium text-gray-800 text-lg mb-1">Email</h3>
+                                <p className="text-gray-600 break-words">{contactInfo.email}</p>
                             </div>
                         </div>
                         
-                        <div className="flex items-start md:col-span-2">
-                            <MapPin className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
+                        <div className="flex items-start p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors md:col-span-2">
+                            <MapPin className="h-6 w-6 text-blue-600 mr-4 mt-0.5" />
                             <div>
-                                <h3 className="font-medium text-gray-800">Address</h3>
+                                <h3 className="font-medium text-gray-800 text-lg mb-1">Address</h3>
                                 <p className="text-gray-600">{contactInfo.address}</p>
                             </div>
                         </div>
                         
-                        <div className="flex items-start md:col-span-2">
-                            <Clock className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
+                        <div className="flex items-start p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors md:col-span-2">
+                            <Clock className="h-6 w-6 text-blue-600 mr-4 mt-0.5" />
                             <div>
-                                <h3 className="font-medium text-gray-800">Business Hours</h3>
+                                <h3 className="font-medium text-gray-800 text-lg mb-1">Business Hours</h3>
                                 <p className="text-gray-600">{contactInfo.hours}</p>
                             </div>
                         </div>
                         
                         {contactInfo.website && (
-                            <div className="flex items-start md:col-span-2">
-                                <Globe className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
+                            <div className="flex items-start p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors md:col-span-2">
+                                <Globe className="h-6 w-6 text-blue-600 mr-4 mt-0.5" />
                                 <div>
-                                    <h3 className="font-medium text-gray-800">Website</h3>
+                                    <h3 className="font-medium text-gray-800 text-lg mb-1">Website</h3>
                                     <a 
                                         href={contactInfo.website} 
                                         target="_blank" 
@@ -325,23 +325,23 @@ const ContactManager = () => {
                         )}
                         
                         {(contactInfo.socialMedia.facebook || contactInfo.socialMedia.instagram || contactInfo.socialMedia.twitter) && (
-                            <div className="flex items-start md:col-span-2">
-                                <div className="h-5 w-5 text-blue-600 mr-3 mt-0.5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <div className="flex items-start p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors md:col-span-2">
+                                <div className="text-blue-600 mr-4 mt-0.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
                                         <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
                                     </svg>
                                 </div>
                                 <div>
-                                    <h3 className="font-medium text-gray-800">Social Media</h3>
-                                    <div className="flex flex-wrap gap-3 mt-2">
+                                    <h3 className="font-medium text-gray-800 text-lg mb-1">Social Media</h3>
+                                    <div className="flex flex-wrap gap-4 mt-2">
                                         {contactInfo.socialMedia.facebook && (
                                             <a 
                                                 href={contactInfo.socialMedia.facebook} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer"
-                                                className="text-blue-600 hover:underline"
+                                                className="text-blue-600 hover:underline flex items-center"
                                             >
-                                                Facebook
+                                                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">Facebook</span>
                                             </a>
                                         )}
                                         {contactInfo.socialMedia.instagram && (
@@ -349,9 +349,9 @@ const ContactManager = () => {
                                                 href={contactInfo.socialMedia.instagram} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer"
-                                                className="text-pink-600 hover:underline"
+                                                className="text-pink-600 hover:underline flex items-center"
                                             >
-                                                Instagram
+                                                <span className="bg-pink-100 text-pink-800 px-3 py-1 rounded-full text-sm">Instagram</span>
                                             </a>
                                         )}
                                         {contactInfo.socialMedia.twitter && (
@@ -359,9 +359,9 @@ const ContactManager = () => {
                                                 href={contactInfo.socialMedia.twitter} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer"
-                                                className="text-blue-400 hover:underline"
+                                                className="text-blue-400 hover:underline flex items-center"
                                             >
-                                                Twitter
+                                                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">Twitter</span>
                                             </a>
                                         )}
                                     </div>
@@ -371,6 +371,8 @@ const ContactManager = () => {
                     </div>
                 </div>
             )}
+            
+            <div className="h-16"></div> {/* Extra space at bottom of page */}
         </div>
     );
 };

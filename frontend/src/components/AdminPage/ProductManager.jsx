@@ -127,9 +127,7 @@ const ProductManager = () => {
       fetchProducts();
     } catch (error) {
       console.error("Error saving product:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to save product"
-      );
+      toast.error(error.response?.data?.message || "Failed to save product");
     } finally {
       setIsLoading(false);
     }
@@ -161,9 +159,7 @@ const ProductManager = () => {
       stock: product.stock.toString(), // Add stock
       image: null,
     });
-    setImagePreview(
-      product.image ? `${API_BASE_URL}${product.image}` : null
-    );
+    setImagePreview(product.image ? `${API_BASE_URL}${product.image}` : null);
     setShowModal(true);
   };
 
@@ -190,7 +186,7 @@ const ProductManager = () => {
   );
 
   return (
-    <div className={`p-6 ${isMobile ? 'pb-28' : ''}`}>
+    <div className={`p-6 ${isMobile ? "pb-28" : ""}`}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div className="relative mb-4 md:mb-0 md:w-64">
           <input
@@ -267,12 +263,16 @@ const ProductManager = () => {
                   </span>
                 </div>
                 <div className="mt-1">
-                  <span className={`px-2 py-1 text-xs rounded ${
-                    product.stock > 0 
-                      ? "bg-green-100 text-green-800" 
-                      : "bg-red-100 text-red-800"
-                  }`}>
-                    {product.stock > 0 ? `Stock: ${product.stock}` : "Out of stock"}
+                  <span
+                    className={`px-2 py-1 text-xs rounded ${
+                      product.stock > 0
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {product.stock > 0
+                      ? `Stock: ${product.stock}`
+                      : "Out of stock"}
                   </span>
                 </div>
               </div>
@@ -312,7 +312,7 @@ const ProductManager = () => {
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Price ($)
+                  Price
                 </label>
                 <input
                   type="number"
@@ -403,7 +403,11 @@ const ProductManager = () => {
                   </div>
                 )}
               </div>
-              <div className={`flex justify-end ${isMobile ? 'sticky bottom-0 bg-white py-4 border-t mt-4' : ''}`}>
+              <div
+                className={`flex justify-end ${
+                  isMobile ? "sticky bottom-0 bg-white py-4 border-t mt-4" : ""
+                }`}
+              >
                 <button
                   type="button"
                   onClick={resetForm}

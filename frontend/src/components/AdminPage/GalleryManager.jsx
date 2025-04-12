@@ -310,15 +310,15 @@ const GalleryManager = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className="bg-white shadow rounded-lg overflow-hidden">
-                        <table className="min-w-full divide-y divide-gray-200">
+                    <div className="bg-white shadow rounded-lg overflow-x-auto">
+                        <table className="min-w-full md:w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Featured</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Image</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">Title</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">Description</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Featured</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
@@ -349,22 +349,25 @@ const GalleryManager = () => {
                                                 className="text-blue-600 hover:text-blue-900 mr-3"
                                                 onClick={() => handleEditImage(image)}
                                             >
-                                                <Edit2 className="h-4 w-4" />
+                                                <Edit2 className="h-4 w-4 inline-block" />
                                             </button>
                                             <button 
                                                 className="text-red-600 hover:text-red-900"
                                                 onClick={() => handleDelete(image._id)}
                                             >
-                                                <Trash2 className="h-4 w-4" />
+                                                <Trash2 className="h-4 w-4 inline-block" />
                                             </button>
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
+                        <div className="h-8"></div> {/* Extra space at bottom of table */}
                     </div>
                 )}
             </div>
+            
+            <div className="h-16"></div> {/* Extra space at bottom of page */}
             
             {/* Modal */}
             {showModal && (
