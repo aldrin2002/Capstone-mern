@@ -3,7 +3,10 @@ import { Phone, Mail, MapPin, Clock, Globe, Save, Loader } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
+// Add console log to debug mode detection
+console.log("Current environment mode:", import.meta.env.MODE);
 const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api/contact" : "/api/contact";
+console.log("API URL resolved to:", API_URL);
 
 const ContactManager = () => {
     const [contactInfo, setContactInfo] = useState({

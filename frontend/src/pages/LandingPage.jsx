@@ -8,8 +8,12 @@ const ContactSection = () => {
 
   useEffect(() => {
     const fetchContactData = async () => {
+      const apiUrl = import.meta.env.MODE === "development" 
+        ? "http://localhost:5000/api/contact" 
+        : "/api/contact";
+        
       try {
-        const response = await fetch('http://localhost:5000/api/contact');
+        const response = await fetch(apiUrl);
         const data = await response.json();
         setContactData(data);
       } catch (error) {

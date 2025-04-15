@@ -3,9 +3,12 @@ import { Image, PlusCircle, Trash2, Edit2, Eye, Search, Loader, XCircle } from "
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
+console.log("GalleryManager - Current environment mode:", import.meta.env.MODE);
 const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api/gallery" : "/api/gallery";
+console.log("GalleryManager - Resolved API_URL:", API_URL);
 // Add API base URL for images
 const API_BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5000" : "";
+console.log("GalleryManager - Resolved API_BASE_URL:", API_BASE_URL);
 
 const GalleryManager = () => {
     const [gallery, setGallery] = useState([]);
