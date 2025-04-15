@@ -11,6 +11,17 @@ const OrderManager = () => {
     const [statusFilter, setStatusFilter] = useState("All");
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    
+    // Handle window resize
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
     
     const statuses = ["All", "Pending", "Processing", "Completed", "Cancelled"];
     
@@ -166,7 +177,7 @@ const OrderManager = () => {
     }
     
     return (
-        <div className="p-6 h-full">
+        <div className="p-6 h-full pb-20">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold text-blue-800">Orders Management</h2>
             </div>
@@ -209,50 +220,53 @@ const OrderManager = () => {
                 </div>
             ) : (
                 <div className="bg-white shadow rounded-lg overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredOrders.map((order) => (
-                                <tr key={order._id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-gray-900">{order._id}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-900">{order.customer.name}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-900">{formatDate(order.createdAt)}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-900">${order.total.toFixed(2)}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full items-center ${getStatusClass(order.status)}`}>
-                                            {getStatusIcon(order.status)}
-                                            <span className="ml-1">{order.status}</span>
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button 
-                                            onClick={() => getOrderDetails(order._id)}
-                                            className="text-blue-600 hover:text-blue-900"
-                                        >
-                                            <Eye className="h-5 w-5" />
-                                        </button>
-                                    </td>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {filteredOrders.map((order) => (
+                                    <tr key={order._id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-medium text-gray-900">{order._id}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-900">{order.customer.name}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-900">{formatDate(order.createdAt)}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-900">${order.total.toFixed(2)}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full items-center ${getStatusClass(order.status)}`}>
+                                                {getStatusIcon(order.status)}
+                                                <span className="ml-1">{order.status}</span>
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                            <button 
+                                                onClick={() => getOrderDetails(order._id)}
+                                                className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-md inline-flex items-center"
+                                            >
+                                                <Eye className="h-4 w-4 mr-1" />
+                                                <span>View</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
             
@@ -312,32 +326,34 @@ const OrderManager = () => {
                             
                             <div className="border-t border-gray-200 pt-4">
                                 <h4 className="font-medium mb-2">Order Items</h4>
-                                <table className="min-w-full">
-                                    <thead>
-                                        <tr>
-                                            <th className="py-2 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
-                                            <th className="py-2 text-right text-xs font-medium text-gray-500 uppercase">Qty</th>
-                                            <th className="py-2 text-right text-xs font-medium text-gray-500 uppercase">Price</th>
-                                            <th className="py-2 text-right text-xs font-medium text-gray-500 uppercase">Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200">
-                                        {selectedOrder.items.map((item, index) => (
-                                            <tr key={index}>
-                                                <td className="py-3 text-sm">{item.name}</td>
-                                                <td className="py-3 text-sm text-right">{item.quantity}</td>
-                                                <td className="py-3 text-sm text-right">${item.price.toFixed(2)}</td>
-                                                <td className="py-3 text-sm text-right">${(item.price * item.quantity).toFixed(2)}</td>
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full">
+                                        <thead>
+                                            <tr>
+                                                <th className="py-2 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+                                                <th className="py-2 text-right text-xs font-medium text-gray-500 uppercase">Qty</th>
+                                                <th className="py-2 text-right text-xs font-medium text-gray-500 uppercase">Price</th>
+                                                <th className="py-2 text-right text-xs font-medium text-gray-500 uppercase">Subtotal</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colSpan="3" className="py-3 text-right font-medium">Total:</td>
-                                            <td className="py-3 text-right font-medium">${selectedOrder.total.toFixed(2)}</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-200">
+                                            {selectedOrder.items.map((item, index) => (
+                                                <tr key={index}>
+                                                    <td className="py-3 text-sm">{item.name}</td>
+                                                    <td className="py-3 text-sm text-right">{item.quantity}</td>
+                                                    <td className="py-3 text-sm text-right">${item.price.toFixed(2)}</td>
+                                                    <td className="py-3 text-sm text-right">${(item.price * item.quantity).toFixed(2)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colSpan="3" className="py-3 text-right font-medium">Total:</td>
+                                                <td className="py-3 text-right font-medium">${selectedOrder.total.toFixed(2)}</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                         
