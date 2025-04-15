@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import CustomerSideNav from "../../pages/customer/customerSideNav";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, Plus, Minus, Trash2, Coffee } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Trash2, Coffee, CreditCard, Truck, Upload, X, Check } from "lucide-react";
+import { useAuthStore } from "../../store/authStore";
 
 const CustomerBuy = () => {
   const [products, setProducts] = useState([]);
@@ -20,6 +21,18 @@ const CustomerBuy = () => {
   ]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  
+  // Payment Modal State
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [gcashReference, setGcashReference] = useState("");
+  const [proofImage, setProofImage] = useState(null);
+  const [proofImagePreview, setProofImagePreview] = useState(null);
+  const [isProcessingOrder, setIsProcessingOrder] = useState(false);
+
+  const fileInputRef = useRef(null);
 
   // Handle window resize
   useEffect(() => {
@@ -35,7 +48,7 @@ const CustomerBuy = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/products");
+        const response = await axios.get("/api/products");
         setProducts(response.data);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -93,30 +106,144 @@ const CustomerBuy = () => {
     total + (item.price * item.quantity), 0
   );
 
-  // Checkout function
-  const handleCheckout = async () => {
+  // Open payment modal
+  const openPaymentModal = () => {
     if (cart.length === 0) {
       toast.error("Your cart is empty");
       return;
     }
+    
+    if (!user) {
+      toast.error("Please log in to place an order");
+      navigate("/costumerLogin");
+      return;
+    }
+    
+    // Pre-fill address if user is logged in
+    if (user) {
+      setDeliveryAddress(user.address || "");
+    }
+    
+    setShowPaymentModal(true);
+  };
 
+  // Handle file input
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProofImage(file);
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProofImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Upload proof image
+  const uploadProofImage = async () => {
+    if (!proofImage) return "";
+    
+    const formData = new FormData();
+    formData.append('image', proofImage);
+    
     try {
-      // Here you would typically send the order to your backend
-      await axios.post("http://localhost:5000/api/orders", {
-        customer: user._id,
+      const response = await axios.post('/api/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        withCredentials: true
+      });
+      return response.data.imagePath;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      throw new Error("Failed to upload proof of payment image");
+    }
+  };
+
+  // Submit order
+  const submitOrder = async () => {
+    try {
+      setIsProcessingOrder(true);
+      
+      // Validate required fields
+      if (!deliveryAddress.trim()) {
+        toast.error("Please enter a delivery address");
+        setIsProcessingOrder(false);
+        return;
+      }
+      
+      // For GCash, validate reference number and proof image
+      if (paymentMethod === "GCash") {
+        if (!gcashReference.trim()) {
+          toast.error("Please enter GCash reference number");
+          setIsProcessingOrder(false);
+          return;
+        }
+        
+        if (!proofImage) {
+          toast.error("Please upload proof of payment");
+          setIsProcessingOrder(false);
+          return;
+        }
+      }
+      
+      // Upload proof image first if needed
+      let imagePath = "";
+      if (paymentMethod === "GCash" && proofImage) {
+        imagePath = await uploadProofImage();
+      }
+      
+      // Map the payment method to one of the allowed enum values in the backend
+      let orderPaymentMethod = "Cash";
+      if (paymentMethod === "GCash") {
+        orderPaymentMethod = "Online Payment";
+      } else if (paymentMethod === "Cash on Delivery") {
+        orderPaymentMethod = "Cash";
+      }
+      
+      // Create order object with only the fields the backend expects
+      const orderData = {
+        customer: {
+          name: user?.name || "Guest",
+          email: user?.email || "guest@example.com",
+          phone: user?.phone || ""
+        },
         items: cart.map(item => ({
           product: item._id,
           quantity: item.quantity,
           price: item.price
         })),
+        notes: `Delivery Address: ${deliveryAddress}${paymentMethod === "GCash" ? `, GCash Ref: ${gcashReference}` : ""}`,
+        paymentMethod: orderPaymentMethod,
         total: cartTotal
+      };
+      
+      console.log("Order data being sent:", orderData);
+      
+      // Send order to server with authentication
+      const response = await axios.post("/api/orders", orderData, {
+        withCredentials: true  // Ensure cookies are sent for authentication
       });
       
-      toast.success("Order placed successfully!");
+      console.log("Order response:", response.data);
+      
+      // Reset states
       setCart([]);
+      setShowPaymentModal(false);
+      setPaymentMethod("Cash on Delivery");
+      setDeliveryAddress("");
+      setGcashReference("");
+      setProofImage(null);
+      setProofImagePreview(null);
+      
+      toast.success("Order placed successfully!");
+      navigate("/customer-dashboard");
+      
     } catch (error) {
       console.error("Error placing order:", error);
-      toast.error("Failed to place order. Please try again.");
+      toast.error(error.response?.data?.message || "Failed to place order. Please try again.");
+    } finally {
+      setIsProcessingOrder(false);
     }
   };
 
@@ -171,7 +298,7 @@ const CustomerBuy = () => {
                         <div className="w-1/3 h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
                           {product.image ? (
                             <img
-                              src={`http://localhost:5000${product.image}`}
+                              src={product.image}
                               alt={product.name}
                               className="w-full h-full object-cover"
                             />
@@ -253,7 +380,7 @@ const CustomerBuy = () => {
                         <span>₱{cartTotal.toFixed(2)}</span>
                       </div>
                       <button 
-                        onClick={handleCheckout}
+                        onClick={openPaymentModal}
                         className="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 flex items-center justify-center"
                       >
                         <ShoppingCart className="w-4 h-4 mr-2" />
@@ -267,6 +394,194 @@ const CustomerBuy = () => {
           </div>
         </div>
       </main>
+
+      {/* Payment Method Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Complete Your Order</h2>
+                <button 
+                  onClick={() => setShowPaymentModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Delivery Address */}
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Delivery Address
+                </label>
+                <textarea
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="2"
+                  placeholder="Enter your complete delivery address"
+                  required
+                />
+              </div>
+
+              {/* Payment Method Selection */}
+              <div className="mb-4">
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Payment Method
+                </label>
+                <div className="space-y-2">
+                  <div 
+                    className={`p-3 border rounded-md cursor-pointer flex items-center ${
+                      paymentMethod === "Cash on Delivery" 
+                        ? "border-blue-500 bg-blue-50" 
+                        : "border-gray-300 hover:border-blue-300"
+                    }`}
+                    onClick={() => setPaymentMethod("Cash on Delivery")}
+                  >
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 ${
+                      paymentMethod === "Cash on Delivery" ? "border-blue-500" : "border-gray-400"
+                    }`}>
+                      {paymentMethod === "Cash on Delivery" && (
+                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">Cash on Delivery</div>
+                      <div className="text-sm text-gray-500">Pay when your order arrives</div>
+                    </div>
+                    <Truck className="w-5 h-5 text-gray-400" />
+                  </div>
+
+                  <div 
+                    className={`p-3 border rounded-md cursor-pointer flex items-center ${
+                      paymentMethod === "GCash" 
+                        ? "border-blue-500 bg-blue-50" 
+                        : "border-gray-300 hover:border-blue-300"
+                    }`}
+                    onClick={() => setPaymentMethod("GCash")}
+                  >
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 ${
+                      paymentMethod === "GCash" ? "border-blue-500" : "border-gray-400"
+                    }`}>
+                      {paymentMethod === "GCash" && (
+                        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">GCash</div>
+                      <div className="text-sm text-gray-500">Pay via GCash mobile payment</div>
+                    </div>
+                    <CreditCard className="w-5 h-5 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+
+              {/* GCash Details (Conditional) */}
+              {paymentMethod === "GCash" && (
+                <div className="border rounded-md p-4 mb-4 bg-blue-50">
+                  <h3 className="font-medium text-blue-900 mb-2">GCash Payment Details</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Please send your payment to: <br />
+                    <span className="font-medium">0912 345 6789</span> (CafeX Official)
+                  </p>
+
+                  <div className="mb-3">
+                    <label className="block text-gray-700 text-sm font-medium mb-1">
+                      Reference Number
+                    </label>
+                    <input
+                      type="text"
+                      value={gcashReference}
+                      onChange={(e) => setGcashReference(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter GCash reference number"
+                    />
+                  </div>
+
+                  <div className="mb-2">
+                    <label className="block text-gray-700 text-sm font-medium mb-1">
+                      Proof of Payment
+                    </label>
+                    <div 
+                      className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center cursor-pointer hover:bg-gray-50"
+                      onClick={() => fileInputRef.current.click()}
+                    >
+                      {proofImagePreview ? (
+                        <div className="relative">
+                          <img 
+                            src={proofImagePreview} 
+                            alt="Payment proof" 
+                            className="max-h-48 mx-auto rounded-md"
+                          />
+                          <button 
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProofImage(null);
+                              setProofImagePreview(null);
+                            }}
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-gray-500">
+                          <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                          <p className="text-sm">Click to upload screenshot/photo</p>
+                          <p className="text-xs text-gray-400 mt-1">JPG, PNG or WEBP</p>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        className="hidden"
+                        accept="image/jpeg,image/png,image/webp"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Order Total */}
+              <div className="mb-4 pt-2 border-t">
+                <div className="flex justify-between text-gray-700">
+                  <span>Subtotal:</span>
+                  <span>₱{cartTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-gray-700 pt-1">
+                  <span>Delivery Fee:</span>
+                  <span>₱50.00</span>
+                </div>
+                <div className="flex justify-between font-bold text-lg pt-2">
+                  <span>Total:</span>
+                  <span>₱{(cartTotal + 50).toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                onClick={submitOrder}
+                disabled={isProcessingOrder}
+                className="w-full bg-blue-600 text-white py-3 rounded-md font-semibold hover:bg-blue-700 flex items-center justify-center"
+              >
+                {isProcessingOrder ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white mr-2"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Place Order
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -8,6 +8,16 @@ export default defineConfig(({ command }) => {
     define: {
       // Explicitly set MODE based on command
       'import.meta.env.MODE': JSON.stringify(command === 'serve' ? 'development' : 'production')
+    },
+    server: {
+      proxy: {
+        // Proxy API requests during development
+        '/api': {
+          target: 'http://localhost:5000',
+          changeOrigin: true,
+          secure: false
+        }
+      }
     }
   }
 })
