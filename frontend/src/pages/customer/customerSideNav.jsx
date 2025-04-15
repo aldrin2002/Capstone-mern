@@ -40,7 +40,10 @@ const CustomerSideNav = () => {
     // Fetch contact information
     const fetchContactInfo = async () => {
         try {
-            const response = await axios.get("http://localhost:5000/api/contact");
+            const apiUrl = import.meta.env.MODE === "development" 
+                ? "http://localhost:5000/api/contact" 
+                : "/api/contact";
+            const response = await axios.get(apiUrl);
             setContactInfo(response.data);
         } catch (error) {
             console.error("Error fetching contact information:", error);
