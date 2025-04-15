@@ -34,7 +34,10 @@ const CustomerMenu = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/products");
+        const apiUrl = import.meta.env.MODE === "development" 
+          ? "http://localhost:5000/api/products" 
+          : "/api/products";
+        const response = await axios.get(apiUrl);
         setProducts(response.data);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -51,6 +54,11 @@ const CustomerMenu = () => {
   const filteredProducts = products.filter(
     (product) => product.category === activeCategory
   );
+
+  // Define API base URL for images
+  const API_BASE_URL = import.meta.env.MODE === "development" 
+    ? "http://localhost:5000" 
+    : "";
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
@@ -101,7 +109,7 @@ const CustomerMenu = () => {
                     <div className="h-36 bg-gray-100 flex items-center justify-center overflow-hidden">
                       {product.image ? (
                         <img
-                          src={`http://localhost:5000${product.image}`}
+                          src={`${API_BASE_URL}${product.image}`}
                           alt={product.name}
                           className="w-full h-full object-cover"
                         />

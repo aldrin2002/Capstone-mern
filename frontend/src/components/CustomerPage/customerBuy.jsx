@@ -48,7 +48,10 @@ const CustomerBuy = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get("/api/products");
+        const apiUrl = import.meta.env.MODE === "development" 
+          ? "http://localhost:5000/api/products" 
+          : "/api/products";
+        const response = await axios.get(apiUrl);
         setProducts(response.data);
       } catch (error) {
         console.error("Error fetching products:", error);
