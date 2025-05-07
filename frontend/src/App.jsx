@@ -14,6 +14,7 @@ import CustomerAboutUs from "./components/CustomerPage/customerAboutUs";
 import CustomerMenu from "./components/CustomerPage/customerMenu";
 import CustomerBuy from "./components/CustomerPage/customerBuy";
 import CustomerContact from "./components/CustomerPage/customerContact";
+import CustomerMessage from "./components/CustomerPage/customerMessage";
 
 // Loading spinner component
 const LoadingSpinner = () => (
@@ -166,6 +167,14 @@ function App() {
           element={
             <ProtectedRoute>
               <CustomerContact />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customer-messages"
+          element={
+            <ProtectedRoute>
+              <CustomerMessage />
             </ProtectedRoute>
           }
         />

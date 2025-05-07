@@ -34,6 +34,11 @@ const CustomerBuy = () => {
 
   const fileInputRef = useRef(null);
 
+  // Define API base URL for images
+  const API_BASE_URL = import.meta.env.MODE === "development" 
+    ? "http://localhost:5000" 
+    : "";
+
   // Handle window resize
   useEffect(() => {
     const handleResize = () => {
@@ -301,7 +306,7 @@ const CustomerBuy = () => {
                         <div className="w-1/3 h-32 bg-gray-100 flex items-center justify-center overflow-hidden">
                           {product.image ? (
                             <img
-                              src={product.image}
+                              src={`${API_BASE_URL}${product.image}`}
                               alt={product.name}
                               className="w-full h-full object-cover"
                             />
