@@ -18,6 +18,7 @@
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^6.26.0",
+    "sweetalert2": "^11.6.13",
     "zustand": "^4.5.4"
   },
   "devDependencies": {

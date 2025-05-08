@@ -54,6 +54,7 @@ export const createOrder = async (req, res) => {
         // Calculate total and validate items
         let total = 0;
         const orderItems = [];
+        const stockUpdates = []; // Track stock updates for products
         
         for (const item of items) {
             if (!item.product || !item.quantity) {
@@ -64,6 +65,13 @@ export const createOrder = async (req, res) => {
             const product = await Product.findById(item.product);
             if (!product) {
                 return res.status(400).json({ message: `Product with ID ${item.product} not found` });
+            }
+            
+            // Check if enough stock is available
+            if (product.stock < item.quantity) {
+                return res.status(400).json({ 
+                    message: `Not enough stock for ${product.name}. Only ${product.stock} available.` 
+                });
             }
             
             // Calculate item subtotal
@@ -77,8 +85,15 @@ export const createOrder = async (req, res) => {
                 quantity: item.quantity,
                 price: product.price
             });
+            
+            // Track stock update
+            stockUpdates.push({
+                productId: product._id,
+                newStock: product.stock - item.quantity
+            });
         }
         
+        // Create and save the order first
         const newOrder = new Order({
             customer,
             items: orderItems,
@@ -88,6 +103,16 @@ export const createOrder = async (req, res) => {
         });
         
         const savedOrder = await newOrder.save();
+        
+        // After successful order creation, update all product stocks
+        for (const update of stockUpdates) {
+            await Product.findByIdAndUpdate(
+                update.productId, 
+                { stock: update.newStock },
+                { new: true }
+            );
+        }
+        
         res.status(201).json(savedOrder);
     } catch (error) {
         console.error("Error in createOrder:", error);
@@ -157,4 +182,31 @@ export const deleteOrder = async (req, res) => {
         console.error("Error in deleteOrder:", error);
         res.status(500).json({ message: "Server error while deleting order" });
     }
-}; 
+};
+
+// Get orders for the current customer
+export const getCustomerOrders = async (req, res) => {
+    try {
+        // Try to get email from token first
+        let customerEmail = req.user?.email;
+        
+        // If not available in token, try query parameter
+        if (!customerEmail && req.query.email) {
+            customerEmail = req.query.email;
+        }
+        
+        if (!customerEmail) {
+            return res.status(400).json({ message: "Customer email not found" });
+        }
+        
+        // Find orders by customer email
+        const orders = await Order.find({ "customer.email": customerEmail })
+            .sort({ createdAt: -1 })
+            .populate("items.product");
+        
+        res.status(200).json(orders);
+    } catch (error) {
+        console.error("Error in getCustomerOrders:", error);
+        res.status(500).json({ message: "Server error while fetching customer orders" });
+    }
+};

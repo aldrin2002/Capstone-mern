@@ -5,6 +5,7 @@ import { Home, Info, Image, Coffee, Phone, ShoppingBag, LogOut, Plus, MessageCir
 import { useAuthStore } from "../../store/authStore";
 import { useNavigate } from "react-router-dom";
 import logoImage from "../../assets/1.png";
+import Swal from "sweetalert2"; // Add this import
 
 const CustomerSideNav = () => {
     const [contactInfo, setContactInfo] = useState(null);
@@ -17,10 +18,32 @@ const CustomerSideNav = () => {
     // Check if current route is active
     const isActive = (path) => location.pathname === path;
 
-    // Handle logout
-    const handleLogout = async () => {
-        await logout();
-        navigate("/LandingPage");
+    // Handle logout with SweetAlert
+    const handleLogout = () => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You will be logged out of your account",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, logout",
+            background: "rgba(255, 255, 255, 0.9)",
+            backdrop: `rgba(0, 0, 123, 0.4)`
+        }).then((result) => {
+            if (result.isConfirmed) {
+                logout();
+                Swal.fire({
+                    title: "Logged Out!",
+                    text: "You have been successfully logged out",
+                    icon: "success",
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    navigate("/LandingPage");
+                });
+            }
+        });
     };
 
     // Toggle floating menu expansion
@@ -63,6 +86,7 @@ const CustomerSideNav = () => {
         { path: "/customer-menu", label: "MENU", icon: <Coffee size={20} /> },
         { path: "/customer-contact", label: "CONTACT", icon: <Phone size={20} /> },
         { path: "/customer-messages", label: "MESSAGES", icon: <MessageCircle size={20} /> },
+        { path: "/customer-orders", label: "MY ORDERS", icon: <ShoppingBag size={20} /> },
     ];
 
     // Mobile bottom navigation

@@ -15,6 +15,8 @@ import CustomerMenu from "./components/CustomerPage/customerMenu";
 import CustomerBuy from "./components/CustomerPage/customerBuy";
 import CustomerContact from "./components/CustomerPage/customerContact";
 import CustomerMessage from "./components/CustomerPage/customerMessage";
+import AdminMessage from './components/AdminPage/adminMessage';
+import CustomerOrders from './components/CustomerPage/CustomerOrders';
 
 // Loading spinner component
 const LoadingSpinner = () => (
@@ -66,6 +68,10 @@ function App() {
   const { isCheckingAuth, checkAuth } = useAuthStore();
 
   useEffect(() => {
+    // Check for token in localStorage and log its status
+    const token = localStorage.getItem('token');
+    console.log("App initialization - Token status:", token ? "Available" : "Not available");
+    
     checkAuth();
   }, []);
 
@@ -175,6 +181,30 @@ function App() {
           element={
             <ProtectedRoute>
               <CustomerMessage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customer-message"
+          element={
+            <ProtectedRoute>
+              <CustomerMessage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/messages"
+          element={
+            <ProtectedRoute>
+              <AdminMessage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customer-orders"
+          element={
+            <ProtectedRoute>
+              <CustomerOrders />
             </ProtectedRoute>
           }
         />

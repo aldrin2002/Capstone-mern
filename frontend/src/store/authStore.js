@@ -63,6 +63,12 @@ export const useAuthStore = create((set) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await axios.post(`${API_URL}/login`, { email, password });
+            
+            // Store token in localStorage (add this)
+            if (response.data.token) {
+                localStorage.setItem('token', response.data.token);
+            }
+            
             set({
                 isAuthenticated: true,
                 user: response.data.user,
@@ -80,6 +86,12 @@ export const useAuthStore = create((set) => ({
         set({ isLoading: true, error: null });
         try {
             const response = await axios.post(`${API_URL}/costumerLogin`, { email, password });
+            
+            // Save token to localStorage
+            if (response.data.token) {
+                localStorage.setItem('token', response.data.token);
+            }
+            
             set({
                 isAuthenticated: true,
                 user: response.data.user,
@@ -97,6 +109,8 @@ export const useAuthStore = create((set) => ({
         set({ isLoading: true, error: null });
         try {
             await axios.post(`${API_URL}/logout`);
+            // Remove token from localStorage
+            localStorage.removeItem('token');
             set({ user: null, isAuthenticated: false, error: null, isLoading: false });
         } catch (error) {
             set({ error: "Error logging out", isLoading: false });

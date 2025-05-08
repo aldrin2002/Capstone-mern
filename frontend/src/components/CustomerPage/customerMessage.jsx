@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { io } from "socket.io-client";
 import CustomerSideNav from "../../pages/customer/customerSideNav";
 import { useAuthStore } from "../../store/authStore";
 import { 
@@ -14,6 +15,11 @@ import {
   CircleCheck
 } from "lucide-react";
 
+// API URLs
+const API_BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5000" : "";
+const API_URL = `${API_BASE_URL}/api/messages`;
+const SOCKET_URL = import.meta.env.MODE === "development" ? "http://localhost:5000" : window.location.origin;
+
 const CustomerMessage = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -23,49 +29,13 @@ const CustomerMessage = () => {
   const [attachmentPreview, setAttachmentPreview] = useState(null);
   const [onlineAdmins, setOnlineAdmins] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [conversation, setConversation] = useState(null);
+  const [adminOnline, setAdminOnline] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const socketRef = useRef(null);
   const { user } = useAuthStore();
   
-  // Mock data for initial UI
-  const mockMessages = [
-    {
-      _id: "1",
-      sender: { name: "Admin", role: "admin" },
-      content: "Hello! How can I help you today?",
-      timestamp: new Date(Date.now() - 3600000 * 2),
-      isRead: true
-    },
-    {
-      _id: "2",
-      sender: { name: user?.name || "You", role: "customer" },
-      content: "Hi! I have a question about my recent order.",
-      timestamp: new Date(Date.now() - 3600000 * 1.8),
-      isRead: true
-    },
-    {
-      _id: "3", 
-      sender: { name: "Admin", role: "admin" },
-      content: "Sure, I'd be happy to help. Could you please provide your order number?",
-      timestamp: new Date(Date.now() - 3600000 * 1.5),
-      isRead: true
-    },
-    {
-      _id: "4",
-      sender: { name: user?.name || "You", role: "customer" },
-      content: "It's #ORD-12345. I ordered a cappuccino and sandwich but received a latte instead.",
-      timestamp: new Date(Date.now() - 3600000 * 1.3),
-      isRead: true
-    },
-    {
-      _id: "5",
-      sender: { name: "Admin", role: "admin" },
-      content: "I apologize for the mistake. I've checked your order and will arrange for the correct item to be delivered to you today. Would that work for you?",
-      timestamp: new Date(Date.now() - 3600000),
-      isRead: true
-    }
-  ];
-
   // Handle window resize
   useEffect(() => {
     const handleResize = () => {
@@ -81,90 +51,125 @@ const CustomerMessage = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Load messages
+  // Connect to socket and load messages
   useEffect(() => {
-    // Simulating API call to fetch messages
-    const fetchMessages = async () => {
+    if (!user) return;
+    
+    console.log("Current user:", user);
+    console.log("Cookies available:", document.cookie);
+
+    const fetchConversation = async () => {
       try {
-        // This would be replaced with actual API call when WebSocket is implemented
-        // const apiUrl = "/api/messages";
-        // const response = await axios.get(apiUrl);
-        // setMessages(response.data);
+        setIsLoading(true);
+        // Get/create user's conversation
+        const conversationRes = await axios.get(`${API_URL}/conversation`, { 
+          withCredentials: true 
+        });
         
-        // For now, use mock data
-        setTimeout(() => {
-          setMessages(mockMessages);
-          setIsLoading(false);
-        }, 1000);
+        setConversation(conversationRes.data);
+        
+        // Fetch messages for this conversation
+        const messagesRes = await axios.get(`${API_URL}/${conversationRes.data._id}`, {
+          withCredentials: true
+        });
+        
+        setMessages(messagesRes.data);
+        setIsLoading(false);
       } catch (error) {
-        console.error("Error fetching messages:", error);
-        toast.error("Failed to load messages");
+        console.error("Error fetching conversation:", error);
+        toast.error("Failed to load conversation");
         setIsLoading(false);
       }
     };
     
-    fetchMessages();
+    fetchConversation();
+    connectSocket(); // Use the extracted function
     
-    // This would be where you connect to WebSocket
-    // const socket = io(SOCKET_URL);
-    // socket.on('message', (newMessage) => {
-    //   setMessages(prev => [...prev, newMessage]);
-    // });
-    // socket.on('admin-online-count', (count) => {
-    //   setOnlineAdmins(count);
-    // });
-    
-    // Simulate admin count for demonstration
-    setOnlineAdmins(1);
-    
-    // return () => {
-    //   socket.disconnect();
-    // };
-  }, []);
+    // Clean up on unmount
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, [user]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const uploadAttachment = async () => {
+    if (!attachment) return null;
+    
+    const formData = new FormData();
+    formData.append('attachment', attachment);
+    
+    try {
+      const response = await axios.post(`${API_URL}/attachment`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        withCredentials: true
+      });
+      
+      return response.data.filePath;
+    } catch (error) {
+      console.error("Error uploading attachment:", error);
+      throw new Error("Failed to upload attachment");
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!newMessage.trim() && !attachment) return;
+    if (!conversation) {
+      toast.error("Conversation not initialized");
+      return;
+    }
+    
+    // Check if socket is connected before trying to send
+    if (!socketRef.current || !socketRef.current.connected) {
+      toast.error("Not connected to chat server. Attempting to reconnect...");
+      
+      try {
+        // Try to reconnect
+        connectSocket(); // We need to define this function outside useEffect
+        
+        // Give some time for reconnection before failing
+        setTimeout(() => {
+          if (!socketRef.current || !socketRef.current.connected) {
+            toast.error("Failed to connect to chat server. Please refresh the page.");
+          } else {
+            // If reconnected successfully, try sending the message again
+            handleSubmit(e);
+          }
+        }, 2000);
+      } catch (error) {
+        console.error("Reconnection failed:", error);
+        toast.error("Connection error. Please refresh the page.");
+      }
+      
+      return;
+    }
     
     try {
       setIsSending(true);
       
-      // In real implementation:
-      // 1. Upload attachment if any
-      // 2. Send message through WebSocket
-      // 3. Optionally save to database via API
+      // Upload attachment if any
+      let attachmentPath = null;
+      if (attachment) {
+        attachmentPath = await uploadAttachment();
+      }
       
-      // For demo, just simulate sending and receiving
-      const outgoingMessage = {
-        _id: `temp-${Date.now()}`,
-        sender: { name: user?.name || "You", role: "customer" },
+      // Send message via socket
+      socketRef.current.emit('send-message', {
+        conversationId: conversation._id,
         content: newMessage,
-        timestamp: new Date(),
-        attachment: attachmentPreview,
-        isRead: false
-      };
+        attachment: attachmentPath
+      });
       
-      setMessages(messages => [...messages, outgoingMessage]);
+      // Clear form fields
       setNewMessage("");
       setAttachment(null);
       setAttachmentPreview(null);
-      
-      // Simulate admin response for demo purposes
-      setTimeout(() => {
-        const adminResponse = {
-          _id: `admin-${Date.now()}`,
-          sender: { name: "Admin", role: "admin" },
-          content: "Thanks for your message! We'll get back to you soon.",
-          timestamp: new Date(),
-          isRead: true
-        };
-        setMessages(messages => [...messages, adminResponse]);
-      }, 2000);
       
     } catch (error) {
       console.error("Error sending message:", error);
@@ -174,9 +179,80 @@ const CustomerMessage = () => {
     }
   };
 
+  // Extract the connect socket function so it can be reused
+  const connectSocket = () => {
+    try {
+      // Get the token from localStorage or from the authenticated user
+      const token = localStorage.getItem('token');
+      console.log("Customer Socket connection - token available:", !!token);
+      
+      if (!token) {
+        console.error("No auth token found - cannot establish socket connection");
+        toast.error("Authentication required for messaging");
+        return false; // Return false to indicate connection failure
+      }
+      
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+      
+      // Connect with explicit token in auth object
+      socketRef.current = io(SOCKET_URL, {
+        auth: { token },
+        reconnection: true,
+        reconnectionAttempts: 5,
+        timeout: 10000
+      });
+      
+      // Add event handlers to debug connection issues
+      socketRef.current.on('connect', () => {
+        console.log("Customer socket connected successfully with ID:", socketRef.current.id);
+        toast.success("Connected to chat server");
+        
+        // Request admin online status immediately after connecting
+        socketRef.current.emit('check-admin-status');
+      });
+      
+      // Add listener for admin online status - improved
+      socketRef.current.on('admin-online-count', (count) => {
+        console.log("Admin online count received:", count);
+        setOnlineAdmins(count);
+        setAdminOnline(count > 0);
+      });
+      
+      // Add listener for new messages
+      socketRef.current.on('new-message', (message) => {
+        console.log("New message received:", message);
+        setMessages(prevMessages => [...prevMessages, message]);
+      });
+      
+      // Add listener for messages being read
+      socketRef.current.on('messages-read', (data) => {
+        if (data.by !== 'customer') {
+          setMessages(prevMessages => 
+            prevMessages.map(msg => 
+              msg.sender.role === 'customer' ? { ...msg, isRead: true } : msg
+            )
+          );
+        }
+      });
+      
+      return true; // Return true to indicate connection attempt was made
+    } catch (error) {
+      console.error("Error in socket connection setup:", error);
+      toast.error("Failed to set up chat connection");
+      return false;
+    }
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error("File size too large (max 5MB)");
+        return;
+      }
+      
       setAttachment(file);
       
       const reader = new FileReader();
@@ -253,7 +329,7 @@ const CustomerMessage = () => {
                     {message.attachment && (
                       <div className="mb-2">
                         <img 
-                          src={message.attachment} 
+                          src={message.attachment.startsWith('data:') ? message.attachment : `${API_BASE_URL}${message.attachment}`}
                           alt="Attachment" 
                           className="rounded-md max-h-60 max-w-full"
                         />
@@ -266,7 +342,7 @@ const CustomerMessage = () => {
                       }`}
                     >
                       <Clock size={12} className="mr-1" />
-                      <span>{formatTime(message.timestamp)}</span>
+                      <span>{formatTime(message.timestamp || message.createdAt)}</span>
                       
                       {message.sender.role === 'customer' && (
                         <CircleCheck 
@@ -324,13 +400,6 @@ const CustomerMessage = () => {
                     className="hover:text-blue-500"
                   >
                     <Image size={18} />
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => fileInputRef.current.click()}
-                    className="hover:text-blue-500"
-                  >
-                    <Paperclip size={18} />
                   </button>
                 </div>
               </div>

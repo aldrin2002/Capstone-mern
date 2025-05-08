@@ -47,7 +47,7 @@ export const signup = async (req, res) => {
 export const login = async (req, res) => {
     const { email, password } = req.body;
     try {
-        const user = await User.findOne({ email, role: "admin" }); // Ensure only admin users can log in here
+        const user = await User.findOne({ email, role: "admin" });
         if (!user) {
             return res.status(400).json({ success: false, message: "Invalid credentials" });
         }
@@ -56,7 +56,8 @@ export const login = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid credentials" });
         }
 
-        generateTokenAndSetCookie(res, user._id);
+        // Generate token and return it in the response
+        const token = generateTokenAndSetCookie(res, user._id);
 
         user.lastLogin = new Date();
         await user.save();
@@ -64,6 +65,7 @@ export const login = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Logged in successfully",
+            token: token, // Include token in response body
             user: {
                 ...user._doc,
                 password: undefined,
@@ -78,7 +80,7 @@ export const login = async (req, res) => {
 export const costumerlogin = async (req, res) => {
     const { email, password } = req.body;
     try {
-        const user = await User.findOne({ email, role: "customer" }); // Ensure only customer users can log in here
+        const user = await User.findOne({ email, role: "customer" }); 
         if (!user) {
             return res.status(400).json({ success: false, message: "Invalid credentials" });
         }
@@ -87,7 +89,8 @@ export const costumerlogin = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid credentials" });
         }
 
-        generateTokenAndSetCookie(res, user._id);
+        // Generate token and set cookie
+        const token = generateTokenAndSetCookie(res, user._id);
 
         user.lastLogin = new Date();
         await user.save();
@@ -95,6 +98,7 @@ export const costumerlogin = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Logged in successfully",
+            token: token, // Include token in response body
             user: {
                 ...user._doc,
                 password: undefined,

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { ShoppingCart, Search, Filter, Eye, CheckCircle, XCircle, Clock, Loader } from "lucide-react";
+import { ShoppingCart, Search, Filter, Eye, CheckCircle, XCircle, Clock, Loader, Trash } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import Swal from "sweetalert2";
 
 const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api/orders" : "/api/orders";
 
@@ -147,6 +148,30 @@ const OrderManager = () => {
         } catch (error) {
             console.error("Error updating order status:", error);
             toast.error("Failed to update order status");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Add this function after updateOrderStatus
+    const deleteOrder = async (id) => {
+        setIsLoading(true);
+        try {
+            await axios.delete(`${API_URL}/${id}`, {
+                withCredentials: true
+            });
+            toast.success("Order deleted successfully");
+            
+            // Remove order from local state
+            setOrders(orders.filter(order => order._id !== id));
+            
+            // Close modal if the deleted order was selected
+            if (selectedOrder && selectedOrder._id === id) {
+                setSelectedOrder(null);
+            }
+        } catch (error) {
+            console.error("Error deleting order:", error);
+            toast.error("Failed to delete order");
         } finally {
             setIsLoading(false);
         }
@@ -357,34 +382,101 @@ const OrderManager = () => {
                             </div>
                         </div>
                         
-                        <div className="border-t border-gray-200 px-6 py-4 flex justify-end">
-                            {selectedOrder.status === "Pending" && (
-                                <>
+                        <div className="border-t border-gray-200 px-6 py-4 flex justify-between">
+                            <button 
+                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center"
+                                onClick={() => {
+                                    Swal.fire({
+                                        title: 'Delete this order?',
+                                        text: "This action cannot be undone!",
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonColor: '#d33',
+                                        cancelButtonColor: '#3085d6',
+                                        confirmButtonText: 'Yes, delete it!'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            deleteOrder(selectedOrder._id);
+                                        }
+                                    });
+                                }}
+                                disabled={isLoading}
+                            >
+                                <Trash className="h-4 w-4 mr-1" />
+                                Delete Order
+                            </button>
+                        
+                            <div>
+                                {selectedOrder.status === "Pending" && (
+                                    <>
+                                        <button 
+                                            className="mr-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                                            onClick={() => {
+                                                Swal.fire({
+                                                    title: 'Process this order?',
+                                                    text: "You are about to change the status to Processing",
+                                                    icon: 'question',
+                                                    showCancelButton: true,
+                                                    confirmButtonColor: '#3085d6',
+                                                    cancelButtonColor: '#d33',
+                                                    confirmButtonText: 'Yes, process it!'
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        updateOrderStatus(selectedOrder._id, "Processing");
+                                                    }
+                                                });
+                                            }}
+                                            disabled={isLoading}
+                                        >
+                                            Process Order
+                                        </button>
+                                        <button 
+                                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+                                            onClick={() => {
+                                                Swal.fire({
+                                                    title: 'Cancel this order?',
+                                                    text: "This action cannot be undone",
+                                                    icon: 'warning',
+                                                    showCancelButton: true,
+                                                    confirmButtonColor: '#3085d6',
+                                                    cancelButtonColor: '#d33',
+                                                    confirmButtonText: 'Yes, cancel it!'
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        updateOrderStatus(selectedOrder._id, "Cancelled");
+                                                    }
+                                                });
+                                            }}
+                                            disabled={isLoading}
+                                        >
+                                            Cancel Order
+                                        </button>
+                                    </>
+                                )}
+                                {selectedOrder.status === "Processing" && (
                                     <button 
-                                        className="mr-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-                                        onClick={() => updateOrderStatus(selectedOrder._id, "Processing")}
+                                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+                                        onClick={() => {
+                                            Swal.fire({
+                                                title: 'Complete this order?',
+                                                text: "You are marking this order as completed",
+                                                icon: 'info',
+                                                showCancelButton: true,
+                                                confirmButtonColor: '#28a745',
+                                                cancelButtonColor: '#d33',
+                                                confirmButtonText: 'Yes, complete it!'
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    updateOrderStatus(selectedOrder._id, "Completed");
+                                                }
+                                            });
+                                        }}
                                         disabled={isLoading}
                                     >
-                                        Process Order
+                                        Mark as Completed
                                     </button>
-                                    <button 
-                                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
-                                        onClick={() => updateOrderStatus(selectedOrder._id, "Cancelled")}
-                                        disabled={isLoading}
-                                    >
-                                        Cancel Order
-                                    </button>
-                                </>
-                            )}
-                            {selectedOrder.status === "Processing" && (
-                                <button 
-                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
-                                    onClick={() => updateOrderStatus(selectedOrder._id, "Completed")}
-                                    disabled={isLoading}
-                                >
-                                    Mark as Completed
-                                </button>
-                            )}
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -5,6 +5,7 @@ import Input from "../../components/Input";
 import { useAuthStore } from "../../store/authStore";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
+import Swal from "sweetalert2"; // Add this import
 
 const CostumerLoginPage = () => {
   const [email, setEmail] = useState("");
@@ -17,10 +18,28 @@ const CostumerLoginPage = () => {
     e.preventDefault();
     try {
       await customerLogin(email, password);
-      toast.success("Logged in successfully!");
-      navigate("/customer-dashboard");
+      
+      // Show SweetAlert welcome message
+      Swal.fire({
+        title: "Welcome Customer!",
+        text: "You have successfully logged in",
+        icon: "success",
+        confirmButtonText: "Continue to Dashboard",
+        confirmButtonColor: "#3B82F6",
+        background: "rgba(255, 255, 255, 0.9)",
+        backdrop: `rgba(59, 130, 246, 0.4)`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/customer-dashboard");
+        }
+      });
+      
     } catch (error) {
-      toast.error(error.response?.data?.message || "Invalid credentials. Please try again.");
+      if (error.message === "Backend server not running. Please start the server.") {
+        toast.error("Backend server not running. Please start the server.");
+      } else {
+        toast.error(error.response?.data?.message || "Invalid credentials. Please try again.");
+      }
     }
   };
 

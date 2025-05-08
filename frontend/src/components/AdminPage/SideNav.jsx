@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
-import { Users, ShoppingBag, Image, Phone, ShoppingCart, Home, LogOut, Plus } from "lucide-react";
+import { Users, ShoppingBag, Image, Phone, ShoppingCart, Home, LogOut, Plus, MessageSquare } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import Swal from "sweetalert2"; // Add this import
 
 const SideNav = ({ active, setActive }) => {
     const { logout } = useAuthStore();
     const navigate = useNavigate();
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0); // Example state for unread messages
 
     const navItems = [
         { id: "dashboard", label: "Dashboard", icon: Home },
@@ -18,10 +20,32 @@ const SideNav = ({ active, setActive }) => {
         { id: "orders", label: "Orders", icon: ShoppingCart },
     ];
 
-    // Handle logout
+    // Handle logout with SweetAlert confirmation
     const handleLogout = () => {
-        logout();
-        navigate("/LandingPage");
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You will be logged out of your account",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, logout",
+            background: "rgba(255, 255, 255, 0.9)",
+            backdrop: `rgba(0, 0, 123, 0.4)`
+        }).then((result) => {
+            if (result.isConfirmed) {
+                logout();
+                Swal.fire({
+                    title: "Logged Out!",
+                    text: "You have been successfully logged out",
+                    icon: "success",
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    navigate("/LandingPage");
+                });
+            }
+        });
     };
 
     // Toggle floating menu expansion
@@ -119,6 +143,17 @@ const SideNav = ({ active, setActive }) => {
                             </li>
                         );
                     })}
+                    <li>
+                        <Link to="/admin/messages" className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-600 rounded-md">
+                            <MessageSquare className="w-5 h-5 mr-3" />
+                            <span>Messages</span>
+                            {unreadCount > 0 && (
+                                <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </Link>
+                    </li>
                 </ul>
             </div>
             

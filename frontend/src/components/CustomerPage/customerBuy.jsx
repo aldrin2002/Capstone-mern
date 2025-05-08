@@ -5,6 +5,7 @@ import CustomerSideNav from "../../pages/customer/customerSideNav";
 import { useNavigate } from "react-router-dom";
 import { ShoppingCart, Plus, Minus, Trash2, Coffee, CreditCard, Truck, Upload, X, Check } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
+import Swal from "sweetalert2"; // Add this import if it's not already there
 
 const CustomerBuy = () => {
   const [products, setProducts] = useState([]);
@@ -244,8 +245,22 @@ const CustomerBuy = () => {
       setProofImage(null);
       setProofImagePreview(null);
       
-      toast.success("Order placed successfully!");
-      navigate("/customer-dashboard");
+      // Show SweetAlert for order success
+      Swal.fire({
+        title: "Order Placed!",
+        text: "Your order has been successfully placed.",
+        icon: "success",
+        confirmButtonText: "View Orders",
+        confirmButtonColor: "#3B82F6",
+        background: "rgba(255, 255, 255, 0.9)",
+        backdrop: `rgba(59, 130, 246, 0.4)`
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate("/customer-orders");
+        } else {
+          navigate("/customer-dashboard");
+        }
+      });
       
     } catch (error) {
       console.error("Error placing order:", error);
