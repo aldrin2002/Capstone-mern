@@ -31,6 +31,9 @@ const CustomerMessage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [conversation, setConversation] = useState(null);
   const [adminOnline, setAdminOnline] = useState(false);
+  const [adminTyping, setAdminTyping] = useState(false);;
+  const [isConnected, setIsConnected] = useState(false);
+  const [typingTimeout, setTypingTimeout] = useState(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const socketRef = useRef(null);
@@ -201,16 +204,27 @@ const CustomerMessage = () => {
         auth: { token },
         reconnection: true,
         reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
         timeout: 10000
       });
       
       // Add event handlers to debug connection issues
       socketRef.current.on('connect', () => {
         console.log("Customer socket connected successfully with ID:", socketRef.current.id);
-        toast.success("Connected to chat server");
+        toast.success("Connected to chat server", { duration: 2000 });
         
         // Request admin online status immediately after connecting
         socketRef.current.emit('check-admin-status');
+      });
+      
+      socketRef.current.on('connect_error', (err) => {
+        console.error("Socket connection error:", err.message);
+        toast.error(`Connection error: ${err.message}`);
+      });
+      
+      socketRef.current.on('disconnect', () => {
+        console.log("Socket disconnected, trying to reconnect...");
+        toast.error("Disconnected from chat server. Reconnecting...", { duration: 3000 });
       });
       
       // Add listener for admin online status - improved
@@ -223,7 +237,11 @@ const CustomerMessage = () => {
       // Add listener for new messages
       socketRef.current.on('new-message', (message) => {
         console.log("New message received:", message);
-        setMessages(prevMessages => [...prevMessages, message]);
+        setMessages(prevMessages => {
+          // Check if message already exists to prevent duplicates
+          if (prevMessages.some(m => m._id === message._id)) return prevMessages;
+          return [...prevMessages, message];
+        });
       });
       
       // Add listener for messages being read
@@ -236,12 +254,34 @@ const CustomerMessage = () => {
           );
         }
       });
+
+      // Add typing indicator
+      socketRef.current.on('admin-typing', (isTyping) => {
+        setAdminTyping(isTyping);
+      });
       
       return true; // Return true to indicate connection attempt was made
     } catch (error) {
       console.error("Error in socket connection setup:", error);
       toast.error("Failed to set up chat connection");
       return false;
+    }
+  };
+
+  // Handle typing indicator
+  const handleTyping = () => {
+    if (socketRef.current && socketRef.current.connected) {
+      socketRef.current.emit('customer-typing', true);
+      
+      // Clear existing timeout
+      if (typingTimeout) clearTimeout(typingTimeout);
+      
+      // Set new timeout to stop typing indicator after 2 seconds of inactivity
+      const timeout = setTimeout(() => {
+        socketRef.current.emit('customer-typing', false);
+      }, 2000);
+      
+      setTypingTimeout(timeout);
     }
   };
 
@@ -279,12 +319,21 @@ const CustomerMessage = () => {
       <main className="flex-1 flex flex-col bg-white">
         {/* Header */}
         <div className="bg-blue-900 text-white p-4">
-          <h1 className="text-xl font-bold">Store Owner</h1>
-          <p className="text-sm">
-            {onlineAdmins > 0 
-              ? `${onlineAdmins} admin${onlineAdmins > 1 ? 's' : ''} online` 
-              : 'Offline'}
-          </p>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold">Store Owner</h1>
+            <div className="flex items-center">
+              <span className={`inline-block h-2 w-2 rounded-full mr-1.5 ${
+                socketRef.current?.connected ? 'bg-green-400' : 'bg-red-400'
+              }`}></span>
+              <p className="text-sm">
+                {socketRef.current?.connected 
+                  ? (onlineAdmins > 0 
+                    ? `${onlineAdmins} admin${onlineAdmins > 1 ? 's' : ''} online` 
+                    : 'No admins online')
+                  : 'Disconnected'}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Messages Container - Add scroll area with padding */}
@@ -401,7 +450,10 @@ const CustomerMessage = () => {
               <input
                 type="text"
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={(e) => {
+                  setNewMessage(e.target.value);
+                  handleTyping();
+                }}
                 placeholder="Type your message..."
                 className="flex-1 border-0 focus:ring-0 focus:outline-none"
                 disabled={isSending}

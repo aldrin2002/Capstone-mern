@@ -51,6 +51,27 @@ const AdminMessage = () => {
   const [activeMessageMenu, setActiveMessageMenu] = useState(null);
   const [messageToEdit, setMessageToEdit] = useState(null);
   const [editedContent, setEditedContent] = useState("");
+  const [typingCustomers, setTypingCustomers] = useState({});
+  const [typingTimeout, setTypingTimeout] = useState(null);
+
+  // Helper function for sorting conversations - move this inside
+  const sortConversationsByLatest = (conversationsArray) => {
+    return [...conversationsArray].sort((a, b) => {
+      const dateA = new Date(a.lastMessage || a.createdAt);
+      const dateB = new Date(b.lastMessage || b.createdAt);
+      return dateB - dateA; // Descending order (newest first)
+    });
+  };
+
+  // Cleanup function for socket listeners - move this inside
+  const cleanupSocketListeners = () => {
+    if (socketRef.current) {
+      console.log("Cleaning up socket listeners");
+      socketRef.current.off('new-message');
+      socketRef.current.off('customer-status-update');
+      socketRef.current.off('customer-typing');
+    }
+  };
 
   // Load conversations and connect to socket
   useEffect(() => {
@@ -100,7 +121,7 @@ const AdminMessage = () => {
           timeout: 10000
         });
         
-        // Connection events
+        // ONLY set up connection events here, not message handlers
         socketRef.current.on('connect', () => {
           console.log("Admin socket connected with ID:", socketRef.current.id);
           setIsSocketConnected(true);
@@ -108,8 +129,7 @@ const AdminMessage = () => {
           socketRef.current.emit('admin-connected');
           toast.success("Connected to chat server");
           
-          // Setup message handlers here, INSIDE the connect event
-          setupMessageHandlers();
+          // DO NOT call setupMessageHandlers here - it's handled by the useEffect
         });
         
         socketRef.current.on('connect_error', (err) => {
@@ -153,39 +173,161 @@ const AdminMessage = () => {
     // Remove any existing listeners to prevent duplicates
     socketRef.current.off('new-message');
     socketRef.current.off('customer-status-update');
+    socketRef.current.off('customer-typing');
     
-    // Set up new-message handler
+    // Set up new-message handler with robust conversation comparison
     socketRef.current.on('new-message', (message) => {
       console.log("New message received by admin:", message);
       
-      // Update messages if the message belongs to the current conversation
-      if (selectedConversation && message.conversation === selectedConversation._id) {
+      // CRITICAL FIX: Convert both IDs to strings to ensure proper comparison
+      const messageConvId = message.conversation?._id || message.conversation;
+      const selectedConvId = selectedConversation?._id;
+      const messageConvString = typeof messageConvId === 'object' ? messageConvId.toString() : String(messageConvId);
+      const selectedConvString = typeof selectedConvId === 'object' ? selectedConvId.toString() : String(selectedConvId);
+      
+      // If this message belongs to the current conversation
+      if (selectedConversation && messageConvString === selectedConvString) {
+        // Play notification for customer messages only
+        if (message.sender.role === 'customer') {
+          try {
+            const activeNotification = new Audio('/notification-subtle.mp3');
+            activeNotification.volume = 0.3;
+            activeNotification.play().catch(err => console.log("Audio play prevented:", err));
+          } catch (error) {
+            console.log("Audio error:", error);
+          }
+        }
+        
         setMessages(prevMessages => {
-          // Check if message already exists
-          const messageExists = prevMessages.some(m => m._id === message._id);
-          if (messageExists) return prevMessages;
+          // IMPROVED DUPLICATE DETECTION - check for both ID and temporary messages with same content
+          const isDuplicate = prevMessages.some(m => 
+            // Same permanent ID
+            m._id === message._id || 
+            // OR temporary message with same content and timestamp within 5 seconds
+            (m._id.toString().startsWith('temp-') && 
+             m.content === message.content && 
+             m.sender.role === message.sender.role &&
+             Math.abs(new Date(m.createdAt) - new Date(message.createdAt)) < 5000)
+          );
           
-          // Add new message
-          return [...prevMessages, message];
+          if (isDuplicate) {
+            // Replace temporary messages with permanent ones
+            return prevMessages.map(m => {
+              if (m._id.toString().startsWith('temp-') && 
+                  m.content === message.content && 
+                  m.sender.role === message.sender.role &&
+                  Math.abs(new Date(m.createdAt) - new Date(message.createdAt)) < 5000) {
+                // Replace temp message with permanent one
+                return message;
+              }
+              return m;
+            });
+          }
+          
+          // Add new message and scroll to it
+          const updatedMessages = [...prevMessages, message];
+          setTimeout(scrollToBottom, 100);
+          return updatedMessages;
         });
         
         // Mark the message as read since admin is viewing this conversation
-        socketRef.current.emit('mark-read', { conversationId: selectedConversation._id });
+        if (message.sender.role === 'customer') {
+          socketRef.current.emit('mark-read', { conversationId: selectedConvString });
+        }
       }
       
-      // Always update conversations list with new message info
-      setConversations(prev => 
-        prev.map(conv => {
-          if (conv._id === message.conversation && message.sender.role === 'customer') {
+      // Update conversations list with new message info
+      setConversations(prev => {
+        // Find the conversation that received this message
+        const updatedConversations = prev.map(conv => {
+          const convId = typeof conv._id === 'object' ? conv._id.toString() : String(conv._id);
+          if (convId === messageConvString) {
+            // Check if this is the conversation we're currently viewing
+            const isCurrentlySelected = selectedConversation && selectedConvString === convId;
+            
             return { 
               ...conv, 
-              unreadCount: (conv.unreadCount || 0) + 1, 
-              lastMessage: new Date() 
+              lastMessage: new Date(),
+              lastMessageContent: message.content, // Store message preview
+              lastMessageSender: message.sender.role, // Track sender type
+              // Only increment unread count if not currently viewing this conversation
+              unreadCount: isCurrentlySelected ? 0 : (conv.unreadCount || 0) + 1
             };
           }
           return conv;
-        })
-      );
+        });
+        
+        // Move the conversation with new message to the top
+        return sortConversationsByLatest(updatedConversations);
+      });
+      
+      // Show notification if message is from a customer and not in current conversation
+      const messageConversation = conversations.find(c => {
+        const convId = typeof c._id === 'object' ? c._id.toString() : String(c._id);
+        return convId === messageConvString;
+      });
+      
+      if (message.sender.role === 'customer' && 
+          (!selectedConversation || messageConvString !== selectedConvString)) {
+        
+        // Find the conversation to get customer name
+        const customerName = messageConversation?.customer?.name || 'Customer';
+        
+        // Play notification sound for messages not in current view
+        const notification = new Audio('/notification.mp3');
+        notification.play().catch(err => console.log("Audio play prevented:", err));
+        
+        // Show toast notification that's clickable
+        toast.custom((t) => (
+          <div 
+            className={`${
+              t.visible ? 'animate-enter' : 'animate-leave'
+            } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+            onClick={() => {
+              // Find and select this conversation when notification is clicked
+              const conv = conversations.find(c => {
+                const cId = typeof c._id === 'object' ? c._id.toString() : String(c._id);
+                return cId === messageConvString;
+              });
+              if (conv) setSelectedConversation(conv);
+              toast.dismiss(t.id);
+            }}
+          >
+            {/* Rest of your toast content */}
+            <div className="flex-1 p-4 cursor-pointer">
+              <div className="flex items-start">
+                <div className="flex-shrink-0 pt-0.5">
+                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                    <MessageSquare className="h-5 w-5 text-blue-600" />
+                  </div>
+                </div>
+                <div className="ml-3 flex-1">
+                  <p className="text-sm font-medium text-gray-900">
+                    New message from {customerName}
+                  </p>
+                  <p className="mt-1 text-sm text-gray-500 truncate">
+                    {message.content}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex border-l border-gray-200">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toast.dismiss(t.id);
+                }}
+                className="w-full border border-transparent rounded-none rounded-r-lg flex items-center justify-center p-4 text-sm font-medium text-blue-600 hover:text-blue-500 focus:outline-none"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        ), {
+          duration: 5000,
+          position: 'top-right'
+        });
+      }
     });
     
     // Set up customer-status-update handler
@@ -194,6 +336,15 @@ const AdminMessage = () => {
       if (data.customers) {
         setOnlineCustomers(data.customers);
       }
+    });
+    
+    // Set up customer typing handler
+    socketRef.current.on('customer-typing', ({ customerId, conversationId, isTyping }) => {
+      console.log("Customer typing:", customerId, isTyping);
+      setTypingCustomers(prev => ({
+        ...prev,
+        [customerId]: isTyping
+      }));
     });
     
     // Request online customers right away
@@ -209,14 +360,22 @@ const AdminMessage = () => {
     // Set up all message and status handlers
     setupMessageHandlers();
     
+    // Mark messages in the selected conversation as read
+    if (selectedConversation) {
+      socketRef.current.emit('mark-read', { 
+        conversationId: selectedConversation._id 
+      });
+    }
+    
     return () => {
       // Clean up listeners when component unmounts or socket connection changes
       if (socketRef.current) {
         socketRef.current.off('new-message');
         socketRef.current.off('customer-status-update');
+        socketRef.current.off('customer-typing');
       }
     };
-  }, [socketRef.current?.connected]);
+  }, [socketRef.current?.connected, selectedConversation?._id]); // Added selectedConversation._id dependency
 
   // Periodically request online customers to keep status fresh
   useEffect(() => {
@@ -321,8 +480,10 @@ const AdminMessage = () => {
   // Update this function to allow browsing history
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
-      // Get the container element (parent of the messages)
-      const container = messagesEndRef.current.parentElement.parentElement;
+      // Get the container element
+      const container = messagesContainerRef.current;
+      
+      if (!container) return;
       
       // Check if user is already near bottom (within 300px of bottom)
       const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 300;
@@ -330,6 +491,10 @@ const AdminMessage = () => {
       // Only auto-scroll if user is already near the bottom
       if (isNearBottom) {
         messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      } else if (showScrollButton === false) {
+        // If new message arrives and we're not showing the scroll button yet,
+        // show it to indicate new messages
+        setShowScrollButton(true);
       }
     }
   };
@@ -595,6 +760,45 @@ const AdminMessage = () => {
     }
   };
 
+  const handleAdminTyping = () => {
+    if (socketRef.current && socketRef.current.connected && selectedConversation) {
+      socketRef.current.emit('admin-typing', {
+        conversationId: selectedConversation._id,
+        isTyping: true
+      });
+      
+      // Clear existing timeout
+      if (typingTimeout) clearTimeout(typingTimeout);
+      
+      // Set new timeout to stop typing indicator after 2 seconds of inactivity
+      const timeout = setTimeout(() => {
+        socketRef.current.emit('admin-typing', {
+          conversationId: selectedConversation._id,
+          isTyping: false
+        });
+      }, 2000);
+      
+      setTypingTimeout(timeout);
+    }
+  };
+
+  // Add this useEffect to keep conversations sorted by most recent messages
+
+useEffect(() => {
+  // Sort conversations by lastMessage date (most recent first)
+  const sortedConversations = [...conversations].sort((a, b) => {
+    const dateA = new Date(a.lastMessage || a.createdAt);
+    const dateB = new Date(b.lastMessage || b.createdAt);
+    return dateB - dateA;
+  });
+  
+  // Only update if order has changed
+  if (JSON.stringify(sortedConversations.map(c => c._id)) !== 
+      JSON.stringify(conversations.map(c => c._id))) {
+    setConversations(sortedConversations);
+  }
+}, [conversations]);
+
   return (
     <div className="p-6 bg-gray-50 h-full">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
@@ -619,10 +823,11 @@ const AdminMessage = () => {
         </div>
       </div>
       
-      <div className="bg-white rounded-lg shadow-md overflow-hidden h-[calc(100vh-200px)]">
-        <div className="grid grid-cols-1 md:grid-cols-3 h-full">
-          {/* Conversation List */}
-          <div className="md:col-span-1 border-r border-gray-200">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden h-[calc(100vh-200px)] flex flex-col">
+        <div className="grid grid-cols-1 md:grid-cols-3 h-full overflow-hidden">
+          {/* Conversation List - Left sidebar */}
+          <div className="md:col-span-1 border-r border-gray-200 flex flex-col h-full overflow-hidden">
+            {/* Search input - Keep as is */}
             <div className="p-4 border-b border-gray-200">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -636,21 +841,19 @@ const AdminMessage = () => {
               </div>
             </div>
             
+            {/* Conversations list - Make sure this scrolls independently */}
             {isLoading ? (
               <div className="flex justify-center items-center h-40">
                 <Loader className="h-8 w-8 text-blue-500 animate-spin" />
               </div>
             ) : (
               <div 
-                className="overflow-y-auto" 
+                ref={conversationsContainerRef}
+                className="overflow-y-auto flex-1"
                 style={{ 
-                  maxHeight: "calc(100vh - 300px)",
-                  overflowY: "scroll",
+                  overflowY: "auto",
                   scrollbarWidth: "thin",
                   scrollbarColor: "#cbd5e0 #f7fafc",
-                  "--webkit-scrollbar": "8px",
-                  "--webkit-scrollbar-thumb": "#cbd5e0",
-                  "--webkit-scrollbar-track": "#f7fafc"
                 }}
               >
                 {filteredConversations.length === 0 ? (
@@ -679,11 +882,12 @@ const AdminMessage = () => {
                           {conversationsInGroup.map((conv) => (
                             <div
                               key={conv._id}
-                              className={`p-4 border-l-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors relative group ${
+                              className={`p-4 border-l-4 border-b border-gray-100 cursor-pointer 
+                                hover:bg-gray-50 transition-colors relative group ${
                                 selectedConversation?._id === conv._id 
                                   ? 'bg-blue-50 border-l-blue-500' 
                                   : conv.unreadCount > 0
-                                    ? 'border-l-amber-400' 
+                                    ? 'border-l-amber-400 bg-amber-50' // More visible background for unread messages
                                     : 'border-l-transparent'
                               }`}
                               onClick={() => setSelectedConversation(conv)}
@@ -715,8 +919,11 @@ const AdminMessage = () => {
                                   
                                   <div className="flex items-center mt-1">
                                     {conv.unreadCount > 0 && (
-                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        {conv.unreadCount} new
+                                      <span className="absolute top-3 right-3 inline-flex items-center 
+                                        justify-center px-2 py-1 text-xs font-bold leading-none 
+                                        text-white transform translate-x-1/2 -translate-y-1/2 
+                                        bg-red-600 rounded-full animate-pulse">
+                                        {conv.unreadCount}
                                       </span>
                                     )}
                                   </div>
@@ -744,8 +951,8 @@ const AdminMessage = () => {
             )}
           </div>
           
-          {/* Messages */}
-          <div className="md:col-span-2 flex flex-col h-full">
+          {/* Messages container - Right side */}
+          <div className="md:col-span-2 flex flex-col h-full overflow-hidden">
             {selectedConversation ? (
               <>
                 {/* Chat Header */}
@@ -783,13 +990,10 @@ const AdminMessage = () => {
                   ref={messagesContainerRef}
                   className="flex-1 overflow-y-auto p-4 bg-gray-50"
                   style={{ 
-                    maxHeight: "calc(100vh - 300px)",
-                    overflowY: "scroll",
+                    height: "calc(100% - 140px)", /* Fixed height calculation */
+                    overflowY: "auto",
                     scrollbarWidth: "thin",
                     scrollbarColor: "#cbd5e0 #f7fafc",
-                    "--webkit-scrollbar": "8px",
-                    "--webkit-scrollbar-thumb": "#cbd5e0",
-                    "--webkit-scrollbar-track": "#f7fafc"
                   }}
                 >
                   {isLoadingMessages ? (
@@ -952,13 +1156,27 @@ const AdminMessage = () => {
                           })}
                         </div>
                       ))}
+                      {selectedConversation && typingCustomers[selectedConversation.customer?._id] && (
+                        <div className="flex items-center mt-2">
+                          <div className="h-8 w-8 rounded-full bg-gray-300 flex-shrink-0 mr-2 flex items-center justify-center">
+                            <User size={16} className="text-gray-600" />
+                          </div>
+                          <div className="bg-white rounded-lg px-4 py-2 text-gray-500 inline-block border border-gray-200">
+                            <div className="flex items-center">
+                              <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce mr-1" style={{ animationDelay: "0ms" }}></span>
+                              <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce mr-1" style={{ animationDelay: "300ms" }}></span>
+                              <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "600ms" }}></span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       <div ref={messagesEndRef} />
                     </div>
                   )}
                 </div>
                 
                 {/* Message Input */}
-                <div className="border-t border-gray-200 bg-white p-4">
+                <div className="border-t border-gray-200 bg-white p-4 sticky bottom-0 z-10">
                   <form onSubmit={handleSubmit} className="flex flex-col">
                     {/* Attachment Preview */}
                     {attachmentPreview && (
@@ -987,7 +1205,10 @@ const AdminMessage = () => {
                         <input
                           type="text"
                           value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
+                          onChange={(e) => {
+                            setNewMessage(e.target.value);
+                            handleAdminTyping();
+                          }}
                           placeholder="Type a message..."
                           className="flex-1 bg-transparent outline-none"
                         />

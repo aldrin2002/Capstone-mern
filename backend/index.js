@@ -282,6 +282,53 @@ io.on('connection', async (socket) => {
       }
     });
     
+    // Handle customer typing indicator
+    socket.on('customer-typing', async (isTyping) => {
+      try {
+        // Only proceed if the socket is authenticated as a customer
+        if (socket.role !== 'customer') return;
+        
+        const user = await User.findById(socket.userId).select("name");
+        if (!user) return;
+        
+        // Find the conversation for this customer
+        const conversation = await Conversation.findOne({ customer: socket.userId });
+        if (!conversation) return;
+        
+        // Broadcast typing status to all admin sockets with conversation ID
+        adminSockets.forEach(socketId => {
+          io.to(socketId).emit('customer-typing', {
+            customerId: socket.userId,
+            conversationId: conversation._id,
+            isTyping
+          });
+        });
+        
+        console.log(`Customer ${user.name} ${isTyping ? 'started' : 'stopped'} typing`);
+      } catch (error) {
+        console.error('Error in customer-typing event:', error);
+      }
+    });
+    
+    // Handle admin typing indicator
+    socket.on('admin-typing', async ({ conversationId, isTyping }) => {
+      try {
+        // Only proceed if the socket is authenticated as an admin
+        if (socket.role !== 'admin') return;
+        
+        // Get the conversation to find the customer
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation || !conversation.customer) return;
+        
+        // Emit typing event to specific customer's conversation room
+        io.to(`conversation-${conversation.customer}`).emit('admin-typing', isTyping);
+        
+        console.log(`Admin is ${isTyping ? 'typing to' : 'stopped typing to'} customer ${conversation.customer}`);
+      } catch (err) {
+        console.error('Error in admin-typing event:', err);
+      }
+    });
+    
     // Update the disconnect handler to track customer status
     socket.on('disconnect', () => {
       console.log(`User disconnected: ${socket.id}`);

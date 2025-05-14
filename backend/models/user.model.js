@@ -9,7 +9,10 @@ const userSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: true,
+            required: function() {
+                // Only require password if there's no googleId
+                return !this.googleId;
+            },
         },
         name: {
             type: String,
@@ -17,7 +20,10 @@ const userSchema = new mongoose.Schema(
         },
         phone: {
             type: String,
-            required: true,
+            required: function() {
+                // Only require phone if there's no googleId
+                return !this.googleId;
+            },
         },
         role: {
             type: String,
@@ -28,6 +34,13 @@ const userSchema = new mongoose.Schema(
             type: Date,
             default: Date.now,
         },
+        googleId: {
+            type: String,
+            sparse: true
+        },
+        profilePicture: {
+            type: String
+        }
     },
     { timestamps: true }
 );

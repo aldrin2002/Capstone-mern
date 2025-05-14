@@ -17,6 +17,7 @@ import CustomerContact from "./components/CustomerPage/customerContact";
 import CustomerMessage from "./components/CustomerPage/customerMessage";
 import AdminMessage from './components/AdminPage/AdminMessage';
 import CustomerOrders from './components/CustomerPage/CustomerOrders';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 // Loading spinner component
 const LoadingSpinner = () => (
@@ -80,140 +81,142 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<LandingPage />} />
-        
-        {/* Auth Routes */}
-        <Route
-          path="/login"
-          element={
-            <AuthRoute>
-              <LoginPage />
-            </AuthRoute>
-          }
-        />
-        <Route
-          path="/signup"
-          element={
-            <AuthRoute>
-              <SignUpPage />
-            </AuthRoute>
-          }
-        />
-        <Route
-          path="/costumerLogin"
-          element={
-            <AuthRoute>
-              <CostumerLoginPage />
-            </AuthRoute>
-          }
-        />
-        <Route
-          path="/costumerSignup"
-          element={
-            <AuthRoute>
-              <CostumerSignUpPage />
-            </AuthRoute>
-          }
-        />
-
-        {/* Protected Routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/customer-dashboard"
-          element={
-            <ProtectedRoute>
-              <CustomerDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/customer-about"
-          element={
-            <ProtectedRoute>
-              <CustomerAboutUs />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/customer-gallery"
-          element={
-            <ProtectedRoute>
-              <CustomerGallery />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/customer-menu"
-          element={
-            <ProtectedRoute>
-              <CustomerMenu />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/customer-buy"
-          element={
-            <ProtectedRoute>
-              <CustomerBuy />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/customer-contact"
-          element={
-            <ProtectedRoute>
-              <CustomerContact />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/customer-messages"
-          element={
-            <ProtectedRoute>
-              <CustomerMessage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/customer-message"
-          element={
-            <ProtectedRoute>
-              <CustomerMessage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/messages"
-          element={
-            <ProtectedRoute>
-              <Navigate to="/dashboard" state={{ activeTab: "messages" }} replace />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/customer-orders"
-          element={
-            <ProtectedRoute>
-              <CustomerOrders />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Catch-All Route */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      <Toaster />
-    </div>
+    <GoogleOAuthProvider clientId="915875950866-dqhflpl4s6qfdt6uohbc5anjfn0nn5gd.apps.googleusercontent.com">
+      <div className="min-h-screen bg-white">
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
+          
+          {/* Auth Routes */}
+          <Route
+            path="/login"
+            element={
+              <AuthRoute>
+                <LoginPage />
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <AuthRoute>
+                <SignUpPage />
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/costumerLogin"
+            element={
+              <AuthRoute>
+                <CostumerLoginPage />
+              </AuthRoute>
+            }
+          />
+          <Route
+            path="/costumerSignup"
+            element={
+              <AuthRoute>
+                <CostumerSignUpPage />
+              </AuthRoute>
+            }
+          />
+  
+          {/* Protected Routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customer-dashboard"
+            element={
+              <ProtectedRoute>
+                <CustomerDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customer-about"
+            element={
+              <ProtectedRoute>
+                <CustomerAboutUs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customer-gallery"
+            element={
+              <ProtectedRoute>
+                <CustomerGallery />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customer-menu"
+            element={
+              <ProtectedRoute>
+                <CustomerMenu />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customer-buy"
+            element={
+              <ProtectedRoute>
+                <CustomerBuy />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customer-contact"
+            element={
+              <ProtectedRoute>
+                <CustomerContact />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customer-messages"
+            element={
+              <ProtectedRoute>
+                <CustomerMessage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customer-message"
+            element={
+              <ProtectedRoute>
+                <CustomerMessage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/messages"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/dashboard" state={{ activeTab: "messages" }} replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/customer-orders"
+            element={
+              <ProtectedRoute>
+                <CustomerOrders />
+              </ProtectedRoute>
+            }
+          />
+  
+          {/* Catch-All Route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        <Toaster />
+      </div>
+    </GoogleOAuthProvider>
   );
 }
 
