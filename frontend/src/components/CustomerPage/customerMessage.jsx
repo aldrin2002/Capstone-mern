@@ -12,7 +12,8 @@ import {
   Paperclip, 
   Image, 
   X, 
-  CircleCheck
+  CircleCheck,
+  ChevronDown
 } from "lucide-react";
 
 // API URLs
@@ -27,17 +28,34 @@ const CustomerMessage = () => {
   const [isSending, setIsSending] = useState(false);
   const [attachment, setAttachment] = useState(null);
   const [attachmentPreview, setAttachmentPreview] = useState(null);
-  const [onlineAdmins, setOnlineAdmins] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [conversation, setConversation] = useState(null);
-  const [adminOnline, setAdminOnline] = useState(false);
-  const [adminTyping, setAdminTyping] = useState(false);;
+  const [adminTyping, setAdminTyping] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const fileInputRef = useRef(null);
   const socketRef = useRef(null);
   const { user } = useAuthStore();
+  
+  // Helper function for formatting dates
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) {
+      return "Today";
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
   
   // Handle window resize
   useEffect(() => {
@@ -49,9 +67,36 @@ const CustomerMessage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Auto-scroll to bottom of messages
+  // Add scroll detection for showing/hiding scroll button
   useEffect(() => {
-    scrollToBottom();
+    const handleScroll = () => {
+      if (messagesContainerRef.current) {
+        const container = messagesContainerRef.current;
+        const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+        setShowScrollButton(!atBottom);
+      }
+    };
+    
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
+
+  // Auto-scroll to bottom of messages but only if already near bottom
+  useEffect(() => {
+    if (messagesEndRef.current && messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 300;
+      
+      if (isNearBottom) {
+        scrollToBottom();
+      } else if (showScrollButton === false) {
+        // Only update if we're not already showing the button
+        setShowScrollButton(true);
+      }
+    }
   }, [messages]);
 
   // Connect to socket and load messages
@@ -78,6 +123,9 @@ const CustomerMessage = () => {
         
         setMessages(messagesRes.data);
         setIsLoading(false);
+        
+        // Scroll to bottom after loading messages
+        setTimeout(scrollToBottom, 100);
       } catch (error) {
         console.error("Error fetching conversation:", error);
         toast.error("Failed to load conversation");
@@ -86,18 +134,23 @@ const CustomerMessage = () => {
     };
     
     fetchConversation();
-    connectSocket(); // Use the extracted function
+    connectSocket();
     
     // Clean up on unmount
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
+      if (typingTimeout) {
+        clearTimeout(typingTimeout);
+      }
     };
   }, [user]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const uploadAttachment = async () => {
@@ -134,7 +187,7 @@ const CustomerMessage = () => {
       
       try {
         // Try to reconnect
-        connectSocket(); // We need to define this function outside useEffect
+        connectSocket();
         
         // Give some time for reconnection before failing
         setTimeout(() => {
@@ -174,6 +227,9 @@ const CustomerMessage = () => {
       setAttachment(null);
       setAttachmentPreview(null);
       
+      // Ensure scroll to bottom after sending
+      setTimeout(scrollToBottom, 100);
+      
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
@@ -192,7 +248,7 @@ const CustomerMessage = () => {
       if (!token) {
         console.error("No auth token found - cannot establish socket connection");
         toast.error("Authentication required for messaging");
-        return false; // Return false to indicate connection failure
+        return false;
       }
       
       if (socketRef.current) {
@@ -211,27 +267,20 @@ const CustomerMessage = () => {
       // Add event handlers to debug connection issues
       socketRef.current.on('connect', () => {
         console.log("Customer socket connected successfully with ID:", socketRef.current.id);
+        setIsConnected(true);
         toast.success("Connected to chat server", { duration: 2000 });
-        
-        // Request admin online status immediately after connecting
-        socketRef.current.emit('check-admin-status');
       });
       
       socketRef.current.on('connect_error', (err) => {
         console.error("Socket connection error:", err.message);
+        setIsConnected(false);
         toast.error(`Connection error: ${err.message}`);
       });
       
       socketRef.current.on('disconnect', () => {
         console.log("Socket disconnected, trying to reconnect...");
+        setIsConnected(false);
         toast.error("Disconnected from chat server. Reconnecting...", { duration: 3000 });
-      });
-      
-      // Add listener for admin online status - improved
-      socketRef.current.on('admin-online-count', (count) => {
-        console.log("Admin online count received:", count);
-        setOnlineAdmins(count);
-        setAdminOnline(count > 0);
       });
       
       // Add listener for new messages
@@ -260,7 +309,7 @@ const CustomerMessage = () => {
         setAdminTyping(isTyping);
       });
       
-      return true; // Return true to indicate connection attempt was made
+      return true;
     } catch (error) {
       console.error("Error in socket connection setup:", error);
       toast.error("Failed to set up chat connection");
@@ -311,36 +360,36 @@ const CustomerMessage = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
+    // Make the outer container fixed height with no scrolling
+    <div className="flex h-screen overflow-hidden bg-gray-100">
+      {/* Sidebar - fixed height, no scroll */}
       <CustomerSideNav />
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col bg-white">
-        {/* Header */}
-        <div className="bg-blue-900 text-white p-4">
+      {/* Main Content - fixed height with proper internal scrolling */}
+      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-white">
+        {/* Header - fixed at top */}
+        <div className="bg-blue-900 text-white p-4 shrink-0">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold">Store Owner</h1>
             <div className="flex items-center">
               <span className={`inline-block h-2 w-2 rounded-full mr-1.5 ${
-                socketRef.current?.connected ? 'bg-green-400' : 'bg-red-400'
+                isConnected ? 'bg-green-400' : 'bg-red-400'
               }`}></span>
               <p className="text-sm">
-                {socketRef.current?.connected 
-                  ? (onlineAdmins > 0 
-                    ? `${onlineAdmins} admin${onlineAdmins > 1 ? 's' : ''} online` 
-                    : 'No admins online')
-                  : 'Disconnected'}
+                {isConnected ? 'Connected' : 'Disconnected'}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Messages Container - Add scroll area with padding */}
+        {/* Messages Container - only this part scrolls */}
         <div 
-          className="flex-1 overflow-y-auto p-4"
-          style={{ paddingBottom: isMobile ? "8rem" : "1rem" }}
-          ref={messagesEndRef}
+          ref={messagesContainerRef}
+          className="flex-1 overflow-y-auto p-4 relative"
+          style={{ 
+            scrollbarWidth: "thin",
+            scrollbarColor: "#cbd5e0 #f7fafc",
+          }}
         >
           {isLoading ? (
             <div className="flex justify-center items-center h-full">
@@ -356,54 +405,143 @@ const CustomerMessage = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {messages.map((message) => (
-                <div 
-                  key={message._id} 
-                  className={`flex ${message.sender.role === 'customer' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div 
-                    className={`rounded-lg px-4 py-2 max-w-[80%] md:max-w-[70%] relative ${
-                      message.sender.role === 'customer' 
-                        ? 'bg-blue-600 text-white rounded-br-none' 
-                        : 'bg-gray-200 text-gray-800 rounded-bl-none'
-                    }`}
-                  >
-                    {message.attachment && (
-                      <div className="mb-2">
-                        <img 
-                          src={message.attachment.startsWith('data:') ? message.attachment : `${API_BASE_URL}${message.attachment}`}
-                          alt="Attachment" 
-                          className="rounded-md max-h-60 max-w-full"
-                        />
-                      </div>
-                    )}
-                    <p>{message.content}</p>
-                    <div 
-                      className={`flex items-center text-xs mt-1 ${
-                        message.sender.role === 'customer' ? 'text-blue-100' : 'text-gray-500'
-                      }`}
-                    >
-                      <Clock size={12} className="mr-1" />
-                      <span>{formatTime(message.timestamp || message.createdAt)}</span>
+              {/* Group messages by date */}
+              {Object.entries(
+                messages.reduce((groups, message) => {
+                  const date = new Date(message.timestamp || message.createdAt).toDateString();
+                  if (!groups[date]) groups[date] = [];
+                  groups[date].push(message);
+                  return groups;
+                }, {})
+              ).map(([date, dateMessages]) => (
+                <div key={date}>
+                  <div className="flex justify-center my-4">
+                    <span className="px-3 py-1 bg-gray-200 rounded-full text-xs text-gray-600">
+                      {formatDate(date)}
+                    </span>
+                  </div>
+                  
+                  {/* Group consecutive messages by same sender */}
+                  {dateMessages.reduce((groups, message, index) => {
+                    const prevMessage = dateMessages[index - 1];
+                    const sameAsPrev = prevMessage && 
+                      prevMessage.sender.role === message.sender.role && 
+                      (new Date(message.createdAt) - new Date(prevMessage.createdAt)) < 300000; // 5 minutes
                       
-                      {message.sender.role === 'customer' && (
-                        <CircleCheck 
-                          size={14} 
-                          className={`ml-1 ${message.isRead ? 'text-blue-100' : 'text-blue-300'}`}
-                        />
-                      )}
+                    if (sameAsPrev) {
+                      groups[groups.length - 1].push(message);
+                    } else {
+                      groups.push([message]);
+                    }
+                    return groups;
+                  }, []).map((group, groupIndex) => {
+                    const isCustomer = group[0].sender.role === 'customer';
+                    
+                    return (
+                      <div 
+                        key={groupIndex} 
+                        className={`flex ${isCustomer ? 'justify-end' : 'justify-start'} mb-4`}
+                      >
+                        {!isCustomer && (
+                          <div className="h-8 w-8 rounded-full bg-blue-500 flex-shrink-0 mr-2 mt-1 flex items-center justify-center">
+                            <User size={16} className="text-white" />
+                          </div>
+                        )}
+                        
+                        <div className="max-w-[75%]">
+                          <div className="space-y-1">
+                            {group.map((message) => (
+                              <div
+                                key={message._id} 
+                                className={`rounded-lg px-4 py-2 relative ${
+                                  isCustomer 
+                                    ? 'bg-blue-600 text-white rounded-br-none' 
+                                    : 'bg-gray-200 text-gray-800 rounded-bl-none'
+                                }`}
+                              >
+                                {message.attachment && (
+                                  <div className="mb-2">
+                                    <img 
+                                      src={message.attachment.startsWith('data:') ? message.attachment : `${API_BASE_URL}${message.attachment}`}
+                                      alt="Attachment" 
+                                      className="rounded-md max-h-60 max-w-full cursor-pointer hover:opacity-90 transition-opacity"
+                                      onClick={() => window.open(
+                                        message.attachment.startsWith('data:') 
+                                          ? message.attachment 
+                                          : `${API_BASE_URL}${message.attachment}`, 
+                                        '_blank'
+                                      )}
+                                    />
+                                  </div>
+                                )}
+                                <p>{message.content}</p>
+                                <div 
+                                  className={`flex items-center text-xs mt-1 ${
+                                    isCustomer ? 'text-blue-100 justify-end' : 'text-gray-500'
+                                  }`}
+                                >
+                                  <Clock size={12} className="mr-1" />
+                                  <span>{formatTime(message.timestamp || message.createdAt)}</span>
+                                  
+                                  {isCustomer && (
+                                    <CircleCheck 
+                                      size={14} 
+                                      className={`ml-1 ${message.isRead ? 'text-blue-100' : 'text-blue-300'}`}
+                                      title={message.isRead ? "Read" : "Delivered"}
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        {isCustomer && (
+                          <div className="h-8 w-8 rounded-full bg-blue-600 flex-shrink-0 ml-2 mt-1 flex items-center justify-center">
+                            <User size={16} className="text-white" />
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+
+              {/* Typing indicator */}
+              {adminTyping && (
+                <div className="flex items-center mt-2">
+                  <div className="h-8 w-8 rounded-full bg-blue-500 flex-shrink-0 mr-2 flex items-center justify-center">
+                    <User size={16} className="text-white" />
+                  </div>
+                  <div className="bg-gray-200 rounded-lg px-4 py-2 text-gray-500 inline-block">
+                    <div className="flex items-center">
+                      <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce mr-1" style={{ animationDelay: "0ms" }}></span>
+                      <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce mr-1" style={{ animationDelay: "300ms" }}></span>
+                      <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "600ms" }}></span>
                     </div>
                   </div>
                 </div>
-              ))}
+              )}
+              
+              {/* Scroll reference element */}
               <div ref={messagesEndRef} />
             </div>
           )}
+          
+          {/* Scroll to bottom button */}
+          {showScrollButton && (
+            <button
+              onClick={scrollToBottom}
+              className="fixed bottom-24 right-6 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-all"
+            >
+              <ChevronDown size={24} />
+            </button>
+          )}
         </div>
 
-        {/* Input Area - Position above bottom nav */}
+        {/* Input Area - fixed at bottom */}
         <div 
-          className="bg-white border-t border-gray-200 p-4"
+          className="bg-white border-t border-gray-200 p-4 shrink-0 z-10"
           style={isMobile ? { 
             position: "fixed", 
             bottom: `${MOBILE_NAV_HEIGHT}px`, 
@@ -412,7 +550,7 @@ const CustomerMessage = () => {
             zIndex: 30
           } : {}}
         >
-          <form onSubmit={handleSubmit} className="flex gap-2">
+          <form onSubmit={handleSubmit} className="flex flex-col">
             {/* Attachment preview if any */}
             {attachmentPreview && (
               <div className="mb-2 relative inline-block">
@@ -434,44 +572,51 @@ const CustomerMessage = () => {
               </div>
             )}
             
-            <div className="flex flex-1 items-center gap-2 rounded-lg border border-gray-300 px-3 py-2">
-              {/* File input button */}
-              <label className="cursor-pointer text-gray-500 hover:text-gray-700">
+            <div className="flex items-center gap-2">
+              <div className="flex flex-1 items-center gap-2 rounded-lg border border-gray-300 px-3 py-2">
+                {/* File input button */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current.click()}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <Paperclip size={20} />
+                </button>
+                
+                {/* Message input */}
                 <input
-                  type="file"
-                  className="hidden"
-                  onChange={handleFileChange}
-                  accept="image/*"
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => {
+                    setNewMessage(e.target.value);
+                    handleTyping();
+                  }}
+                  placeholder="Type your message..."
+                  className="flex-1 border-0 focus:ring-0 focus:outline-none"
+                  disabled={isSending}
                 />
-                <Paperclip size={20} />
-              </label>
+              </div>
               
-              {/* Message input */}
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => {
-                  setNewMessage(e.target.value);
-                  handleTyping();
-                }}
-                placeholder="Type your message..."
-                className="flex-1 border-0 focus:ring-0 focus:outline-none"
-                disabled={isSending}
-              />
+              {/* Send button */}
+              <button
+                type="submit"
+                className={`rounded-lg p-3 text-white ${
+                  isSending || (!newMessage.trim() && !attachment)
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
+                disabled={isSending || (!newMessage.trim() && !attachment)}
+              >
+                <Send size={20} />
+              </button>
             </div>
-            
-            {/* Send button */}
-            <button
-              type="submit"
-              className={`rounded-lg px-4 py-2 text-white ${
-                isSending || (!newMessage.trim() && !attachment)
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
-              disabled={isSending || (!newMessage.trim() && !attachment)}
-            >
-              <Send size={20} />
-            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              onChange={handleFileChange}
+              className="hidden"
+              accept="image/*"
+            />
           </form>
         </div>
       </main>
