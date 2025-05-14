@@ -15,7 +15,7 @@ import CustomerMenu from "./components/CustomerPage/customerMenu";
 import CustomerBuy from "./components/CustomerPage/customerBuy";
 import CustomerContact from "./components/CustomerPage/customerContact";
 import CustomerMessage from "./components/CustomerPage/customerMessage";
-import AdminMessage from './components/AdminPage/adminMessage';
+import AdminMessage from './components/AdminPage/AdminMessage';
 import CustomerOrders from './components/CustomerPage/CustomerOrders';
 
 // Loading spinner component
@@ -196,7 +196,7 @@ function App() {
           path="/admin/messages"
           element={
             <ProtectedRoute>
-              <AdminMessage />
+              <Navigate to="/dashboard" state={{ activeTab: "messages" }} replace />
             </ProtectedRoute>
           }
         />

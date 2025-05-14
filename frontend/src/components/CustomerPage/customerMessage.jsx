@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { io } from "socket.io-client";
-import CustomerSideNav from "../../pages/customer/customerSideNav";
+import CustomerSideNav, { MOBILE_NAV_HEIGHT } from "../../pages/customer/customerSideNav";
 import { useAuthStore } from "../../store/authStore";
 import { 
   Send, 
@@ -271,35 +271,28 @@ const CustomerMessage = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
       <CustomerSideNav />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col bg-white">
         {/* Header */}
-        <div className="border-b border-gray-200 bg-white p-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
-          <div className="flex items-center">
-            <div className="mr-3">
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <User className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-            <div>
-              <h1 className="font-semibold text-gray-900">Customer Support</h1>
-              <div className="flex items-center text-sm text-gray-500">
-                <span className={`w-2 h-2 rounded-full mr-1.5 ${onlineAdmins > 0 ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                <span>{onlineAdmins > 0 ? 'Online' : 'Offline'}</span>
-              </div>
-            </div>
-          </div>
-          <button className="text-gray-400 hover:text-gray-600">
-            <MoreVertical size={20} />
-          </button>
+        <div className="bg-blue-900 text-white p-4">
+          <h1 className="text-xl font-bold">Store Owner</h1>
+          <p className="text-sm">
+            {onlineAdmins > 0 
+              ? `${onlineAdmins} admin${onlineAdmins > 1 ? 's' : ''} online` 
+              : 'Offline'}
+          </p>
         </div>
 
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+        {/* Messages Container - Add scroll area with padding */}
+        <div 
+          className="flex-1 overflow-y-auto p-4"
+          style={{ paddingBottom: isMobile ? "8rem" : "1rem" }}
+          ref={messagesEndRef}
+        >
           {isLoading ? (
             <div className="flex justify-center items-center h-full">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
@@ -359,16 +352,25 @@ const CustomerMessage = () => {
           )}
         </div>
 
-        {/* Message Input */}
-        <div className="border-t border-gray-200 bg-white p-4">
-          <form onSubmit={handleSubmit} className="flex flex-col">
-            {/* Attachment Preview */}
+        {/* Input Area - Position above bottom nav */}
+        <div 
+          className="bg-white border-t border-gray-200 p-4"
+          style={isMobile ? { 
+            position: "fixed", 
+            bottom: `${MOBILE_NAV_HEIGHT}px`, 
+            left: 0, 
+            right: 0,
+            zIndex: 30
+          } : {}}
+        >
+          <form onSubmit={handleSubmit} className="flex gap-2">
+            {/* Attachment preview if any */}
             {attachmentPreview && (
-              <div className="mb-3 relative inline-block">
+              <div className="mb-2 relative inline-block">
                 <img 
                   src={attachmentPreview} 
                   alt="Attachment preview" 
-                  className="h-20 rounded-md border border-gray-300"
+                  className="h-20 w-auto rounded border border-gray-300" 
                 />
                 <button 
                   type="button"
@@ -376,52 +378,48 @@ const CustomerMessage = () => {
                     setAttachment(null);
                     setAttachmentPreview(null);
                   }}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
                 >
-                  <X size={14} />
+                  <X size={16} />
                 </button>
               </div>
             )}
             
-            {/* Message Input and Buttons */}
-            <div className="flex items-center gap-2">
-              <div className="flex-1 bg-gray-100 rounded-full flex items-center px-4 py-2">
+            <div className="flex flex-1 items-center gap-2 rounded-lg border border-gray-300 px-3 py-2">
+              {/* File input button */}
+              <label className="cursor-pointer text-gray-500 hover:text-gray-700">
                 <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
-                  className="flex-1 bg-transparent outline-none"
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  accept="image/*"
                 />
-                <div className="flex space-x-2 text-gray-400">
-                  <button 
-                    type="button" 
-                    onClick={() => fileInputRef.current.click()}
-                    className="hover:text-blue-500"
-                  >
-                    <Image size={18} />
-                  </button>
-                </div>
-              </div>
-              <button 
-                type="submit" 
-                className="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 flex-shrink-0 disabled:bg-blue-400"
-                disabled={isSending || (!newMessage.trim() && !attachment)}
-              >
-                {isSending ? (
-                  <div className="h-5 w-5 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
-                ) : (
-                  <Send size={18} />
-                )}
-              </button>
+                <Paperclip size={20} />
+              </label>
+              
+              {/* Message input */}
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Type your message..."
+                className="flex-1 border-0 focus:ring-0 focus:outline-none"
+                disabled={isSending}
+              />
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              onChange={handleFileChange}
-              className="hidden"
-              accept="image/*"
-            />
+            
+            {/* Send button */}
+            <button
+              type="submit"
+              className={`rounded-lg px-4 py-2 text-white ${
+                isSending || (!newMessage.trim() && !attachment)
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+              disabled={isSending || (!newMessage.trim() && !attachment)}
+            >
+              <Send size={20} />
+            </button>
           </form>
         </div>
       </main>

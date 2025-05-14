@@ -270,7 +270,7 @@ const OrderManager = () => {
                                             <div className="text-sm text-gray-900">{formatDate(order.createdAt)}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-900">${order.total.toFixed(2)}</div>
+                                            <div className="text-sm text-gray-900">₱{order.total.toFixed(2)}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full items-center ${getStatusClass(order.status)}`}>
@@ -366,15 +366,15 @@ const OrderManager = () => {
                                                 <tr key={index}>
                                                     <td className="py-3 text-sm">{item.name}</td>
                                                     <td className="py-3 text-sm text-right">{item.quantity}</td>
-                                                    <td className="py-3 text-sm text-right">${item.price.toFixed(2)}</td>
-                                                    <td className="py-3 text-sm text-right">${(item.price * item.quantity).toFixed(2)}</td>
+                                                    <td className="py-3 text-sm text-right">₱{item.price.toFixed(2)}</td>
+                                                    <td className="py-3 text-sm text-right">₱{(item.price * item.quantity).toFixed(2)}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                         <tfoot>
                                             <tr>
                                                 <td colSpan="3" className="py-3 text-right font-medium">Total:</td>
-                                                <td className="py-3 text-right font-medium">${selectedOrder.total.toFixed(2)}</td>
+                                                <td className="py-3 text-right font-medium">₱{selectedOrder.total.toFixed(2)}</td>
                                             </tr>
                                         </tfoot>
                                     </table>

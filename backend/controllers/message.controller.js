@@ -67,3 +67,62 @@ export const uploadAttachment = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// Delete a single message
+export const deleteMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Find the message to get attachment info before deletion
+    const message = await Message.findById(id);
+    
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+    
+    // Delete the message
+    await Message.findByIdAndDelete(id);
+    
+    // If message had an attachment, could add file removal here
+    // if (message.attachment) {
+    //   const filePath = path.join(process.cwd(), 'uploads', path.basename(message.attachment));
+    //   if (fs.existsSync(filePath)) {
+    //     fs.unlinkSync(filePath);
+    //   }
+    // }
+    
+    res.status(200).json({ message: "Message deleted successfully" });
+    
+  } catch (error) {
+    console.error("Error in deleteMessage:", error);
+    res.status(500).json({ message: "Server error while deleting message" });
+  }
+};
+
+// Delete an entire conversation and its messages
+export const deleteConversation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Find all messages in the conversation first to handle attachments
+    const messages = await Message.find({ conversation: id });
+    
+    // Delete all messages in the conversation
+    await Message.deleteMany({ conversation: id });
+    
+    // Delete the conversation
+    const deletedConversation = await Conversation.findByIdAndDelete(id);
+    
+    if (!deletedConversation) {
+      return res.status(404).json({ message: "Conversation not found" });
+    }
+    
+    // Could add cleanup of attachment files here if needed
+    
+    res.status(200).json({ message: "Conversation and messages deleted successfully" });
+    
+  } catch (error) {
+    console.error("Error in deleteConversation:", error);
+    res.status(500).json({ message: "Server error while deleting conversation" });
+  }
+};

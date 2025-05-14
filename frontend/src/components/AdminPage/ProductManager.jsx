@@ -312,7 +312,7 @@ const ProductManager = () => {
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Price ($)
+                  Price (₱)
                 </label>
                 <input
                   type="number"
@@ -350,7 +350,7 @@ const ProductManager = () => {
                   required
                 >
                   <option value="Coffee">Coffee</option>
-                  <option value="Tea">Tea</option>
+                  <option value="Tea">Milk Tea</option>
                   <option value="Pastry">Pastry</option>
                   <option value="Sandwich">Sandwich</option>
                   <option value="Dessert">Dessert</option>

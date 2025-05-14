@@ -7,7 +7,9 @@ import {
   getMessages, 
   getOrCreateConversation, 
   getAllConversations,
-  uploadAttachment 
+  uploadAttachment,
+  deleteMessage,
+  deleteConversation 
 } from "../controllers/message.controller.js";
 
 const router = express.Router();
@@ -48,5 +50,11 @@ router.get("/:conversationId", verifyToken, getMessages);
 
 // Upload attachment
 router.post("/attachment", verifyToken, upload.single("attachment"), uploadAttachment);
+
+// Delete a single message
+router.delete("/:id", verifyToken, deleteMessage);
+
+// Delete a conversation and all its messages
+router.delete("/conversation/:id", verifyToken, deleteConversation);
 
 export default router;

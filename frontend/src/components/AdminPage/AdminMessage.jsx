@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { io } from "socket.io-client";
+import Swal from 'sweetalert2';
 import { 
   Send, 
   User, 
@@ -15,7 +16,9 @@ import {
   Loader,
   MessageSquare,
   RefreshCw,
-  SearchX
+  SearchX,
+  Trash2,
+  Edit
 } from "lucide-react";
 
 // API URLs
@@ -36,10 +39,18 @@ const AdminMessage = () => {
   const [attachmentPreview, setAttachmentPreview] = useState(null);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [showConversationScrollButton, setShowConversationScrollButton] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const socketRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const conversationsContainerRef = useRef(null);
+  const conversationsEndRef = useRef(null);
+  const [onlineCustomers, setOnlineCustomers] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [activeMessageMenu, setActiveMessageMenu] = useState(null);
+  const [messageToEdit, setMessageToEdit] = useState(null);
+  const [editedContent, setEditedContent] = useState("");
 
   // Load conversations and connect to socket
   useEffect(() => {
@@ -135,12 +146,13 @@ const AdminMessage = () => {
     };
   }, []);
 
-  // Add this function to set up message handlers
+  // Update setupMessageHandlers to include customer status tracking
   const setupMessageHandlers = () => {
     if (!socketRef.current) return;
     
     // Remove any existing listeners to prevent duplicates
     socketRef.current.off('new-message');
+    socketRef.current.off('customer-status-update');
     
     // Set up new-message handler
     socketRef.current.on('new-message', (message) => {
@@ -175,68 +187,49 @@ const AdminMessage = () => {
         })
       );
     });
+    
+    // Set up customer-status-update handler
+    socketRef.current.on('customer-status-update', (data) => {
+      console.log("Customer status update received:", data);
+      if (data.customers) {
+        setOnlineCustomers(data.customers);
+      }
+    });
+    
+    // Request online customers right away
+    socketRef.current.emit('get-online-customers');
   };
 
-  // Set up message event listeners in a separate useEffect that depends on selectedConversation
+  // Make sure to include the useEffect that depends on socketRef.current?.connected
   useEffect(() => {
     if (!socketRef.current || !socketRef.current.connected) {
       return;
     }
     
-    // Remove any existing listeners to prevent duplicates
-    socketRef.current.off('new-message');
-    
-    // Set up new-message handler that works with the current selectedConversation
-    socketRef.current.on('new-message', (message) => {
-      console.log("New message received by admin:", message);
-      
-      // Update messages if the message belongs to the current conversation
-      if (selectedConversation && message.conversation === selectedConversation._id) {
-        setMessages(prevMessages => {
-          // Check if message already exists
-          const messageExists = prevMessages.some(m => m._id === message._id);
-          if (messageExists) return prevMessages;
-          
-          // Add new message
-          return [...prevMessages, message];
-        });
-      }
-      
-      // Always update conversations list with new message info
-      setConversations(prev => 
-        prev.map(conv => {
-          if (conv._id === message.conversation && message.sender.role === 'customer') {
-            return { 
-              ...conv, 
-              unreadCount: (conv.unreadCount || 0) + 1, 
-              lastMessage: new Date() 
-            };
-          }
-          return conv;
-        })
-      );
-    });
-    
-    // Mark as read when conversation changes
-    if (selectedConversation) {
-      socketRef.current.emit('mark-read', { conversationId: selectedConversation._id });
-    }
+    // Set up all message and status handlers
+    setupMessageHandlers();
     
     return () => {
-      // Clean up listener when component unmounts or selectedConversation changes
+      // Clean up listeners when component unmounts or socket connection changes
       if (socketRef.current) {
         socketRef.current.off('new-message');
+        socketRef.current.off('customer-status-update');
       }
     };
-  }, [selectedConversation, socketRef.current?.connected]);
+  }, [socketRef.current?.connected]);
 
-  // Add a useEffect to reconnect socket if selected conversation changes
+  // Periodically request online customers to keep status fresh
   useEffect(() => {
-    if (selectedConversation && socketRef.current) {
-      // Mark messages as read when conversation changes
-      socketRef.current.emit('mark-read', { conversationId: selectedConversation._id });
+    if (!socketRef.current || !socketRef.current.connected) {
+      return;
     }
-  }, [selectedConversation]);
+    
+    const intervalId = setInterval(() => {
+      socketRef.current.emit('get-online-customers');
+    }, 30000); // Every 30 seconds
+    
+    return () => clearInterval(intervalId);
+  }, [socketRef.current?.connected]);
 
   // Fetch messages when conversation changes
   useEffect(() => {
@@ -268,6 +261,31 @@ const AdminMessage = () => {
       return () => container.removeEventListener('scroll', handleScroll);
     }
   }, []);
+
+  // Add this useEffect to handle scroll detection for conversations list
+  useEffect(() => {
+    const handleConversationScroll = () => {
+      if (conversationsContainerRef.current) {
+        const container = conversationsContainerRef.current;
+        const atBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+        setShowConversationScrollButton(!atBottom);
+      }
+    };
+    
+    const container = conversationsContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleConversationScroll);
+      return () => container.removeEventListener('scroll', handleConversationScroll);
+    }
+  }, []);
+
+  // Add back the useEffect for handling conversation changes
+  useEffect(() => {
+    if (selectedConversation && socketRef.current && socketRef.current.connected) {
+      // Mark messages as read when conversation changes
+      socketRef.current.emit('mark-read', { conversationId: selectedConversation._id });
+    }
+  }, [selectedConversation, socketRef.current?.connected]);
 
   const fetchMessages = async (conversationId) => {
     setIsLoadingMessages(true);
@@ -316,6 +334,11 @@ const AdminMessage = () => {
     }
   };
 
+  // Add this function to scroll the conversation list to bottom
+  const scrollConversationsToBottom = () => {
+    conversationsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   const uploadAttachment = async () => {
     if (!attachment) return null;
     
@@ -352,6 +375,24 @@ const AdminMessage = () => {
       if (attachment) {
         attachmentPath = await uploadAttachment();
       }
+      
+      // Create temp message for immediate display
+      const tempMessage = {
+        _id: `temp-${Date.now()}`,
+        sender: {
+          id: 'admin',
+          name: 'You',
+          role: 'admin'
+        },
+        content: newMessage,
+        attachment: attachmentPath,
+        conversation: selectedConversation._id,
+        createdAt: new Date(),
+        isRead: true
+      };
+      
+      // Update local state immediately
+      setMessages(prevMessages => [...prevMessages, tempMessage]);
       
       // Send message via socket
       socketRef.current.emit('send-message', {
@@ -419,9 +460,144 @@ const AdminMessage = () => {
     conv.customer?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Function to check if a customer is online
+  const isCustomerOnline = (customerId) => {
+    return onlineCustomers.includes(customerId);
+  };
+
+  // Function to handle deleting a message with sweet alert
+  const handleDeleteMessage = async (messageId, e) => {
+    e.stopPropagation();
+    
+    // Show confirmation dialog
+    const result = await Swal.fire({
+      title: 'Delete Message?',
+      text: 'This action cannot be undone',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel'
+    });
+    
+    // If user confirms deletion
+    if (result.isConfirmed) {
+      try {
+        setIsDeleting(true);
+        
+        // Check if it's a temporary message (client-side only)
+        if (messageId.toString().startsWith('temp-')) {
+          // Just remove it from local state without server call
+          setMessages(prevMessages => prevMessages.filter(msg => msg._id !== messageId));
+          
+          Swal.fire({
+            title: 'Deleted!',
+            text: 'Message has been deleted',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          });
+          
+          return;
+        }
+        
+        // For real messages, proceed with API call
+        const response = await axios.delete(`${API_URL}/${messageId}`, {
+          withCredentials: true
+        });
+        
+        if (response.status === 200) {
+          // Remove the deleted message from state
+          setMessages(prevMessages => prevMessages.filter(msg => msg._id !== messageId));
+          Swal.fire({
+            title: 'Deleted!',
+            text: 'Message has been deleted',
+            icon: 'success',
+            timer: 0,
+            showConfirmButton: false
+          });
+        } else {
+          throw new Error('Failed to delete');
+        }
+      } catch (error) {
+        console.error("Error deleting message:", error);
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to delete message',
+          icon: 'error'
+        });
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
+  
+  // Function to handle deleting a conversation with sweet alert
+  const handleDeleteConversation = async (conversationId, e) => {
+    e.stopPropagation();
+    
+    // Find conversation details
+    const conversation = conversations.find(c => c._id === conversationId);
+    const customerName = conversation?.customer?.name || 'this customer';
+    
+    // Show confirmation dialog
+    const result = await Swal.fire({
+      title: 'Delete Entire Conversation?',
+      text: `All messages with ${customerName} will be permanently deleted.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel'
+    });
+    
+    // If user confirms deletion
+    if (result.isConfirmed) {
+      setIsDeleting(true);
+      
+      try {
+        const response = await axios.delete(`${API_URL}/conversation/${conversationId}`, {
+          withCredentials: true
+        });
+        
+        if (response.status === 200) {
+          // Remove the conversation from state
+          setConversations(prev => prev.filter(conv => conv._id !== conversationId));
+          
+          // If the deleted conversation was selected, clear selection
+          if (selectedConversation && selectedConversation._id === conversationId) {
+            setSelectedConversation(null);
+            setMessages([]);
+          }
+          
+          Swal.fire({
+            title: 'Deleted!',
+            text: 'Conversation has been deleted',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } else {
+          throw new Error('Failed to delete');
+        }
+      } catch (error) {
+        console.error("Error deleting conversation:", error);
+        Swal.fire({
+          title: 'Error!',
+          text: 'Failed to delete conversation',
+          icon: 'error'
+        });
+      } finally {
+        setIsDeleting(false);
+      }
+    }
+  };
+
   return (
-    <div className="p-4 md:p-6 h-full bg-gray-50">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-4 md:mb-6">
+    <div className="p-6 bg-gray-50 h-full">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-blue-900 flex items-center">
           <MessageSquare className="h-6 w-6 mr-2 text-blue-600" /> 
           Customer Conversations
@@ -443,11 +619,11 @@ const AdminMessage = () => {
         </div>
       </div>
       
-      <div className="bg-white rounded-lg shadow-md overflow-hidden h-[calc(100vh-180px)]">
+      <div className="bg-white rounded-lg shadow-md overflow-hidden h-[calc(100vh-200px)]">
         <div className="grid grid-cols-1 md:grid-cols-3 h-full">
           {/* Conversation List */}
           <div className="md:col-span-1 border-r border-gray-200">
-            <div className="p-4">
+            <div className="p-4 border-b border-gray-200">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                 <input
@@ -465,7 +641,18 @@ const AdminMessage = () => {
                 <Loader className="h-8 w-8 text-blue-500 animate-spin" />
               </div>
             ) : (
-              <div className="overflow-y-auto h-[calc(100vh-280px)]">
+              <div 
+                className="overflow-y-auto" 
+                style={{ 
+                  maxHeight: "calc(100vh - 300px)",
+                  overflowY: "scroll",
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "#cbd5e0 #f7fafc",
+                  "--webkit-scrollbar": "8px",
+                  "--webkit-scrollbar-thumb": "#cbd5e0",
+                  "--webkit-scrollbar-track": "#f7fafc"
+                }}
+              >
                 {filteredConversations.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <SearchX size={24} className="mx-auto mb-2 text-gray-400" />
@@ -485,14 +672,14 @@ const AdminMessage = () => {
                       
                       return (
                         <div key={dateGroup}>
-                          <div className="sticky top-0 bg-gray-100 px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <div className="sticky top-0 bg-gray-100 px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider z-10">
                             {dateGroup}
                           </div>
                           
                           {conversationsInGroup.map((conv) => (
                             <div
                               key={conv._id}
-                              className={`p-4 border-l-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
+                              className={`p-4 border-l-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors relative group ${
                                 selectedConversation?._id === conv._id 
                                   ? 'bg-blue-50 border-l-blue-500' 
                                   : conv.unreadCount > 0
@@ -502,10 +689,14 @@ const AdminMessage = () => {
                               onClick={() => setSelectedConversation(conv)}
                             >
                               <div className="flex items-center">
-                                <div className="flex-shrink-0 mr-3">
+                                <div className="flex-shrink-0 mr-3 relative">
                                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-medium">
                                     {conv.customer?.name?.charAt(0).toUpperCase() || 'C'}
                                   </div>
+                                  {/* Online status indicator */}
+                                  {isCustomerOnline(conv.customer?._id) && (
+                                    <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
+                                  )}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex justify-between items-center mb-1">
@@ -528,20 +719,25 @@ const AdminMessage = () => {
                                         {conv.unreadCount} new
                                       </span>
                                     )}
-                                    
-                                    {conv.status === 'active' && (
-                                      <span className="inline-flex items-center ml-2 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Active
-                                      </span>
-                                    )}
                                   </div>
                                 </div>
                               </div>
+                              
+                              {/* Delete conversation button */}
+                              <button 
+                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => handleDeleteConversation(conv._id, e)}
+                                disabled={isDeleting}
+                                title="Delete conversation"
+                              >
+                                <Trash2 size={14} />
+                              </button>
                             </div>
                           ))}
                         </div>
                       );
                     })}
+                    <div ref={conversationsEndRef} />
                   </>
                 )}
               </div>
@@ -555,14 +751,26 @@ const AdminMessage = () => {
                 {/* Chat Header */}
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                   <div className="flex items-center">
-                    <div className="mr-3">
+                    <div className="mr-3 relative">
                       <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                         <User className="h-6 w-6 text-blue-600" />
                       </div>
+                      {/* Online status indicator in chat header */}
+                      {selectedConversation && isCustomerOnline(selectedConversation.customer?._id) && (
+                        <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
+                      )}
                     </div>
                     <div>
                       <h2 className="font-medium">{selectedConversation.customer?.name || 'Customer'}</h2>
-                      <p className="text-sm text-gray-500">{selectedConversation.customer?.email}</p>
+                      <div className="flex items-center">
+                        <p className="text-sm text-gray-500">{selectedConversation.customer?.email}</p>
+                        {isCustomerOnline(selectedConversation.customer?._id) && (
+                          <span className="ml-2 text-xs text-green-500 flex items-center">
+                            <span className="h-2 w-2 bg-green-500 rounded-full mr-1"></span>
+                            Active now
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <button className="text-gray-400 hover:text-gray-600">
@@ -571,7 +779,19 @@ const AdminMessage = () => {
                 </div>
                 
                 {/* Messages Area */}
-                <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 bg-gray-50 h-[calc(100vh-350px)] relative">
+                <div 
+                  ref={messagesContainerRef}
+                  className="flex-1 overflow-y-auto p-4 bg-gray-50"
+                  style={{ 
+                    maxHeight: "calc(100vh - 300px)",
+                    overflowY: "scroll",
+                    scrollbarWidth: "thin",
+                    scrollbarColor: "#cbd5e0 #f7fafc",
+                    "--webkit-scrollbar": "8px",
+                    "--webkit-scrollbar-thumb": "#cbd5e0",
+                    "--webkit-scrollbar-track": "#f7fafc"
+                  }}
+                >
                   {isLoadingMessages ? (
                     <div className="flex justify-center items-center h-full">
                       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
@@ -640,7 +860,7 @@ const AdminMessage = () => {
                                     {group.map((message) => (
                                       <div
                                         key={message._id}
-                                        className={`rounded-lg px-4 py-2 ${
+                                        className={`rounded-lg px-4 py-2 relative group ${
                                           isAdmin 
                                             ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-tr-none shadow-md' 
                                             : 'bg-white text-gray-800 rounded-tl-none border border-gray-200 shadow-sm'
@@ -674,6 +894,49 @@ const AdminMessage = () => {
                                             />
                                           )}
                                         </div>
+                                        
+                                        {/* Replace your current delete button with this menu button */}
+                                        <button
+                                          className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1 opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-gray-100"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setActiveMessageMenu(activeMessageMenu === message._id ? null : message._id);
+                                          }}
+                                          disabled={isDeleting}
+                                          title="Message options"
+                                        >
+                                          <MoreVertical size={14} />
+                                        </button>
+
+                                        {/* Message options menu */}
+                                        {activeMessageMenu === message._id && (
+                                          <div className="absolute top-8 right-2 bg-white shadow-lg rounded-md py-1 w-32 z-10">
+                                            {isAdmin && message.content && ( // Only show edit for text messages
+                                              <button
+                                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setMessageToEdit(message);
+                                                  setEditedContent(message.content);
+                                                  setActiveMessageMenu(null);
+                                                }}
+                                              >
+                                                <Edit size={14} className="mr-2" />
+                                                Edit message
+                                              </button>
+                                            )}
+                                            <button
+                                              className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+                                              onClick={(e) => {
+                                                handleDeleteMessage(message._id, e);
+                                                setActiveMessageMenu(null);
+                                              }}
+                                            >
+                                              <Trash2 size={14} className="mr-2" />
+                                              Delete message
+                                            </button>
+                                          </div>
+                                        )}
                                       </div>
                                     ))}
                                   </div>
@@ -691,16 +954,6 @@ const AdminMessage = () => {
                       ))}
                       <div ref={messagesEndRef} />
                     </div>
-                  )}
-                  
-                  {/* Scroll to bottom button */}
-                  {showScrollButton && (
-                    <button
-                      onClick={() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                      className="absolute bottom-4 right-4 bg-blue-500 text-white rounded-full p-2 shadow-lg hover:bg-blue-600 transition-all animate-bounce-subtle"
-                    >
-                      <ArrowDown size={20} />
-                    </button>
                   )}
                 </div>
                 
@@ -778,6 +1031,67 @@ const AdminMessage = () => {
           </div>
         </div>
       </div>
+      
+      {/* Show loading overlay during delete operations */}
+      {isDeleting && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-lg shadow-md flex items-center">
+            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500 mr-3"></div>
+            <p>Deleting...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Message Modal */}
+      {messageToEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Edit Message</h3>
+              <button 
+                onClick={() => setMessageToEdit(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <textarea
+              value={editedContent}
+              onChange={(e) => setEditedContent(e.target.value)}
+              className="w-full border border-gray-300 rounded-md p-2 min-h-[100px] mb-4"
+              placeholder="Edit your message..."
+            />
+            
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setMessageToEdit(null)}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // Implement your handleEditMessage function here
+                  // For now, just update the local state
+                  setMessages(prevMessages => 
+                    prevMessages.map(msg => 
+                      msg._id === messageToEdit._id 
+                        ? {...msg, content: editedContent} 
+                        : msg
+                    )
+                  );
+                  setMessageToEdit(null);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                disabled={!editedContent.trim()}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

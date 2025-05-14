@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Info, Image, Coffee, Phone, ShoppingBag, LogOut, Plus, MessageCircle } from "lucide-react";
+import { Home, Info, Image, Coffee, Phone, ShoppingBag, LogOut, Plus, MessageCircle, ShoppingCart } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useNavigate } from "react-router-dom";
 import logoImage from "../../assets/1.png";
-import Swal from "sweetalert2"; // Add this import
+import Swal from "sweetalert2";
+
+// Export this constant to be used by other components
+export const MOBILE_NAV_HEIGHT = 64; // 16 * 4 = 64px (4rem)
 
 const CustomerSideNav = () => {
     const [contactInfo, setContactInfo] = useState(null);
@@ -91,6 +94,11 @@ const CustomerSideNav = () => {
 
     // Mobile bottom navigation
     if (isMobile) {
+        // Define basic navigation items for bottom bar (excluding Messages and Orders)
+        const bottomNavItems = navItems.filter(item => 
+            item.label !== "MESSAGES" && item.label !== "MY ORDERS"
+        );
+        
         return (
             <>
                 {/* Floating Expandable Button */}
@@ -105,13 +113,33 @@ const CustomerSideNav = () => {
                         </button>
                     )}
                     
-                    {/* Buy Button - Only visible when expanded */}
+                    {/* Messages Button - Only visible when expanded */}
+                    {isExpanded && (
+                        <Link 
+                            to="/customer-messages"
+                            className="bg-blue-500 text-white p-3 rounded-full shadow-lg hover:bg-blue-600 transition-all transform animate-fadeIn"
+                        >
+                            <MessageCircle size={24} />
+                        </Link>
+                    )}
+                    
+                    {/* Orders Button - Only visible when expanded */}
+                    {isExpanded && (
+                        <Link 
+                            to="/customer-orders"
+                            className="bg-purple-500 text-white p-3 rounded-full shadow-lg hover:bg-purple-600 transition-all transform animate-fadeIn"
+                        >
+                            <ShoppingBag size={24} />
+                        </Link>
+                    )}
+                    
+                    {/* Buy Button - Different icon to avoid confusion */}
                     {isExpanded && (
                         <Link 
                             to="/customer-buy"
                             className="bg-yellow-500 text-blue-900 p-3 rounded-full shadow-lg hover:bg-yellow-600 transition-all transform animate-fadeIn"
                         >
-                            <ShoppingBag size={24} />
+                            <ShoppingCart size={24} />
                         </Link>
                     )}
                     
@@ -129,9 +157,12 @@ const CustomerSideNav = () => {
                 </div>
                 
                 {/* Bottom Navigation */}
-                <div className="fixed bottom-0 left-0 right-0 bg-blue-900 text-white z-40">
-                    <div className="flex justify-around items-center h-16">
-                        {navItems.map((item) => (
+                <div 
+                    className="fixed bottom-0 left-0 right-0 bg-blue-900 text-white z-40"
+                    style={{ height: `${MOBILE_NAV_HEIGHT}px` }}
+                >
+                    <div className="flex justify-around items-center h-full">
+                        {bottomNavItems.map((item) => (
                             <Link 
                                 key={item.path} 
                                 to={item.path}

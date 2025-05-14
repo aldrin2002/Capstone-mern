@@ -3,7 +3,7 @@ import { Loader, Search } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { Link } from "react-router-dom";
-import CustomerSideNav from "../../pages/customer/customerSideNav";
+import CustomerSideNav, { MOBILE_NAV_HEIGHT } from "../../pages/customer/customerSideNav";
 
 // API URLs
 const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api/gallery" : "/api/gallery";
@@ -14,6 +14,17 @@ const CustomerGallery = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch gallery images
   const fetchGallery = async () => {
@@ -45,8 +56,11 @@ const CustomerGallery = () => {
       {/* Sidebar */}
       <CustomerSideNav />
 
-      {/* Main Content */}
-      <main className="flex-1 bg-white">
+      {/* Main Content - Add padding bottom for mobile */}
+      <main 
+        className="flex-1 bg-white"
+        style={isMobile ? { paddingBottom: `${MOBILE_NAV_HEIGHT + 16}px` } : {}}
+      >
         {/* Header Section */}
         <div
           className="relative bg-cover bg-center h-64"
@@ -84,7 +98,7 @@ const CustomerGallery = () => {
               <p className="text-gray-500">No gallery images found.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 pb-16 md:pb-0">
               {filteredGallery.map((image) => (
                 <div
                   key={image._id}

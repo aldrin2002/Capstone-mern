@@ -75,6 +75,19 @@ app.use("/api/messages", messageRoutes);
 // Socket.IO connection handling
 const connectedUsers = new Map();
 const adminSockets = new Set();
+const onlineCustomers = new Set();
+
+// Add this function to get online customers and emit to admins
+const broadcastOnlineCustomers = () => {
+  const onlineCustomerIds = Array.from(onlineCustomers);
+  console.log(`Broadcasting online customers: ${onlineCustomerIds.length} customers online`);
+  // Emit to all admin sockets
+  adminSockets.forEach(socketId => {
+    io.to(socketId).emit('customer-status-update', { 
+      customers: onlineCustomerIds
+    });
+  });
+};
 
 // Socket.IO middleware for authentication
 io.use((socket, next) => {
@@ -140,11 +153,29 @@ io.on('connection', async (socket) => {
       // Emit online admin count to ALL clients immediately
       io.emit('admin-online-count', adminSockets.size);
       
+      // Also emit current online customers to this admin
+      socket.emit('customer-status-update', {
+        customers: Array.from(onlineCustomers)
+      });
+      
       // Also listen for explicit admin connection announcement
       socket.on('admin-connected', () => {
         console.log("Admin explicitly announced connection, broadcasting to all clients");
         io.emit('admin-online-count', adminSockets.size);
       });
+      
+      // Handle request for online customers
+      socket.on('get-online-customers', () => {
+        socket.emit('customer-status-update', {
+          customers: Array.from(onlineCustomers)
+        });
+      });
+    } 
+    // If customer, update online status
+    else if (user.role === 'customer') {
+      onlineCustomers.add(socket.userId);
+      // Broadcast updated online customers list to all admins
+      broadcastOnlineCustomers();
     }
     
     // Always emit current admin count to the connecting client
@@ -251,7 +282,7 @@ io.on('connection', async (socket) => {
       }
     });
     
-    // Handle disconnect
+    // Update the disconnect handler to track customer status
     socket.on('disconnect', () => {
       console.log(`User disconnected: ${socket.id}`);
       
@@ -260,6 +291,10 @@ io.on('connection', async (socket) => {
       if (socket.role === 'admin') {
         adminSockets.delete(socket.id);
         io.emit('admin-online-count', adminSockets.size);
+      } else if (socket.role === 'customer') {
+        onlineCustomers.delete(socket.userId);
+        // Broadcast updated online customers to admins
+        broadcastOnlineCustomers();
       }
     });
     

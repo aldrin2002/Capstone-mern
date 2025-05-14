@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Users, ShoppingBag, Image, Phone, ShoppingCart, Home, LogOut, Plus, MessageSquare } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2"; // Add this import
 
 const SideNav = ({ active, setActive }) => {
@@ -18,6 +18,7 @@ const SideNav = ({ active, setActive }) => {
         { id: "gallery", label: "Gallery", icon: Image },
         { id: "contact", label: "Contact", icon: Phone },
         { id: "orders", label: "Orders", icon: ShoppingCart },
+        { id: "messages", label: "Messages", icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : null },
     ];
 
     // Handle logout with SweetAlert confirmation
@@ -139,21 +140,15 @@ const SideNav = ({ active, setActive }) => {
                                 >
                                     <IconComponent className="w-5 h-5 mr-3" />
                                     <span>{item.label}</span>
+                                    {item.badge && (
+                                        <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                                            {item.badge}
+                                        </span>
+                                    )}
                                 </button>
                             </li>
                         );
                     })}
-                    <li>
-                        <Link to="/admin/messages" className="flex items-center px-4 py-2 text-gray-700 hover:bg-blue-100 hover:text-blue-600 rounded-md">
-                            <MessageSquare className="w-5 h-5 mr-3" />
-                            <span>Messages</span>
-                            {unreadCount > 0 && (
-                                <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                                    {unreadCount}
-                                </span>
-                            )}
-                        </Link>
-                    </li>
                 </ul>
             </div>
             
