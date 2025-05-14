@@ -18,7 +18,8 @@ import {
   RefreshCw,
   SearchX,
   Trash2,
-  Edit
+  Edit,
+  ArrowLeft
 } from "lucide-react";
 
 // API URLs
@@ -53,6 +54,20 @@ const AdminMessage = () => {
   const [editedContent, setEditedContent] = useState("");
   const [typingCustomers, setTypingCustomers] = useState({});
   const [typingTimeout, setTypingTimeout] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
+  // Define a constant for the mobile navigation height
+  const MOBILE_NAV_HEIGHT = 64; // This matches the h-16 in SideNav.jsx
+
+  // Add this effect to handle screen resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Helper function for sorting conversations - move this inside
   const sortConversationsByLatest = (conversationsArray) => {
@@ -77,6 +92,7 @@ const AdminMessage = () => {
   useEffect(() => {
     const fetchConversations = async () => {
       try {
+        if (!isLoading) setIsLoading(true);
         const response = await axios.get(`${API_URL}/conversations`, {
           withCredentials: true
         });
@@ -128,8 +144,6 @@ const AdminMessage = () => {
           // Explicitly announce admin connection to server
           socketRef.current.emit('admin-connected');
           toast.success("Connected to chat server");
-          
-          // DO NOT call setupMessageHandlers here - it's handled by the useEffect
         });
         
         socketRef.current.on('connect_error', (err) => {
@@ -151,15 +165,12 @@ const AdminMessage = () => {
       }
     };
     
+    // Initial fetch - only once when component mounts
     fetchConversations();
-    const connected = connectSocket();
+    connectSocket();
     
-    // Polling for updates every 30 seconds
-    const intervalId = setInterval(fetchConversations, 30000);
-    
-    // Clean up
+    // Clean up when unmounting
     return () => {
-      clearInterval(intervalId);
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
@@ -185,7 +196,7 @@ const AdminMessage = () => {
       const messageConvString = typeof messageConvId === 'object' ? messageConvId.toString() : String(messageConvId);
       const selectedConvString = typeof selectedConvId === 'object' ? selectedConvId.toString() : String(selectedConvId);
       
-      // If this message belongs to the current conversation
+      // Handle message for current conversation
       if (selectedConversation && messageConvString === selectedConvString) {
         // Play notification for customer messages only
         if (message.sender.role === 'customer') {
@@ -198,12 +209,11 @@ const AdminMessage = () => {
           }
         }
         
+        // Update messages without triggering loading state
         setMessages(prevMessages => {
-          // IMPROVED DUPLICATE DETECTION - check for both ID and temporary messages with same content
+          // Check for duplicate message
           const isDuplicate = prevMessages.some(m => 
-            // Same permanent ID
             m._id === message._id || 
-            // OR temporary message with same content and timestamp within 5 seconds
             (m._id.toString().startsWith('temp-') && 
              m.content === message.content && 
              m.sender.role === message.sender.role &&
@@ -217,7 +227,6 @@ const AdminMessage = () => {
                   m.content === message.content && 
                   m.sender.role === message.sender.role &&
                   Math.abs(new Date(m.createdAt) - new Date(message.createdAt)) < 5000) {
-                // Replace temp message with permanent one
                 return message;
               }
               return m;
@@ -230,7 +239,7 @@ const AdminMessage = () => {
           return updatedMessages;
         });
         
-        // Mark the message as read since admin is viewing this conversation
+        // Mark as read without triggering a new fetch
         if (message.sender.role === 'customer') {
           socketRef.current.emit('mark-read', { conversationId: selectedConvString });
         }
@@ -446,36 +455,45 @@ const AdminMessage = () => {
     }
   }, [selectedConversation, socketRef.current?.connected]);
 
-  const fetchMessages = async (conversationId) => {
+  // Update the fetchMessages function (around line 455)
+const fetchMessages = async (conversationId) => {
+  // If we're already viewing this conversation and have messages, don't show loading
+  const shouldShowLoading = !(selectedConversation?._id === conversationId && messages.length > 0);
+  
+  if (shouldShowLoading) {
     setIsLoadingMessages(true);
-    try {
-      const response = await axios.get(`${API_URL}/${conversationId}`, {
-        withCredentials: true
-      });
-      
-      setMessages(response.data);
-      
-      // Mark messages as read
-      if (socketRef.current) {
-        socketRef.current.emit('mark-read', { conversationId });
-      }
-      
-      // Update conversation unread count in the list
-      setConversations(prev => 
-        prev.map(conv => 
-          conv._id === conversationId 
-            ? { ...conv, unreadCount: 0 } 
-            : conv
-        )
-      );
-      
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      toast.error("Failed to load messages");
-    } finally {
+  }
+  
+  try {
+    const response = await axios.get(`${API_URL}/${conversationId}`, {
+      withCredentials: true
+    });
+    
+    setMessages(response.data);
+    
+    // Mark messages as read
+    if (socketRef.current) {
+      socketRef.current.emit('mark-read', { conversationId });
+    }
+    
+    // Update conversation unread count in the list
+    setConversations(prev => 
+      prev.map(conv => 
+        conv._id === conversationId 
+          ? { ...conv, unreadCount: 0 } 
+          : conv
+      )
+    );
+    
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    toast.error("Failed to load messages");
+  } finally {
+    if (shouldShowLoading) {
       setIsLoadingMessages(false);
     }
-  };
+  }
+};
 
   // Update this function to allow browsing history
   const scrollToBottom = () => {
@@ -800,10 +818,11 @@ useEffect(() => {
 }, [conversations]);
 
   return (
-    <div className="p-6 bg-gray-50 h-full">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-blue-900 flex items-center">
-          <MessageSquare className="h-6 w-6 mr-2 text-blue-600" /> 
+    <div className={`p-2 sm:p-4 md:p-6 bg-gray-50 ${isMobile ? 'pb-36' : 'h-full'}`}>
+      {/* Title area */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4 md:mb-6">
+        <h2 className="text-xl md:text-2xl font-bold text-blue-900 flex items-center">
+          <MessageSquare className="h-5 w-5 md:h-6 md:w-6 mr-2 text-blue-600" /> 
           Customer Conversations
           {isSocketConnected && (
             <span className="ml-2 flex items-center text-sm font-normal text-green-600">
@@ -813,20 +832,27 @@ useEffect(() => {
           )}
         </h2>
         
-        <div className="mt-2 md:mt-0 flex items-center">
-          <button 
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm flex items-center hover:bg-blue-700"
-            onClick={() => {/* Refresh conversations */}}
-          >
-            <RefreshCw size={16} className="mr-1" /> Refresh
-          </button>
-        </div>
+        {/* Remove the refresh button as requested */}
       </div>
       
-      <div className="bg-white rounded-lg shadow-md overflow-hidden h-[calc(100vh-200px)] flex flex-col">
+      {/* Chat container with better mobile height calculation */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden h-[calc(100vh-150px)] md:h-[calc(100vh-200px)] flex flex-col">
         <div className="grid grid-cols-1 md:grid-cols-3 h-full overflow-hidden">
-          {/* Conversation List - Left sidebar */}
-          <div className="md:col-span-1 border-r border-gray-200 flex flex-col h-full overflow-hidden">
+          {/* Mobile header when conversation is selected */}
+          {isMobile && selectedConversation && (
+            <div className="md:hidden p-2 border-b flex items-center bg-gray-50">
+              <button 
+                onClick={() => setSelectedConversation(null)}
+                className="p-2 mr-2 rounded-md hover:bg-gray-200 transition-colors"
+              >
+                <ArrowLeft size={20} className="text-gray-600" />
+              </button>
+              <span className="font-medium">Back to conversations</span>
+            </div>
+          )}
+          
+          {/* Left sidebar - hide on mobile when conversation is selected */}
+          <div className={`${isMobile && selectedConversation ? 'hidden' : ''} md:col-span-1 border-r border-gray-200 flex flex-col h-full overflow-hidden`}>
             {/* Search input - Keep as is */}
             <div className="p-4 border-b border-gray-200">
               <div className="relative">
@@ -951,8 +977,8 @@ useEffect(() => {
             )}
           </div>
           
-          {/* Messages container - Right side */}
-          <div className="md:col-span-2 flex flex-col h-full overflow-hidden">
+          {/* Messages container - show full width on mobile */}
+          <div className={`${isMobile && selectedConversation ? 'col-span-1' : ''} md:col-span-2 flex flex-col h-full overflow-hidden`}>
             {selectedConversation ? (
               <>
                 {/* Chat Header */}
@@ -991,6 +1017,7 @@ useEffect(() => {
                   className="flex-1 overflow-y-auto p-4 bg-gray-50"
                   style={{ 
                     height: "calc(100% - 140px)", /* Fixed height calculation */
+                    paddingBottom: isMobile ? "100px" : "inherit", // Increased padding
                     overflowY: "auto",
                     scrollbarWidth: "thin",
                     scrollbarColor: "#cbd5e0 #f7fafc",
@@ -1176,8 +1203,22 @@ useEffect(() => {
                 </div>
                 
                 {/* Message Input */}
-                <div className="border-t border-gray-200 bg-white p-4 sticky bottom-0 z-10">
-                  <form onSubmit={handleSubmit} className="flex flex-col">
+                <div 
+                  className={`border-t border-gray-200 bg-white p-4 ${isMobile ? '' : 'sticky bottom-0'}`}
+                  style={isMobile ? { 
+                    position: "fixed", 
+                    bottom: `${MOBILE_NAV_HEIGHT + 15}px`, // Increased spacing from navigation
+                    left: 0, 
+                    right: 0,
+                    width: "100%",
+                    zIndex: 40, // Higher than floating buttons
+                    boxShadow: "0 -2px 10px rgba(0,0,0,0.1)",
+                    paddingBottom: "16px", // Add more bottom padding
+                    paddingLeft: "16px",
+                    paddingRight: "16px" 
+                  } : { zIndex: 10 }}
+                >
+                  <form onSubmit={handleSubmit} className="flex flex-col max-w-screen-xl mx-auto">
                     {/* Attachment Preview */}
                     {attachmentPreview && (
                       <div className="mb-3 relative inline-block">

@@ -102,7 +102,7 @@ const CustomerSideNav = () => {
         return (
             <>
                 {/* Floating Expandable Button */}
-                <div className="fixed right-4 bottom-20 z-50 flex flex-col-reverse items-center space-y-reverse space-y-2">
+                <div className="fixed right-4 bottom-32 z-50 flex flex-col-reverse items-center space-y-reverse space-y-4">
                     {/* Logout Button - Only visible when expanded */}
                     {isExpanded && (
                         <button

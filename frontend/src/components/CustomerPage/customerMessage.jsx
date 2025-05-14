@@ -12,7 +12,6 @@ import {
   Paperclip, 
   Image, 
   X, 
-  CircleCheck,
   ChevronDown
 } from "lucide-react";
 
@@ -484,11 +483,15 @@ const CustomerMessage = () => {
                                   <span>{formatTime(message.timestamp || message.createdAt)}</span>
                                   
                                   {isCustomer && (
-                                    <CircleCheck 
-                                      size={14} 
-                                      className={`ml-1 ${message.isRead ? 'text-blue-100' : 'text-blue-300'}`}
+                                    <span 
+                                      className={`material-symbols-outlined ml-1 text-sm ${
+                                        message.isRead ? 'text-blue-100' : 'text-blue-300'
+                                      }`}
                                       title={message.isRead ? "Read" : "Delivered"}
-                                    />
+                                      style={{ fontSize: "14px" }} // Match the previous icon size
+                                    >
+                                      done_all
+                                    </span>
                                   )}
                                 </div>
                               </div>

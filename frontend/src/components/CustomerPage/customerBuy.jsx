@@ -150,19 +150,26 @@ const CustomerBuy = () => {
     }
   };
 
-  // Upload proof image
+  // Update the uploadProofImage function to fix the 404 error
   const uploadProofImage = async () => {
     if (!proofImage) return "";
     
+    // Create FormData object with the expected field name
     const formData = new FormData();
-    formData.append('image', proofImage);
+    // Important: Change from 'image' to 'file' - this is likely what the backend expects
+    formData.append('file', proofImage);
     
     try {
-      const response = await axios.post('/api/upload', formData, {
+      // Use the correct upload endpoint that exists in your backend
+      const apiUrl = import.meta.env.MODE === "development" 
+        ? "http://localhost:5000/api/upload" 
+        : "/api/upload";
+        
+      const response = await axios.post(apiUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         withCredentials: true
       });
-      return response.data.imagePath;
+      return response.data.imagePath || response.data.path || response.data.url || response.data.imageUrl;
     } catch (error) {
       console.error("Error uploading image:", error);
       throw new Error("Failed to upload proof of payment image");
@@ -170,105 +177,114 @@ const CustomerBuy = () => {
   };
 
   // Submit order
-  const submitOrder = async () => {
-    try {
-      setIsProcessingOrder(true);
-      
-      // Validate required fields
-      if (!deliveryAddress.trim()) {
-        toast.error("Please enter a delivery address");
+const submitOrder = async () => {
+  try {
+    setIsProcessingOrder(true);
+    
+    // Validate required fields
+    if (!deliveryAddress.trim()) {
+      toast.error("Please enter a delivery address");
+      setIsProcessingOrder(false);
+      return;
+    }
+    
+    // For GCash, validate reference number and proof image
+    if (paymentMethod === "GCash") {
+      if (!gcashReference.trim()) {
+        toast.error("Please enter GCash reference number");
         setIsProcessingOrder(false);
         return;
       }
       
-      // For GCash, validate reference number and proof image
-      if (paymentMethod === "GCash") {
-        if (!gcashReference.trim()) {
-          toast.error("Please enter GCash reference number");
-          setIsProcessingOrder(false);
-          return;
-        }
-        
-        if (!proofImage) {
-          toast.error("Please upload proof of payment");
-          setIsProcessingOrder(false);
-          return;
-        }
+      if (!proofImage) {
+        toast.error("Please upload proof of payment");
+        setIsProcessingOrder(false);
+        return;
       }
-      
-      // Upload proof image first if needed
-      let imagePath = "";
-      if (paymentMethod === "GCash" && proofImage) {
-        imagePath = await uploadProofImage();
-      }
-      
-      // Map the payment method to one of the allowed enum values in the backend
-      let orderPaymentMethod = "Cash";
-      if (paymentMethod === "GCash") {
-        orderPaymentMethod = "Online Payment";
-      } else if (paymentMethod === "Cash on Delivery") {
-        orderPaymentMethod = "Cash";
-      }
-      
-      // Create order object with only the fields the backend expects
-      const orderData = {
-        customer: {
-          name: user?.name || "Guest",
-          email: user?.email || "guest@example.com",
-          phone: user?.phone || ""
-        },
-        items: cart.map(item => ({
-          product: item._id,
-          quantity: item.quantity,
-          price: item.price
-        })),
-        notes: `Delivery Address: ${deliveryAddress}${paymentMethod === "GCash" ? `, GCash Ref: ${gcashReference}` : ""}`,
-        paymentMethod: orderPaymentMethod,
-        total: cartTotal
-      };
-      
-      console.log("Order data being sent:", orderData);
-      
-      // Send order to server with authentication
-      const response = await axios.post("/api/orders", orderData, {
-        withCredentials: true  // Ensure cookies are sent for authentication
-      });
-      
-      console.log("Order response:", response.data);
-      
-      // Reset states
-      setCart([]);
-      setShowPaymentModal(false);
-      setPaymentMethod("Cash on Delivery");
-      setDeliveryAddress("");
-      setGcashReference("");
-      setProofImage(null);
-      setProofImagePreview(null);
-      
-      // Show SweetAlert for order success
-      Swal.fire({
-        title: "Order Placed!",
-        text: "Your order has been successfully placed.",
-        icon: "success",
-        confirmButtonText: "View Orders",
-        confirmButtonColor: "#3B82F6",
-        background: "rgba(255, 255, 255, 0.9)",
-        backdrop: `rgba(59, 130, 246, 0.4)`
-      }).then((result) => {
-        if (result.isConfirmed) {
-          navigate("/customer-orders");
-        } else {
-          navigate("/customer-dashboard");
-        }
-      });
-      
-    } catch (error) {
-      console.error("Error placing order:", error);
-      toast.error(error.response?.data?.message || "Failed to place order. Please try again.");
-    } finally {
-      setIsProcessingOrder(false);
     }
-  };
+    
+    // Create FormData for the order with image
+    const formData = new FormData();
+    
+    // Map payment method to backend enum value
+    let orderPaymentMethod = "Cash";
+    if (paymentMethod === "GCash") {
+      orderPaymentMethod = "Online Payment";
+    }
+    
+    // Create the order data object
+    const orderData = {
+      customer: {
+        name: user?.name || "Guest",
+        email: user?.email || "guest@example.com",
+        phone: user?.phone || ""
+      },
+      items: cart.map(item => ({
+        product: item._id,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      notes: `Delivery Address: ${deliveryAddress}${paymentMethod === "GCash" ? `, GCash Ref: ${gcashReference}` : ""}`,
+      paymentMethod: orderPaymentMethod,
+      total: cartTotal
+    };
+    
+    // Add order data as JSON
+    formData.append('orderData', JSON.stringify(orderData));
+    
+    // Add the proof image if using GCash
+    if (paymentMethod === "GCash" && proofImage) {
+      formData.append('proofImage', proofImage);
+    }
+    
+    // Set the API URL based on environment
+    const apiUrl = import.meta.env.MODE === "development" 
+      ? "http://localhost:5000/api/orders" 
+      : "/api/orders";
+    
+    // Send order with image in a single request
+    const response = await axios.post(apiUrl, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',  // Important for file uploads
+      },
+      withCredentials: true
+    });
+    
+    console.log("Order response:", response.data);
+    
+    // Reset states
+    setCart([]);
+    setShowPaymentModal(false);
+    setPaymentMethod("Cash on Delivery");
+    setDeliveryAddress("");
+    setGcashReference("");
+    setProofImage(null);
+    setProofImagePreview(null);
+    
+    // Show success message
+    Swal.fire({
+      title: "Order Placed!",
+      text: "Your order has been successfully placed.",
+      icon: "success",
+      confirmButtonText: "View Orders",
+      confirmButtonColor: "#3B82F6",
+      background: "rgba(255, 255, 255, 0.9)",
+      backdrop: `rgba(59, 130, 246, 0.4)`
+    }).then((result) => {
+      if (result.isConfirmed) {
+        navigate("/customer-orders");
+      } else {
+        navigate("/customer-dashboard");
+      }
+    });
+    
+  } catch (error) {
+    console.error("Error placing order:", error);
+    toast.error(error.response?.data?.message || "Failed to place order. Please try again.");
+  } finally {
+    setIsProcessingOrder(false);
+  }
+};
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 relative">
