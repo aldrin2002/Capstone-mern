@@ -818,479 +818,368 @@ useEffect(() => {
 }, [conversations]);
 
   return (
-    <div className={`p-2 sm:p-4 md:p-6 bg-gray-50 ${isMobile ? 'h-screen overflow-hidden' : 'h-full'}`}>
-      {/* Title area */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-4 md:mb-6">
-        <h2 className="text-xl md:text-2xl font-bold text-blue-900 flex items-center">
-          <MessageSquare className="h-5 w-5 md:h-6 md:w-6 mr-2 text-blue-600" /> 
-          Customer Conversations
-          {isSocketConnected && (
-            <span className="ml-2 flex items-center text-sm font-normal text-green-600">
-              <span className="h-2 w-2 bg-green-500 rounded-full mr-1"></span>
-              Live
-            </span>
-          )}
-        </h2>
-        
-        {/* Remove the refresh button as requested */}
-      </div>
-      
-      {/* Chat container with better mobile height calculation */}
-      <div className={`bg-white rounded-lg shadow-md overflow-hidden ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} flex flex-col`}>
-        <div className="grid grid-cols-1 md:grid-cols-3 h-full overflow-hidden">
-          {/* Mobile header when conversation is selected */}
-          {isMobile && selectedConversation && (
-            <div className="md:hidden p-2 border-b flex items-center bg-gray-50">
-              <button 
-                onClick={() => setSelectedConversation(null)}
-                className="p-2 mr-2 rounded-md hover:bg-gray-200 transition-colors"
-              >
-                <ArrowLeft size={20} className="text-gray-600" />
-              </button>
-              <span className="font-medium">Back to conversations</span>
+    <div className={`h-screen bg-gray-50 ${isMobile ? 'pb-16' : 'p-4'}`}>
+      {/* Mobile-specific header - Only show when conversation is selected */}
+      {isMobile && selectedConversation ? (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+          <div className="flex items-center h-14 px-4">
+            <button 
+              onClick={() => setSelectedConversation(null)}
+              className="p-2 -ml-2 rounded-full hover:bg-gray-100"
+            >
+              <ArrowLeft size={20} className="text-gray-600" />
+            </button>
+            <div className="ml-2 flex-1">
+              <h2 className="font-medium truncate">{selectedConversation.customer?.name || 'Customer'}</h2>
+              <p className="text-xs text-gray-500 truncate">{selectedConversation.customer?.email}</p>
             </div>
-          )}
-          
-          {/* Left sidebar - hide on mobile when conversation is selected */}
-          <div className={`${isMobile && selectedConversation ? 'hidden' : ''} md:col-span-1 border-r border-gray-200 flex flex-col h-full overflow-hidden`}>
-            {/* Search input - Keep as is */}
-            <div className="p-4 border-b border-gray-200">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                <input
-                  type="text"
-                  placeholder="Search conversations..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-            
-            {/* Conversations list - Make sure this scrolls independently */}
-            {isLoading ? (
-              <div className="flex justify-center items-center h-40">
-                <Loader className="h-8 w-8 text-blue-500 animate-spin" />
-              </div>
-            ) : (
-              <div 
-                ref={conversationsContainerRef}
-                className="overflow-y-auto flex-1"
-                style={{ 
-                  overflowY: "auto",
-                  scrollbarWidth: "thin",
-                  scrollbarColor: "#cbd5e0 #f7fafc",
-                  height: isMobile ? "calc(100% - 100px)" : "auto", // Fixed height for mobile
-                }}
-              >
-                {filteredConversations.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <SearchX size={24} className="mx-auto mb-2 text-gray-400" />
-                    No conversations found
-                  </div>
-                ) : (
-                  <>
-                    {/* Group conversations by date */}
-                    {['Today', 'Yesterday', 'Earlier this week', 'Earlier'].map(dateGroup => {
-                      const conversationsInGroup = filteredConversations.filter(conv => {
-                        const messageDate = new Date(conv.lastMessage || conv.createdAt);
-                        // Logic to determine if conversation belongs in this group
-                        return formatDate(messageDate) === dateGroup;
-                      });
-                      
-                      if (conversationsInGroup.length === 0) return null;
-                      
-                      return (
-                        <div key={dateGroup}>
-                          <div className="sticky top-0 bg-gray-100 px-4 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider z-10">
-                            {dateGroup}
-                          </div>
-                          
-                          {conversationsInGroup.map((conv) => (
-                            <div
-                              key={conv._id}
-                              className={`p-4 border-l-4 border-b border-gray-100 cursor-pointer 
-                                hover:bg-gray-50 transition-colors relative group ${
-                                selectedConversation?._id === conv._id 
-                                  ? 'bg-blue-50 border-l-blue-500' 
-                                  : conv.unreadCount > 0
-                                    ? 'border-l-amber-400 bg-amber-50' // More visible background for unread messages
-                                    : 'border-l-transparent'
-                              }`}
-                              onClick={() => setSelectedConversation(conv)}
-                            >
-                              <div className="flex items-center">
-                                <div className="flex-shrink-0 mr-3 relative">
-                                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-medium">
-                                    {conv.customer?.name?.charAt(0).toUpperCase() || 'C'}
-                                  </div>
-                                  {/* Online status indicator */}
-                                  {isCustomerOnline(conv.customer?._id) && (
-                                    <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
-                                  )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex justify-between items-center mb-1">
-                                    <h3 className="text-sm font-medium truncate">{conv.customer?.name || 'Customer'}</h3>
-                                    <span className="text-xs text-gray-500 flex items-center">
-                                      <Clock size={12} className="mr-1" />
-                                      {formatTime(conv.lastMessage || conv.createdAt)}
-                                    </span>
-                                  </div>
-                                  <p className="text-xs text-gray-500 truncate mb-1">{conv.customer?.email}</p>
-                                  
-                                  {/* Last message preview */}
-                                  <p className="text-xs truncate text-gray-600">
-                                    {conv.lastMessageContent || 'Start a conversation...'}
-                                  </p>
-                                  
-                                  <div className="flex items-center mt-1">
-                                    {conv.unreadCount > 0 && (
-                                      <span className="absolute top-3 right-3 inline-flex items-center 
-                                        justify-center px-2 py-1 text-xs font-bold leading-none 
-                                        text-white transform translate-x-1/2 -translate-y-1/2 
-                                        bg-red-600 rounded-full animate-pulse">
-                                        {conv.unreadCount}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* Delete conversation button */}
-                              <button 
-                                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={(e) => handleDeleteConversation(conv._id, e)}
-                                disabled={isDeleting}
-                                title="Delete conversation"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })}
-                    <div ref={conversationsEndRef} />
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-          
-          {/* Messages container - show full width on mobile */}
-          <div className={`${isMobile && selectedConversation ? 'col-span-1' : ''} md:col-span-2 flex flex-col h-full overflow-hidden`}>
-            {selectedConversation ? (
-              <>
-                {/* Chat Header */}
-                <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="mr-3 relative">
-                      <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                        <User className="h-6 w-6 text-blue-600" />
-                      </div>
-                      {/* Online status indicator in chat header */}
-                      {selectedConversation && isCustomerOnline(selectedConversation.customer?._id) && (
-                        <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
-                      )}
-                    </div>
-                    <div>
-                      <h2 className="font-medium">{selectedConversation.customer?.name || 'Customer'}</h2>
-                      <div className="flex items-center">
-                        <p className="text-sm text-gray-500">{selectedConversation.customer?.email}</p>
-                        {isCustomerOnline(selectedConversation.customer?._id) && (
-                          <span className="ml-2 text-xs text-green-500 flex items-center">
-                            <span className="h-2 w-2 bg-green-500 rounded-full mr-1"></span>
-                            Active now
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <MoreVertical size={20} />
-                  </button>
-                </div>
-                
-                {/* Messages Area */}
-                <div 
-                  ref={messagesContainerRef}
-                  className="flex-1 overflow-y-auto p-4 bg-gray-50"
-                  style={{ 
-                    height: isMobile ? "calc(100% - 140px)" : "calc(100% - 140px)",
-                    paddingBottom: isMobile ? "80px" : "16px",
-                    overflowY: "auto",
-                    scrollbarWidth: "thin",
-                    scrollbarColor: "#cbd5e0 #f7fafc",
-                  }}
-                >
-                  {isLoadingMessages ? (
-                    <div className="flex justify-center items-center h-full">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                      <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                        <Send className="h-8 w-8 text-blue-500" />
-                      </div>
-                      <p>No messages yet</p>
-                      <p className="text-sm mt-1">Start the conversation!</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {/* Group messages by date */}
-                      {Object.entries(
-                        messages.reduce((groups, message) => {
-                          const date = new Date(message.timestamp || message.createdAt).toDateString();
-                          if (!groups[date]) groups[date] = [];
-                          groups[date].push(message);
-                          return groups;
-                        }, {})
-                      ).map(([date, dateMessages]) => (
-                        <div key={date}>
-                          <div className="flex justify-center my-4">
-                            <span className="px-3 py-1 bg-gray-200 rounded-full text-xs text-gray-600">
-                              {formatDate(date)}
-                            </span>
-                          </div>
-                          
-                          {/* Group consecutive messages by same sender */}
-                          {dateMessages.reduce((groups, message, index) => {
-                            const prevMessage = dateMessages[index - 1];
-                            const sameAsPrev = prevMessage && 
-                              prevMessage.sender.role === message.sender.role && 
-                              (new Date(message.createdAt) - new Date(prevMessage.createdAt)) < 300000; // 5 minutes
-                              
-                            if (sameAsPrev) {
-                              groups[groups.length - 1].push(message);
-                            } else {
-                              groups.push([message]);
-                            }
-                            return groups;
-                          }, []).map((group, groupIndex) => {
-                            const isAdmin = group[0].sender.role === 'admin';
-                            
-                            return (
-                              <div 
-                                key={groupIndex} 
-                                className={`flex ${isAdmin ? 'justify-end' : 'justify-start'} mb-4`}
-                              >
-                                {!isAdmin && (
-                                  <div className="h-8 w-8 rounded-full bg-gray-300 flex-shrink-0 mr-2 mt-1 flex items-center justify-center">
-                                    <User size={16} className="text-gray-600" />
-                                  </div>
-                                )}
-                                
-                                <div className="max-w-[75%]">
-                                  <div className={`text-xs mb-1 ${isAdmin ? 'text-right' : ''}`}>
-                                    <span className="font-semibold">
-                                      {isAdmin ? 'You' : group[0].sender.name || 'Customer'}
-                                    </span>
-                                  </div>
-                                  
-                                  <div className="space-y-1">
-                                    {group.map((message) => (
-                                      <div
-                                        key={message._id}
-                                        className={`rounded-lg px-4 py-2 relative group ${
-                                          isAdmin 
-                                            ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-tr-none shadow-md' 
-                                            : 'bg-white text-gray-800 rounded-tl-none border border-gray-200 shadow-sm'
-                                        }`}
-                                      >
-                                        {message.attachment && (
-                                          <div className="mb-2">
-                                            <img 
-                                              src={message.attachment.startsWith('data:') 
-                                                ? message.attachment 
-                                                : `${API_BASE_URL}${message.attachment}`
-                                              } 
-                                              alt="Attachment" 
-                                              className="rounded-md max-h-60 max-w-full cursor-pointer hover:opacity-90 transition-opacity"
-                                              onClick={() => window.open(
-                                                message.attachment.startsWith('data:') 
-                                                  ? message.attachment 
-                                                  : `${API_BASE_URL}${message.attachment}`, 
-                                                '_blank'
-                                              )}
-                                            />
-                                          </div>
-                                        )}
-                                        <p className="whitespace-pre-wrap">{message.content}</p>
-                                        <div className="flex items-center justify-end text-xs mt-1 opacity-80">
-                                          <span>{formatTime(message.timestamp || message.createdAt)}</span>
-                                          {isAdmin && (
-                                            <CircleCheck 
-                                              size={14} 
-                                              className={`ml-1 ${message.isRead ? 'text-green-200' : 'text-blue-300'}`}
-                                            />
-                                          )}
-                                        </div>
-                                        
-                                        {/* Replace your current delete button with this menu button */}
-                                        <button
-                                          className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1 opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-gray-100"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setActiveMessageMenu(activeMessageMenu === message._id ? null : message._id);
-                                          }}
-                                          disabled={isDeleting}
-                                          title="Message options"
-                                        >
-                                          <MoreVertical size={14} />
-                                        </button>
-
-                                        {/* Message options menu */}
-                                        {activeMessageMenu === message._id && (
-                                          <div className="absolute top-8 right-2 bg-white shadow-lg rounded-md py-1 w-32 z-10">
-                                            {isAdmin && message.content && ( // Only show edit for text messages
-                                              <button
-                                                className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center"
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  setMessageToEdit(message);
-                                                  setEditedContent(message.content);
-                                                  setActiveMessageMenu(null);
-                                                }}
-                                              >
-                                                <Edit size={14} className="mr-2" />
-                                                Edit message
-                                              </button>
-                                            )}
-                                            <button
-                                              className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
-                                              onClick={(e) => {
-                                                handleDeleteMessage(message._id, e);
-                                                setActiveMessageMenu(null);
-                                              }}
-                                            >
-                                              <Trash2 size={14} className="mr-2" />
-                                              Delete message
-                                            </button>
-                                          </div>
-                                        )}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                                
-                                {isAdmin && (
-                                  <div className="h-8 w-8 rounded-full bg-blue-500 flex-shrink-0 ml-2 mt-1 flex items-center justify-center">
-                                    <User size={16} className="text-white" />
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ))}
-                      {selectedConversation && typingCustomers[selectedConversation.customer?._id] && (
-                        <div className="flex items-center mt-2">
-                          <div className="h-8 w-8 rounded-full bg-gray-300 flex-shrink-0 mr-2 flex items-center justify-center">
-                            <User size={16} className="text-gray-600" />
-                          </div>
-                          <div className="bg-white rounded-lg px-4 py-2 text-gray-500 inline-block border border-gray-200">
-                            <div className="flex items-center">
-                              <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce mr-1" style={{ animationDelay: "0ms" }}></span>
-                              <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce mr-1" style={{ animationDelay: "300ms" }}></span>
-                              <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "600ms" }}></span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      <div ref={messagesEndRef} />
-                    </div>
-                  )}
-                </div>
-                
-                {/* Message Input */}
-                <div 
-                  className={`border-t border-gray-200 bg-white p-4 ${isMobile ? 'fixed' : 'sticky bottom-0'}`}
-                  style={isMobile ? { 
-                    bottom: `${MOBILE_NAV_HEIGHT}px`,
-                    left: 0, 
-                    right: 0,
-                    width: "100%",
-                    zIndex: 40,
-                    boxShadow: "0 -2px 10px rgba(0,0,0,0.1)",
-                  } : { zIndex: 10 }}
-                >
-                  <form onSubmit={handleSubmit} className="flex flex-col max-w-screen-xl mx-auto">
-                    {/* Attachment Preview */}
-                    {attachmentPreview && (
-                      <div className="mb-3 relative inline-block">
-                        <img 
-                          src={attachmentPreview} 
-                          alt="Attachment preview" 
-                          className="h-20 rounded-md border border-gray-300"
-                        />
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            setAttachment(null);
-                            setAttachmentPreview(null);
-                          }}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-                    )}
-                    
-                    {/* Message Input and Buttons */}
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-gray-100 rounded-full flex items-center px-4 py-2">
-                        <input
-                          type="text"
-                          value={newMessage}
-                          onChange={(e) => {
-                            setNewMessage(e.target.value);
-                            handleAdminTyping();
-                          }}
-                          placeholder="Type a message..."
-                          className="flex-1 bg-transparent outline-none"
-                        />
-                        <div className="flex space-x-2 text-gray-400">
-                          <button 
-                            type="button" 
-                            onClick={() => fileInputRef.current.click()}
-                            className="hover:text-blue-500"
-                          >
-                            <Image size={18} />
-                          </button>
-                        </div>
-                      </div>
-                      <button 
-                        type="submit" 
-                        className="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 flex-shrink-0 disabled:bg-blue-400"
-                        disabled={isSending || (!newMessage.trim() && !attachment)}
-                      >
-                        {isSending ? (
-                          <div className="h-5 w-5 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
-                        ) : (
-                          <Send size={18} />
-                        )}
-                      </button>
-                    </div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      accept="image/*"
-                    />
-                  </form>
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500">
-                <p>Select a conversation to start messaging</p>
-              </div>
+            {isCustomerOnline(selectedConversation.customer?._id) && (
+              <span className="text-xs text-green-500 flex items-center">
+                <span className="h-2 w-2 bg-green-500 rounded-full mr-1"></span>
+                Active
+              </span>
             )}
           </div>
         </div>
+      ) : (
+        // Desktop & Mobile conversation list header
+        <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+            <MessageSquare className="h-5 w-5 mr-2 text-blue-600" />
+            Messages
+            {isSocketConnected && (
+              <span className="ml-2 flex items-center text-sm font-normal text-green-600">
+                <span className="h-2 w-2 bg-green-500 rounded-full mr-1"></span>
+                Live
+              </span>
+            )}
+          </h2>
+        </div>
+      )}
+
+      {/* Main chat container */}
+      <div className={`${isMobile ? 'h-[calc(100vh-4rem)]' : 'h-[calc(100vh-8rem)]'} bg-white shadow-sm flex`}>
+        {/* Conversation list - Hide on mobile when conversation selected */}
+        <div className={`${
+          isMobile && selectedConversation ? 'hidden' : 'w-full'
+        } md:w-80 border-r border-gray-200 flex flex-col`}>
+          {/* Search bar */}
+          <div className="p-3 border-b border-gray-200">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search conversations..."
+                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Conversations list */}
+          <div 
+            ref={conversationsContainerRef}
+            className="flex-1 overflow-y-auto"
+            style={{ 
+              height: isMobile ? "calc(100vh - 8rem)" : "calc(100vh - 12rem)",
+              overflowY: "auto",
+              WebkitOverflowScrolling: "touch"
+            }}
+          >
+            {isLoading ? (
+              <div className="flex justify-center items-center h-32">
+                <Loader className="h-6 w-6 text-blue-500 animate-spin" />
+              </div>
+            ) : filteredConversations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-32 text-gray-500">
+                <SearchX size={24} className="mb-2" />
+                <p className="text-sm">No conversations found</p>
+              </div>
+            ) : (
+              // Conversation items
+              filteredConversations.map((conv) => (
+                <div
+                  key={conv._id}
+                  className={`p-3 border-b border-gray-100 cursor-pointer transition-colors
+                    ${selectedConversation?._id === conv._id 
+                      ? 'bg-blue-50 border-l-4 border-l-blue-500' 
+                      : 'hover:bg-gray-50 border-l-4 border-l-transparent'
+                    }
+                    ${conv.unreadCount > 0 ? 'bg-amber-50' : ''}
+                  `}
+                  onClick={() => setSelectedConversation(conv)}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="relative flex-shrink-0">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-medium">
+                        {conv.customer?.name?.charAt(0).toUpperCase() || 'C'}
+                      </div>
+                      {isCustomerOnline(conv.customer?._id) && (
+                        <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-white" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium text-sm truncate">{conv.customer?.name || 'Customer'}</p>
+                        <span className="text-xs text-gray-500">{formatTime(conv.lastMessage || conv.createdAt)}</span>
+                      </div>
+                      <p className="text-xs text-gray-500 truncate">{conv.lastMessageContent || 'No messages yet'}</p>
+                    </div>
+                    {conv.unreadCount > 0 && (
+                      <div className="flex-shrink-0 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                        <span className="text-xs text-white font-medium">{conv.unreadCount}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Messages area */}
+        <div className={`${
+          isMobile && !selectedConversation ? 'hidden' : 'w-full'
+        } md:flex-1 flex flex-col bg-gray-50`}>
+          {selectedConversation ? (
+            <>
+              {/* Messages container */}
+              <div 
+                ref={messagesContainerRef}
+                className="flex-1 overflow-y-auto px-4 py-6"
+                style={{ 
+                  height: isMobile ? "calc(100vh - 8rem)" : "calc(100vh - 12rem)",
+                  paddingBottom: isMobile ? "5rem" : "1rem"
+                }}
+              >
+                {isLoadingMessages ? (
+                  <div className="flex justify-center items-center h-full">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                    <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                      <Send className="h-8 w-8 text-blue-500" />
+                    </div>
+                    <p>No messages yet</p>
+                    <p className="text-sm mt-1">Start the conversation!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Group messages by date */}
+                    {Object.entries(
+                      messages.reduce((groups, message) => {
+                        const date = new Date(message.timestamp || message.createdAt).toDateString();
+                        if (!groups[date]) groups[date] = [];
+                        groups[date].push(message);
+                        return groups;
+                      }, {})
+                    ).map(([date, dateMessages]) => (
+                      <div key={date}>
+                        <div className="flex justify-center my-4">
+                          <span className="px-3 py-1 bg-gray-200 rounded-full text-xs text-gray-600">
+                            {formatDate(date)}
+                          </span>
+                        </div>
+                        
+                        {/* Group consecutive messages by same sender */}
+                        {dateMessages.reduce((groups, message, index) => {
+                          const prevMessage = dateMessages[index - 1];
+                          const sameAsPrev = prevMessage && 
+                            prevMessage.sender.role === message.sender.role && 
+                            (new Date(message.createdAt) - new Date(prevMessage.createdAt)) < 300000; // 5 minutes
+                            
+                          if (sameAsPrev) {
+                            groups[groups.length - 1].push(message);
+                          } else {
+                            groups.push([message]);
+                          }
+                          return groups;
+                        }, []).map((group, groupIndex) => {
+                          const isAdmin = group[0].sender.role === 'admin';
+                          
+                          return (
+                            <div 
+                              key={groupIndex} 
+                              className={`flex ${isAdmin ? 'justify-end' : 'justify-start'} mb-4`}
+                            >
+                              {!isAdmin && (
+                                <div className="h-8 w-8 rounded-full bg-gray-300 flex-shrink-0 mr-2 mt-1 flex items-center justify-center">
+                                  <User size={16} className="text-gray-600" />
+                                </div>
+                              )}
+                              
+                              <div className="max-w-[75%]">
+                                <div className={`text-xs mb-1 ${isAdmin ? 'text-right' : ''}`}>
+                                  <span className="font-semibold">
+                                    {isAdmin ? 'You' : group[0].sender.name || 'Customer'}
+                                  </span>
+                                </div>
+                                
+                                <div className="space-y-1">
+                                  {group.map((message) => (
+                                    <div
+                                      key={message._id}
+                                      className={`rounded-lg px-4 py-2 relative group ${
+                                        isAdmin 
+                                          ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-tr-none shadow-md' 
+                                          : 'bg-white text-gray-800 rounded-tl-none border border-gray-200 shadow-sm'
+                                      }`}
+                                    >
+                                      {message.attachment && (
+                                        <div className="mb-2">
+                                          <img 
+                                            src={message.attachment.startsWith('data:') 
+                                              ? message.attachment 
+                                              : `${API_BASE_URL}${message.attachment}`
+                                            } 
+                                            alt="Attachment" 
+                                            className="rounded-md max-h-60 max-w-full cursor-pointer hover:opacity-90 transition-opacity"
+                                            onClick={() => window.open(
+                                              message.attachment.startsWith('data:') 
+                                                ? message.attachment 
+                                                : `${API_BASE_URL}${message.attachment}`, 
+                                              '_blank'
+                                            )}
+                                          />
+                                        </div>
+                                      )}
+                                      <p className="whitespace-pre-wrap">{message.content}</p>
+                                      <div className="flex items-center justify-end text-xs mt-1 opacity-80">
+                                        <span>{formatTime(message.timestamp || message.createdAt)}</span>
+                                        {isAdmin && (
+                                          <CircleCheck 
+                                            size={14} 
+                                            className={`ml-1 ${message.isRead ? 'text-green-200' : 'text-blue-300'}`}
+                                          />
+                                        )}
+                                      </div>
+                                      
+                                      {/* Replace your current delete button with this menu button */}
+                                      <button
+                                        className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1 opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-gray-100"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setActiveMessageMenu(activeMessageMenu === message._id ? null : message._id);
+                                        }}
+                                        disabled={isDeleting}
+                                        title="Message options"
+                                      >
+                                        <MoreVertical size={14} />
+                                      </button>
+
+                                      {/* Message options menu */}
+                                      {activeMessageMenu === message._id && (
+                                        <div className="absolute top-8 right-2 bg-white shadow-lg rounded-md py-1 w-32 z-10">
+                                          {isAdmin && message.content && ( // Only show edit for text messages
+                                            <button
+                                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 flex items-center"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setMessageToEdit(message);
+                                                setEditedContent(message.content);
+                                                setActiveMessageMenu(null);
+                                              }}
+                                            >
+                                              <Edit size={14} className="mr-2" />
+                                              Edit message
+                                            </button>
+                                          )}
+                                          <button
+                                            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+                                            onClick={(e) => {
+                                              handleDeleteMessage(message._id, e);
+                                              setActiveMessageMenu(null);
+                                            }}
+                                          >
+                                            <Trash2 size={14} className="mr-2" />
+                                            Delete message
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              {isAdmin && (
+                                <div className="h-8 w-8 rounded-full bg-blue-500 flex-shrink-0 ml-2 mt-1 flex items-center justify-center">
+                                  <User size={16} className="text-white" />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                    {selectedConversation && typingCustomers[selectedConversation.customer?._id] && (
+                      <div className="flex items-center mt-2">
+                        <div className="h-8 w-8 rounded-full bg-gray-300 flex-shrink-0 mr-2 flex items-center justify-center">
+                          <User size={16} className="text-gray-600" />
+                        </div>
+                        <div className="bg-white rounded-lg px-4 py-2 text-gray-500 inline-block border border-gray-200">
+                          <div className="flex items-center">
+                            <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce mr-1" style={{ animationDelay: "0ms" }}></span>
+                            <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce mr-1" style={{ animationDelay: "300ms" }}></span>
+                            <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "600ms" }}></span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
+              </div>
+
+              {/* Message input */}
+              <div className={`bg-white border-t border-gray-200 p-3 ${
+                isMobile ? 'fixed bottom-16 left-0 right-0' : 'sticky bottom-0'
+              }`}>
+                <form onSubmit={handleSubmit} className="flex items-center space-x-2 max-w-4xl mx-auto">
+                  <div className="flex-1 bg-gray-100 rounded-full flex items-center px-4 py-2">
+                    <input
+                      type="text"
+                      value={newMessage}
+                      onChange={(e) => {
+                        setNewMessage(e.target.value);
+                        handleAdminTyping();
+                      }}
+                      placeholder="Type a message..."
+                      className="flex-1 bg-transparent outline-none text-sm"
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => fileInputRef.current.click()}
+                      className="text-gray-400 hover:text-blue-500 p-1"
+                    >
+                      <Image size={18} />
+                    </button>
+                  </div>
+                  <button 
+                    type="submit" 
+                    className="bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 disabled:opacity-50"
+                    disabled={isSending || (!newMessage.trim() && !attachment)}
+                  >
+                    {isSending ? (
+                      <Loader className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <Send size={18} />
+                    )}
+                  </button>
+                </form>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-gray-500">
+              <MessageSquare className="h-12 w-12 mb-4 text-gray-400" />
+              <p className="text-lg font-medium">Select a conversation</p>
+              <p className="text-sm">Choose a conversation to start messaging</p>
+            </div>
+          )}
+        </div>
       </div>
-      
+
       {/* Show loading overlay during delete operations */}
       {isDeleting && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
