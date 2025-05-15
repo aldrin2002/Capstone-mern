@@ -44,7 +44,7 @@ export const getOrderById = async (req, res) => {
 // Create new order
 export const createOrder = async (req, res) => {
     try {
-        const { customer, items, notes, paymentMethod } = req.body;
+        const { customer, items, notes, paymentMethod, proofOfPayment, total } = req.body;
         
         // Validate required fields
         if (!customer || !customer.name || !customer.email || !items || items.length === 0) {
@@ -52,7 +52,7 @@ export const createOrder = async (req, res) => {
         }
         
         // Calculate total and validate items
-        let total = 0;
+        let calculatedTotal = 0;
         const orderItems = [];
         const stockUpdates = []; // Track stock updates for products
         
@@ -76,7 +76,7 @@ export const createOrder = async (req, res) => {
             
             // Calculate item subtotal
             const itemTotal = product.price * item.quantity;
-            total += itemTotal;
+            calculatedTotal += itemTotal;
             
             // Add to order items
             orderItems.push({
@@ -93,13 +93,21 @@ export const createOrder = async (req, res) => {
             });
         }
         
+        // Use provided total if available, otherwise use calculated total
+        const finalTotal = total !== undefined ? total : calculatedTotal;
+        
+        // Set payment status based on payment method
+        const paymentStatus = paymentMethod === "Online Payment" && proofOfPayment ? "Paid" : "Pending";
+        
         // Create and save the order first
         const newOrder = new Order({
             customer,
             items: orderItems,
-            total,
+            total: finalTotal,
             notes: notes || "",
-            paymentMethod: paymentMethod || "Cash"
+            paymentMethod: paymentMethod || "Cash",
+            paymentStatus,
+            proofOfPayment: proofOfPayment || ""
         });
         
         const savedOrder = await newOrder.save();

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import { io } from "socket.io-client";
 import CustomerSideNav, { MOBILE_NAV_HEIGHT } from "../../pages/customer/customerSideNav";
 import { useAuthStore } from "../../store/authStore";
 import { 
@@ -14,6 +13,7 @@ import {
   X, 
   ChevronDown
 } from "lucide-react";
+import { io } from "socket.io-client";
 
 // API URLs
 const API_BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5000" : "";
@@ -33,11 +33,17 @@ const CustomerMessage = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState(null);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [socket, setSocket] = useState(null);
+  const [isAdminTyping, setIsAdminTyping] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [adminOnlineCount, setAdminOnlineCount] = useState(0);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const fileInputRef = useRef(null);
-  const socketRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
   const { user } = useAuthStore();
   
   // Helper function for formatting dates
@@ -98,264 +104,227 @@ const CustomerMessage = () => {
     }
   }, [messages]);
 
-  // Connect to socket and load messages
+  // Initialize socket connection
   useEffect(() => {
     if (!user) return;
     
-    console.log("Current user:", user);
-    console.log("Cookies available:", document.cookie);
-
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("No auth token found for socket connection");
+      return;
+    }
+    
+    // Create socket connection
+    const socketUrl = import.meta.env.MODE === "development" 
+      ? "http://localhost:5000" 
+      : "";
+      
+    const newSocket = io(socketUrl, {
+      auth: { token },
+      withCredentials: true
+    });
+    
+    newSocket.on("connect", () => {
+      console.log("Socket connected:", newSocket.id);
+      setIsConnected(true);
+    });
+    
+    newSocket.on("connect_error", (err) => {
+      console.error("Socket connection error:", err.message);
+      toast.error("Chat connection error. Please refresh the page.");
+      setIsConnected(false);
+    });
+    
+    newSocket.on("disconnect", () => {
+      console.log("Socket disconnected");
+      setIsConnected(false);
+    });
+    
+    newSocket.on("admin-online-count", (count) => {
+      console.log("Admin online count:", count);
+      setAdminOnlineCount(count);
+    });
+    
+    newSocket.on("admin-typing", (isTyping) => {
+      setIsAdminTyping(isTyping);
+    });
+    
+    newSocket.on("new-message", (message) => {
+      console.log("New message received:", message);
+      setMessages((prev) => [...prev, message]);
+      
+      // Mark admin messages as read immediately
+      if (message.sender.role === "admin" && conversation) {
+        newSocket.emit("mark-read", { conversationId: conversation._id });
+      }
+    });
+    
+    setSocket(newSocket);
+    
+    // Cleanup on unmount
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [user]);
+  
+  // Load conversation and messages
+  useEffect(() => {
+    if (!user) return;
+    
     const fetchConversation = async () => {
       try {
         setIsLoading(true);
-        // Get/create user's conversation
-        const conversationRes = await axios.get(`${API_URL}/conversation`, { 
-          withCredentials: true 
-        });
-        
-        setConversation(conversationRes.data);
-        
-        // Fetch messages for this conversation
-        const messagesRes = await axios.get(`${API_URL}/${conversationRes.data._id}`, {
+        // First, get or create conversation for this customer
+        const convResponse = await axios.get(`${API_URL}/conversation`, {
           withCredentials: true
         });
         
-        setMessages(messagesRes.data);
-        setIsLoading(false);
+        const conversationData = convResponse.data;
+        setConversation(conversationData);
         
-        // Scroll to bottom after loading messages
-        setTimeout(scrollToBottom, 100);
+        // Then load messages for this conversation
+        const msgResponse = await axios.get(
+          `${API_URL}/${conversationData._id}`,
+          { withCredentials: true }
+        );
+        
+        setMessages(msgResponse.data);
+        
+        // Mark all admin messages as read
+        if (socket && conversationData._id) {
+          socket.emit("mark-read", { conversationId: conversationData._id });
+        }
       } catch (error) {
-        console.error("Error fetching conversation:", error);
-        toast.error("Failed to load conversation");
+        console.error("Error loading conversation:", error);
+        toast.error("Failed to load chat. Please try again.");
+      } finally {
         setIsLoading(false);
       }
     };
     
     fetchConversation();
-    connectSocket();
+  }, [user, socket]);
+  
+  // Handle typing status
+  const handleTyping = () => {
+    if (!socket || !isConnected) return;
     
-    // Clean up on unmount
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
+    if (!isTyping) {
+      setIsTyping(true);
+      socket.emit("customer-typing", true);
+    }
+    
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    // Set new timeout to stop typing indicator after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      socket.emit("customer-typing", false);
+    }, 2000);
+  };
+  
+  // Handle sending message
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    
+    if (!socket || !isConnected || !conversation) {
+      toast.error("Not connected to chat. Please refresh the page.");
+      return;
+    }
+    
+    if (!newMessage.trim() && !imageFile) {
+      return;
+    }
+    
+    try {
+      let attachment = null;
+      
+      // Upload image if exists
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("attachment", imageFile);
+        
+        console.log("Uploading attachment to:", `${API_URL}/attachment`);
+        const uploadRes = await axios.post(
+          `${API_URL}/attachment`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true
+          }
+        );
+        
+        console.log("Upload response:", uploadRes.data);
+        attachment = uploadRes.data.filePath;
       }
-      if (typingTimeout) {
-        clearTimeout(typingTimeout);
+      
+      // Emit message via socket
+      socket.emit("send-message", {
+        conversationId: conversation._id,
+        content: newMessage,
+        attachment
+      });
+      
+      // Clear inputs
+      setNewMessage("");
+      setImageFile(null);
+      setImagePreview(null);
+      
+      // Stop typing indicator
+      setIsTyping(false);
+      socket.emit("customer-typing", false);
+      
+    } catch (error) {
+      console.error("Error sending message:", error);
+      if (error.response && error.response.status === 500) {
+        console.error("Server error details:", error.response.data);
+        toast.error("Server error uploading image. Please try again.");
+      } else {
+        toast.error("Failed to send message. Please try again.");
       }
+    }
+  };
+  
+  // Handle file selection
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check file type
+    if (!file.type.match("image.*")) {
+      toast.error("Only image files are allowed");
+      return;
+    }
+    
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+    
+    setImageFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
     };
-  }, [user]);
-
+    reader.readAsDataURL(file);
+  };
+  
+  // Format timestamp
+  const formatTime = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+  
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  };
-
-  const uploadAttachment = async () => {
-    if (!attachment) return null;
-    
-    const formData = new FormData();
-    formData.append('attachment', attachment);
-    
-    try {
-      const response = await axios.post(`${API_URL}/attachment`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        withCredentials: true
-      });
-      
-      return response.data.filePath;
-    } catch (error) {
-      console.error("Error uploading attachment:", error);
-      throw new Error("Failed to upload attachment");
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!newMessage.trim() && !attachment) return;
-    if (!conversation) {
-      toast.error("Conversation not initialized");
-      return;
-    }
-    
-    // Check if socket is connected before trying to send
-    if (!socketRef.current || !socketRef.current.connected) {
-      toast.error("Not connected to chat server. Attempting to reconnect...");
-      
-      try {
-        // Try to reconnect
-        connectSocket();
-        
-        // Give some time for reconnection before failing
-        setTimeout(() => {
-          if (!socketRef.current || !socketRef.current.connected) {
-            toast.error("Failed to connect to chat server. Please refresh the page.");
-          } else {
-            // If reconnected successfully, try sending the message again
-            handleSubmit(e);
-          }
-        }, 2000);
-      } catch (error) {
-        console.error("Reconnection failed:", error);
-        toast.error("Connection error. Please refresh the page.");
-      }
-      
-      return;
-    }
-    
-    try {
-      setIsSending(true);
-      
-      // Upload attachment if any
-      let attachmentPath = null;
-      if (attachment) {
-        attachmentPath = await uploadAttachment();
-      }
-      
-      // Send message via socket
-      socketRef.current.emit('send-message', {
-        conversationId: conversation._id,
-        content: newMessage,
-        attachment: attachmentPath
-      });
-      
-      // Clear form fields
-      setNewMessage("");
-      setAttachment(null);
-      setAttachmentPreview(null);
-      
-      // Ensure scroll to bottom after sending
-      setTimeout(scrollToBottom, 100);
-      
-    } catch (error) {
-      console.error("Error sending message:", error);
-      toast.error("Failed to send message");
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  // Extract the connect socket function so it can be reused
-  const connectSocket = () => {
-    try {
-      // Get the token from localStorage or from the authenticated user
-      const token = localStorage.getItem('token');
-      console.log("Customer Socket connection - token available:", !!token);
-      
-      if (!token) {
-        console.error("No auth token found - cannot establish socket connection");
-        toast.error("Authentication required for messaging");
-        return false;
-      }
-      
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
-      
-      // Connect with explicit token in auth object
-      socketRef.current = io(SOCKET_URL, {
-        auth: { token },
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
-        timeout: 10000
-      });
-      
-      // Add event handlers to debug connection issues
-      socketRef.current.on('connect', () => {
-        console.log("Customer socket connected successfully with ID:", socketRef.current.id);
-        setIsConnected(true);
-        toast.success("Connected to chat server", { duration: 2000 });
-      });
-      
-      socketRef.current.on('connect_error', (err) => {
-        console.error("Socket connection error:", err.message);
-        setIsConnected(false);
-        toast.error(`Connection error: ${err.message}`);
-      });
-      
-      socketRef.current.on('disconnect', () => {
-        console.log("Socket disconnected, trying to reconnect...");
-        setIsConnected(false);
-        toast.error("Disconnected from chat server. Reconnecting...", { duration: 3000 });
-      });
-      
-      // Add listener for new messages
-      socketRef.current.on('new-message', (message) => {
-        console.log("New message received:", message);
-        setMessages(prevMessages => {
-          // Check if message already exists to prevent duplicates
-          if (prevMessages.some(m => m._id === message._id)) return prevMessages;
-          return [...prevMessages, message];
-        });
-      });
-      
-      // Add listener for messages being read
-      socketRef.current.on('messages-read', (data) => {
-        if (data.by !== 'customer') {
-          setMessages(prevMessages => 
-            prevMessages.map(msg => 
-              msg.sender.role === 'customer' ? { ...msg, isRead: true } : msg
-            )
-          );
-        }
-      });
-
-      // Add typing indicator
-      socketRef.current.on('admin-typing', (isTyping) => {
-        setAdminTyping(isTyping);
-      });
-      
-      return true;
-    } catch (error) {
-      console.error("Error in socket connection setup:", error);
-      toast.error("Failed to set up chat connection");
-      return false;
-    }
-  };
-
-  // Handle typing indicator
-  const handleTyping = () => {
-    if (socketRef.current && socketRef.current.connected) {
-      socketRef.current.emit('customer-typing', true);
-      
-      // Clear existing timeout
-      if (typingTimeout) clearTimeout(typingTimeout);
-      
-      // Set new timeout to stop typing indicator after 2 seconds of inactivity
-      const timeout = setTimeout(() => {
-        socketRef.current.emit('customer-typing', false);
-      }, 2000);
-      
-      setTypingTimeout(timeout);
-    }
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast.error("File size too large (max 5MB)");
-        return;
-      }
-      
-      setAttachment(file);
-      
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAttachmentPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const formatTime = (date) => {
-    return new Date(date).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
   };
 
   return (
@@ -384,10 +353,11 @@ const CustomerMessage = () => {
         {/* Messages Container - only this part scrolls */}
         <div 
           ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto p-4 relative"
+          className="flex-1 overflow-y-auto p-4 relative pb-16"
           style={{ 
             scrollbarWidth: "thin",
             scrollbarColor: "#cbd5e0 #f7fafc",
+            paddingBottom: isMobile ? "120px" : "80px" // Add extra padding at bottom to prevent messages from being hidden behind input
           }}
         >
           {isLoading ? (
@@ -511,7 +481,7 @@ const CustomerMessage = () => {
               ))}
 
               {/* Typing indicator */}
-              {adminTyping && (
+              {isAdminTyping && (
                 <div className="flex items-center mt-2">
                   <div className="h-8 w-8 rounded-full bg-blue-500 flex-shrink-0 mr-2 flex items-center justify-center">
                     <User size={16} className="text-white" />
@@ -535,7 +505,7 @@ const CustomerMessage = () => {
           {showScrollButton && (
             <button
               onClick={scrollToBottom}
-              className="fixed bottom-24 right-6 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-all"
+              className="fixed bottom-32 md:bottom-24 right-6 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-all z-20"
             >
               <ChevronDown size={24} />
             </button>
@@ -550,23 +520,24 @@ const CustomerMessage = () => {
             bottom: `${MOBILE_NAV_HEIGHT}px`, 
             left: 0, 
             right: 0,
-            zIndex: 30
+            zIndex: 30,
+            boxShadow: "0 -2px 10px rgba(0,0,0,0.05)"
           } : {}}
         >
-          <form onSubmit={handleSubmit} className="flex flex-col">
+          <form onSubmit={handleSendMessage} className="flex flex-col">
             {/* Attachment preview if any */}
-            {attachmentPreview && (
+            {imagePreview && (
               <div className="mb-2 relative inline-block">
                 <img 
-                  src={attachmentPreview} 
+                  src={imagePreview} 
                   alt="Attachment preview" 
                   className="h-20 w-auto rounded border border-gray-300" 
                 />
                 <button 
                   type="button"
                   onClick={() => {
-                    setAttachment(null);
-                    setAttachmentPreview(null);
+                    setImagePreview(null);
+                    setImageFile(null);
                   }}
                   className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
                 >
@@ -604,11 +575,11 @@ const CustomerMessage = () => {
               <button
                 type="submit"
                 className={`rounded-lg p-3 text-white ${
-                  isSending || (!newMessage.trim() && !attachment)
+                  isSending || (!newMessage.trim() && !imageFile)
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-blue-600 hover:bg-blue-700"
                 }`}
-                disabled={isSending || (!newMessage.trim() && !attachment)}
+                disabled={isSending || (!newMessage.trim() && !imageFile)}
               >
                 <Send size={20} />
               </button>

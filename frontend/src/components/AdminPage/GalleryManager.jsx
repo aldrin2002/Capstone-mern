@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Image, PlusCircle, Trash2, Edit2, Eye, Search, Loader, XCircle } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import Swal from "sweetalert2"; // Import SweetAlert
 
 console.log("GalleryManager - Current environment mode:", import.meta.env.MODE);
 const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api/gallery" : "/api/gallery";
@@ -49,7 +50,12 @@ const GalleryManager = () => {
             setGallery(response.data);
         } catch (error) {
             console.error("Error fetching gallery:", error);
-            toast.error("Failed to load gallery images");
+            Swal.fire({
+                icon: 'error',
+                title: 'Load Failed',
+                text: 'Failed to load gallery images',
+                confirmButtonColor: '#3085d6',
+            });
         } finally {
             setIsLoading(false);
         }
@@ -66,6 +72,19 @@ const GalleryManager = () => {
         
         if (type === 'file') {
             const file = files[0];
+            
+            // Validate file size before setting it
+            if (file && file.size > 5 * 1024 * 1024) { // 5MB limit
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File Too Large',
+                    text: 'Image must be less than 5MB',
+                    confirmButtonColor: '#3085d6',
+                });
+                e.target.value = null; // Reset the input
+                return;
+            }
+            
             setFormData(prev => ({
                 ...prev,
                 [name]: file
@@ -126,6 +145,39 @@ const GalleryManager = () => {
     // Update handleSubmit to use FormData for file upload
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Validate form inputs
+        if (!formData.title.trim()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Title Required',
+                text: 'Please enter a title for the image',
+                confirmButtonColor: '#3085d6',
+            });
+            return;
+        }
+        
+        // If adding new image, require an image file
+        if (!editingImage && !formData.image) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Image Required',
+                text: 'Please select an image to upload',
+                confirmButtonColor: '#3085d6',
+            });
+            return;
+        }
+        
+        // Show loading state
+        Swal.fire({
+            title: 'Processing...',
+            html: 'Please wait while we save your changes',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
         setIsLoading(true);
 
         try {
@@ -148,7 +200,14 @@ const GalleryManager = () => {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
-                toast.success("Gallery image updated successfully");
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Updated!',
+                    text: 'Gallery image updated successfully',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
             } else {
                 // Add new image
                 await axios.post(API_URL, galleryData, {
@@ -157,7 +216,14 @@ const GalleryManager = () => {
                         'Content-Type': 'multipart/form-data'
                     }
                 });
-                toast.success("Gallery image added successfully");
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Added!',
+                    text: 'Gallery image added successfully',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
             }
             
             // Refresh gallery and reset form
@@ -165,7 +231,12 @@ const GalleryManager = () => {
             resetForm();
         } catch (error) {
             console.error("Error saving gallery image:", error);
-            toast.error(editingImage ? "Failed to update gallery image" : "Failed to add gallery image");
+            Swal.fire({
+                icon: 'error',
+                title: 'Save Failed',
+                text: error.response?.data?.message || 'An error occurred while saving the image',
+                confirmButtonColor: '#3085d6',
+            });
         } finally {
             setIsLoading(false);
         }
@@ -173,20 +244,55 @@ const GalleryManager = () => {
 
     // Handle delete gallery image
     const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this image?")) {
-            return;
+        // Use SweetAlert for delete confirmation
+        const result = await Swal.fire({
+            icon: 'warning',
+            title: 'Confirm Deletion',
+            text: 'Are you sure you want to delete this image?',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        });
+        
+        if (!result.isConfirmed) {
+            return; // User canceled the deletion
         }
+        
+        // Show loading state
+        Swal.fire({
+            title: 'Deleting...',
+            html: 'Please wait while we delete the image',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
         
         setIsLoading(true);
         try {
             await axios.delete(`${API_URL}/${id}`, {
                 withCredentials: true // Include cookies with request
             });
-            toast.success("Gallery image deleted successfully");
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: 'Gallery image deleted successfully',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            
             fetchGallery();
         } catch (error) {
             console.error("Error deleting gallery image:", error);
-            toast.error("Failed to delete gallery image");
+            Swal.fire({
+                icon: 'error',
+                title: 'Delete Failed',
+                text: 'Failed to delete gallery image',
+                confirmButtonColor: '#3085d6',
+            });
         } finally {
             setIsLoading(false);
         }
@@ -379,8 +485,27 @@ const GalleryManager = () => {
                             </h3>
                             <button
                                 onClick={() => {
-                                    setShowModal(false);
-                                    setImagePreview(null);
+                                    // Confirm discard changes if form has been edited
+                                    const hasChanges = formData.title || formData.description || formData.image || formData.featured;
+                                    
+                                    if (hasChanges) {
+                                        Swal.fire({
+                                            title: 'Discard Changes?',
+                                            text: 'Any unsaved changes will be lost',
+                                            icon: 'question',
+                                            showCancelButton: true,
+                                            confirmButtonColor: '#3085d6',
+                                            cancelButtonColor: '#d33',
+                                            confirmButtonText: 'Yes, discard',
+                                            cancelButtonText: 'No, keep editing'
+                                        }).then((result) => {
+                                            if (result.isConfirmed) {
+                                                resetForm();
+                                            }
+                                        });
+                                    } else {
+                                        resetForm();
+                                    }
                                 }}
                                 className="text-gray-400 hover:text-gray-500"
                             >
@@ -464,7 +589,29 @@ const GalleryManager = () => {
                                 <button
                                     type="button"
                                     className="mr-2 px-4 py-2 text-gray-500 hover:text-gray-700 text-sm font-medium"
-                                    onClick={resetForm}
+                                    onClick={() => {
+                                        // Same confirmation dialog as the X button
+                                        const hasChanges = formData.title || formData.description || formData.image || formData.featured;
+                                        
+                                        if (hasChanges) {
+                                            Swal.fire({
+                                                title: 'Discard Changes?',
+                                                text: 'Any unsaved changes will be lost',
+                                                icon: 'question',
+                                                showCancelButton: true,
+                                                confirmButtonColor: '#3085d6',
+                                                cancelButtonColor: '#d33',
+                                                confirmButtonText: 'Yes, discard',
+                                                cancelButtonText: 'No, keep editing'
+                                            }).then((result) => {
+                                                if (result.isConfirmed) {
+                                                    resetForm();
+                                                }
+                                            });
+                                        } else {
+                                            resetForm();
+                                        }
+                                    }}
                                 >
                                     Cancel
                                 </button>

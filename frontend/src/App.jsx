@@ -19,6 +19,9 @@ import AdminMessage from './components/AdminPage/AdminMessage';
 import CustomerOrders from './components/CustomerPage/CustomerOrders';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
+// Get Google Client ID from environment variables
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '915875950866-dqhflpl4s6qfdt6uohbc5anjfn0nn5gd.apps.googleusercontent.com';
+
 // Loading spinner component
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -81,7 +84,7 @@ function App() {
   }
 
   return (
-    <GoogleOAuthProvider clientId="915875950866-dqhflpl4s6qfdt6uohbc5anjfn0nn5gd.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <div className="min-h-screen bg-white">
         <Routes>
           {/* Public Routes */}

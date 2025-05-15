@@ -565,7 +565,7 @@ const fetchMessages = async (conversationId) => {
         sender: {
           id: 'admin',
           name: 'You',
-          role: 'admin'
+          role: 'admin' 
         },
         content: newMessage,
         attachment: attachmentPath,
@@ -818,7 +818,7 @@ useEffect(() => {
 }, [conversations]);
 
   return (
-    <div className={`p-2 sm:p-4 md:p-6 bg-gray-50 ${isMobile ? 'pb-36' : 'h-full'}`}>
+    <div className={`p-2 sm:p-4 md:p-6 bg-gray-50 ${isMobile ? 'h-screen overflow-hidden' : 'h-full'}`}>
       {/* Title area */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-4 md:mb-6">
         <h2 className="text-xl md:text-2xl font-bold text-blue-900 flex items-center">
@@ -836,7 +836,7 @@ useEffect(() => {
       </div>
       
       {/* Chat container with better mobile height calculation */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden h-[calc(100vh-150px)] md:h-[calc(100vh-200px)] flex flex-col">
+      <div className={`bg-white rounded-lg shadow-md overflow-hidden ${isMobile ? 'h-[calc(100vh-120px)]' : 'h-[calc(100vh-200px)]'} flex flex-col`}>
         <div className="grid grid-cols-1 md:grid-cols-3 h-full overflow-hidden">
           {/* Mobile header when conversation is selected */}
           {isMobile && selectedConversation && (
@@ -880,6 +880,7 @@ useEffect(() => {
                   overflowY: "auto",
                   scrollbarWidth: "thin",
                   scrollbarColor: "#cbd5e0 #f7fafc",
+                  height: isMobile ? "calc(100% - 100px)" : "auto", // Fixed height for mobile
                 }}
               >
                 {filteredConversations.length === 0 ? (
@@ -1016,8 +1017,8 @@ useEffect(() => {
                   ref={messagesContainerRef}
                   className="flex-1 overflow-y-auto p-4 bg-gray-50"
                   style={{ 
-                    height: "calc(100% - 140px)", /* Fixed height calculation */
-                    paddingBottom: isMobile ? "100px" : "inherit", // Increased padding
+                    height: isMobile ? "calc(100% - 140px)" : "calc(100% - 140px)",
+                    paddingBottom: isMobile ? "80px" : "16px",
                     overflowY: "auto",
                     scrollbarWidth: "thin",
                     scrollbarColor: "#cbd5e0 #f7fafc",
@@ -1204,18 +1205,14 @@ useEffect(() => {
                 
                 {/* Message Input */}
                 <div 
-                  className={`border-t border-gray-200 bg-white p-4 ${isMobile ? '' : 'sticky bottom-0'}`}
+                  className={`border-t border-gray-200 bg-white p-4 ${isMobile ? 'fixed' : 'sticky bottom-0'}`}
                   style={isMobile ? { 
-                    position: "fixed", 
-                    bottom: `${MOBILE_NAV_HEIGHT + 15}px`, // Increased spacing from navigation
+                    bottom: `${MOBILE_NAV_HEIGHT}px`,
                     left: 0, 
                     right: 0,
                     width: "100%",
-                    zIndex: 40, // Higher than floating buttons
+                    zIndex: 40,
                     boxShadow: "0 -2px 10px rgba(0,0,0,0.1)",
-                    paddingBottom: "16px", // Add more bottom padding
-                    paddingLeft: "16px",
-                    paddingRight: "16px" 
                   } : { zIndex: 10 }}
                 >
                   <form onSubmit={handleSubmit} className="flex flex-col max-w-screen-xl mx-auto">

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Phone, Mail, MapPin, Clock, Globe, Save, Loader } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 // Add console log to debug mode detection
 console.log("Current environment mode:", import.meta.env.MODE);
@@ -48,7 +49,12 @@ const ContactManager = () => {
             }
         } catch (error) {
             console.error("Error fetching contact info:", error);
-            toast.error("Failed to load contact information");
+            Swal.fire({
+                icon: 'error',
+                title: 'Load Failed',
+                text: 'Failed to load contact information',
+                confirmButtonColor: '#3085d6',
+            });
         } finally {
             setIsLoading(false);
         }
@@ -83,6 +89,51 @@ const ContactManager = () => {
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Basic form validation
+        if (!formData.email || !formData.address || !formData.hours) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Required Fields Missing',
+                text: 'Please fill in all required fields (Email, Address, and Business Hours)',
+                confirmButtonColor: '#3085d6',
+            });
+            return;
+        }
+        
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Email',
+                text: 'Please enter a valid email address',
+                confirmButtonColor: '#3085d6',
+            });
+            return;
+        }
+        
+        // Website validation (if provided)
+        if (formData.website && !formData.website.startsWith('http')) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Website URL',
+                text: 'Website URL should start with http:// or https://',
+                confirmButtonColor: '#3085d6',
+            });
+            return;
+        }
+        
+        // Show loading state
+        Swal.fire({
+            title: 'Saving...',
+            html: 'Please wait while we save your changes',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
         setIsLoading(true);
         
         try {
@@ -91,10 +142,22 @@ const ContactManager = () => {
             });
             setContactInfo(response.data);
             setIsEditing(false);
-            toast.success("Contact information updated successfully");
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Saved!',
+                text: 'Contact information updated successfully',
+                timer: 1500,
+                showConfirmButton: false
+            });
         } catch (error) {
             console.error("Error updating contact info:", error);
-            toast.error("Failed to update contact information");
+            Swal.fire({
+                icon: 'error',
+                title: 'Save Failed',
+                text: error.response?.data?.message || 'Failed to update contact information',
+                confirmButtonColor: '#3085d6',
+            });
         } finally {
             setIsLoading(false);
         }
@@ -102,8 +165,29 @@ const ContactManager = () => {
     
     // Cancel editing
     const handleCancel = () => {
-        setFormData(contactInfo);
-        setIsEditing(false);
+        // Check if form data has changed
+        const hasChanges = JSON.stringify(formData) !== JSON.stringify(contactInfo);
+        
+        if (hasChanges) {
+            Swal.fire({
+                title: 'Discard Changes?',
+                text: 'Any unsaved changes will be lost',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, discard',
+                cancelButtonText: 'No, keep editing'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    setFormData(contactInfo);
+                    setIsEditing(false);
+                }
+            });
+        } else {
+            setFormData(contactInfo);
+            setIsEditing(false);
+        }
     };
     
     return (
@@ -345,26 +429,6 @@ const ContactManager = () => {
                                                 className="text-blue-600 hover:underline"
                                             >
                                                 Facebook
-                                            </a>
-                                        )}
-                                        {contactInfo.socialMedia.instagram && (
-                                            <a 
-                                                href={contactInfo.socialMedia.instagram} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer"
-                                                className="text-pink-600 hover:underline"
-                                            >
-                                                Instagram
-                                            </a>
-                                        )}
-                                        {contactInfo.socialMedia.twitter && (
-                                            <a 
-                                                href={contactInfo.socialMedia.twitter} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer"
-                                                className="text-blue-400 hover:underline"
-                                            >
-                                                Twitter
                                             </a>
                                         )}
                                     </div>

@@ -56,15 +56,20 @@ export const getAllConversations = async (req, res) => {
 // Upload attachment
 export const uploadAttachment = async (req, res) => {
   try {
+    console.log("Upload attachment request received", req.file);
+    
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });
     }
     
+    // Use forward slashes for path consistency
     const filePath = `/uploads/${req.file.filename}`;
+    console.log("File saved with path:", filePath);
+    
     res.status(200).json({ filePath });
   } catch (error) {
     console.error("Error uploading attachment:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error uploading file", error: error.message });
   }
 };
 

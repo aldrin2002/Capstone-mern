@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 const API_URL =
   import.meta.env.MODE === "development"
@@ -63,7 +64,12 @@ const ProductManager = () => {
       setProducts(response.data);
     } catch (error) {
       console.error("Error fetching products:", error);
-      toast.error("Failed to load products");
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to load products',
+        confirmButtonColor: '#3085d6',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -74,18 +80,34 @@ const ProductManager = () => {
     const { name, value, type, files } = e.target;
 
     if (type === "file") {
+      const file = files[0];
+      
+      // Validate file size before setting
+      if (file && file.size > 5 * 1024 * 1024) { // 5MB limit
+        Swal.fire({
+          icon: 'error',
+          title: 'File Too Large',
+          text: 'Image must be less than 5MB',
+          confirmButtonColor: '#3085d6',
+        });
+        e.target.value = null; // Reset input
+        return;
+      }
+      
       setFormData({
         ...formData,
-        [name]: files[0],
+        [name]: file,
       });
 
       // Create image preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      if (files[0]) {
-        reader.readAsDataURL(files[0]);
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setImagePreview(null);
       }
     } else {
       setFormData({
@@ -98,6 +120,49 @@ const ProductManager = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate inputs
+    if (!formData.name.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Name Required',
+        text: 'Please enter a product name',
+        confirmButtonColor: '#3085d6',
+      });
+      return;
+    }
+    
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Price',
+        text: 'Please enter a valid price greater than zero',
+        confirmButtonColor: '#3085d6',
+      });
+      return;
+    }
+    
+    // If adding new product, require an image
+    if (!editingProduct && !formData.image) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Image Required',
+        text: 'Please select an image for the product',
+        confirmButtonColor: '#3085d6',
+      });
+      return;
+    }
+    
+    // Show loading state
+    Swal.fire({
+      title: 'Processing...',
+      html: 'Please wait while we save your changes',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    
     setIsLoading(true);
 
     // Create form data object for file upload
@@ -117,19 +182,34 @@ const ProductManager = () => {
         await axios.put(`${API_URL}/${editingProduct._id}`, productData, {
           withCredentials: true,
         });
-        toast.success("Product updated successfully");
+        Swal.fire({
+          icon: 'success',
+          title: 'Updated!',
+          text: 'Product updated successfully',
+          timer: 1500,
+          showConfirmButton: false
+        });
       } else {
         // Create new product
         await axios.post(API_URL, productData, { withCredentials: true });
-        toast.success("Product added successfully");
+        Swal.fire({
+          icon: 'success',
+          title: 'Added!',
+          text: 'Product added successfully',
+          timer: 1500,
+          showConfirmButton: false
+        });
       }
       resetForm();
       fetchProducts();
     } catch (error) {
       console.error("Error saving product:", error);
-      toast.error(
-        error.response?.data?.message || "Failed to save product"
-      );
+      Swal.fire({
+        icon: 'error',
+        title: 'Save Failed',
+        text: error.response?.data?.message || "Failed to save product",
+        confirmButtonColor: '#3085d6',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -169,18 +249,53 @@ const ProductManager = () => {
 
   // Delete product
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      setIsLoading(true);
-      try {
-        await axios.delete(`${API_URL}/${id}`, { withCredentials: true });
-        toast.success("Product deleted successfully");
-        fetchProducts();
-      } catch (error) {
-        console.error("Error deleting product:", error);
-        toast.error("Failed to delete product");
-      } finally {
-        setIsLoading(false);
+    // Use SweetAlert for confirmation
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Confirm Deletion',
+      text: 'Are you sure you want to delete this product?',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel'
+    });
+    
+    if (!result.isConfirmed) {
+      return; // User canceled the deletion
+    }
+    
+    // Show loading state
+    Swal.fire({
+      title: 'Deleting...',
+      html: 'Please wait while we delete the product',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
       }
+    });
+    
+    setIsLoading(true);
+    try {
+      await axios.delete(`${API_URL}/${id}`, { withCredentials: true });
+      Swal.fire({
+        icon: 'success',
+        title: 'Deleted!',
+        text: 'Product deleted successfully',
+        timer: 1500,
+        showConfirmButton: false
+      });
+      fetchProducts();
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Delete Failed',
+        text: 'Failed to delete product',
+        confirmButtonColor: '#3085d6',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -290,7 +405,29 @@ const ProductManager = () => {
                 {editingProduct ? "Edit Product" : "Add New Product"}
               </h3>
               <button
-                onClick={resetForm}
+                onClick={() => {
+                  // Confirm before closing if form has changes
+                  const hasChanges = formData.name || formData.price || formData.description || formData.image;
+                  
+                  if (hasChanges) {
+                    Swal.fire({
+                      title: 'Discard Changes?',
+                      text: 'Any unsaved changes will be lost',
+                      icon: 'question',
+                      showCancelButton: true,
+                      confirmButtonColor: '#3085d6',
+                      cancelButtonColor: '#d33',
+                      confirmButtonText: 'Yes, discard',
+                      cancelButtonText: 'No, keep editing'
+                    }).then((result) => {
+                      if (result.isConfirmed) {
+                        resetForm();
+                      }
+                    });
+                  } else {
+                    resetForm();
+                  }
+                }}
                 className="text-gray-400 hover:text-gray-500"
               >
                 &times;
@@ -382,6 +519,7 @@ const ProductManager = () => {
                   onChange={handleChange}
                   accept="image/*"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  required={!editingProduct}
                 />
                 {imagePreview && (
                   <div className="mt-2 relative">
@@ -402,11 +540,38 @@ const ProductManager = () => {
                     </button>
                   </div>
                 )}
+                {editingProduct && !formData.image && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    Leave empty to keep the current image
+                  </p>
+                )}
               </div>
               <div className={`flex justify-end ${isMobile ? 'sticky bottom-0 bg-white py-4 border-t mt-4' : ''}`}>
                 <button
                   type="button"
-                  onClick={resetForm}
+                  onClick={() => {
+                    // Same confirmation dialog as the X button
+                    const hasChanges = formData.name || formData.price || formData.description || formData.image;
+                    
+                    if (hasChanges) {
+                      Swal.fire({
+                        title: 'Discard Changes?',
+                        text: 'Any unsaved changes will be lost',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, discard',
+                        cancelButtonText: 'No, keep editing'
+                      }).then((result) => {
+                        if (result.isConfirmed) {
+                          resetForm();
+                        }
+                      });
+                    } else {
+                      resetForm();
+                    }
+                  }}
                   className="mr-2 px-4 py-2 text-gray-500 hover:text-gray-700 text-sm font-medium"
                 >
                   Cancel

@@ -5,21 +5,15 @@ import { User } from "../models/user.model.js";
 import { jwtDecode } from "jwt-decode";
 
 export const signup = async (req, res) => {
-    const { email, password, name, phone } = req.body;
-
     try {
-        if (!email || !password || !name || !phone) {
-            throw new Error("All fields are required");
-        }
+        const { email, password, name, phone } = req.body;
 
         const userAlreadyExists = await User.findOne({ email });
-
         if (userAlreadyExists) {
             return res.status(400).json({ success: false, message: "User already exists" });
         }
 
         const hashedPassword = await bcryptjs.hash(password, 10);
-
         const user = new User({
             email,
             password: hashedPassword,
@@ -30,8 +24,8 @@ export const signup = async (req, res) => {
 
         await user.save();
 
-        // jwt
-        generateTokenAndSetCookie(res, user._id);
+        // jwt - now await the async function
+        await generateTokenAndSetCookie(res, user._id);
 
         res.status(201).json({
             success: true,
@@ -58,8 +52,8 @@ export const login = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid credentials" });
         }
 
-        // Generate token and return it in the response
-        const token = generateTokenAndSetCookie(res, user._id);
+        // Generate token and return it in the response - now await the async function
+        const token = await generateTokenAndSetCookie(res, user._id);
 
         user.lastLogin = new Date();
         await user.save();
@@ -91,8 +85,8 @@ export const costumerlogin = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid credentials" });
         }
 
-        // Generate token and set cookie
-        const token = generateTokenAndSetCookie(res, user._id);
+        // Generate token and set cookie - now await the async function
+        const token = await generateTokenAndSetCookie(res, user._id);
 
         user.lastLogin = new Date();
         await user.save();
@@ -133,7 +127,8 @@ export const costumersignup = async (req, res) => {
         });
 
         await user.save();
-        generateTokenAndSetCookie(res, user._id);
+        // now await the async function
+        await generateTokenAndSetCookie(res, user._id);
 
         res.status(201).json({
             success: true,
@@ -181,8 +176,8 @@ export const costumerSignup = async (req, res) => {
 
         await user.save();
 
-        // Generate JWT token
-        generateTokenAndSetCookie(res, user._id);
+        // Generate JWT token - now await the async function
+        await generateTokenAndSetCookie(res, user._id);
 
         res.status(201).json({
             success: true,
@@ -274,7 +269,10 @@ export const googleLogin = async (req, res) => {
     try {
       // Generate token directly to avoid issues with the helper function
       const token = jwt.sign(
-        { userId: user._id },
+        { 
+          userId: user._id,
+          role: user.role   // Include user role in the token
+        },
         process.env.JWT_SECRET || "fallback-secret-key-for-development",
         { expiresIn: '30d' }
       );

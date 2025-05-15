@@ -63,6 +63,10 @@ const orderSchema = new mongoose.Schema(
             type: String,
             enum: ["Pending", "Paid", "Failed"],
             default: "Pending"
+        },
+        proofOfPayment: {
+            type: String,
+            default: ""
         }
     },
     { timestamps: true }

@@ -21,6 +21,15 @@ const SideNav = ({ active, setActive }) => {
         { id: "messages", label: "Messages", icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : null },
     ];
 
+    // Mobile navigation items (without Messages and Contact)
+    const mobileNavItems = [
+        { id: "dashboard", label: "Dashboard", icon: Home },
+        { id: "users", label: "Users", icon: Users },
+        { id: "products", label: "Products", icon: ShoppingBag },
+        { id: "gallery", label: "Gallery", icon: Image },
+        { id: "orders", label: "Orders", icon: ShoppingCart },
+    ];
+
     // Handle logout with SweetAlert confirmation
     const handleLogout = () => {
         Swal.fire({
@@ -72,12 +81,44 @@ const SideNav = ({ active, setActive }) => {
                 <div className="fixed left-4 bottom-28 z-50 flex flex-col-reverse items-center space-y-reverse space-y-4">
                     {/* Logout Button - Only visible when expanded */}
                     {isExpanded && (
-                        <button
-                            onClick={handleLogout}
-                            className="bg-red-500 text-white p-3 rounded-full shadow-lg hover:bg-red-600 transition-all transform animate-fadeIn"
-                        >
-                            <LogOut size={24} />
-                        </button>
+                        <>
+                            <button
+                                onClick={handleLogout}
+                                className="bg-red-500 text-white p-3 rounded-full shadow-lg hover:bg-red-600 transition-all transform animate-fadeIn"
+                                aria-label="Logout"
+                            >
+                                <LogOut size={24} />
+                            </button>
+                            
+                            {/* Messages Button */}
+                            <button
+                                onClick={() => { 
+                                    setActive("messages");
+                                    setIsExpanded(false);
+                                }}
+                                className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all transform animate-fadeIn relative"
+                                aria-label="Messages"
+                            >
+                                <MessageSquare size={24} />
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </button>
+                            
+                            {/* Contact Button */}
+                            <button
+                                onClick={() => {
+                                    setActive("contact");
+                                    setIsExpanded(false);
+                                }}
+                                className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all transform animate-fadeIn"
+                                aria-label="Contact"
+                            >
+                                <Phone size={24} />
+                            </button>
+                        </>
                     )}
                     
                     {/* Main Toggle Button */}
@@ -88,6 +129,7 @@ const SideNav = ({ active, setActive }) => {
                                 ? "bg-gray-700 text-white rotate-45" 
                                 : "bg-blue-600 text-white"
                         }`}
+                        aria-label={isExpanded ? "Close menu" : "Open menu"}
                     >
                         <Plus size={24} />
                     </button>
@@ -96,7 +138,7 @@ const SideNav = ({ active, setActive }) => {
                 {/* Bottom Navigation */}
                 <div className="fixed bottom-0 left-0 right-0 bg-blue-800 text-white z-40 shadow-lg">
                     <div className="flex justify-around items-center h-16">
-                        {navItems.map((item) => {
+                        {mobileNavItems.map((item) => {
                             const IconComponent = item.icon;
                             return (
                                 <button 
@@ -108,6 +150,11 @@ const SideNav = ({ active, setActive }) => {
                                 >
                                     <IconComponent className="h-5 w-5 mb-1" />
                                     <span className="text-xs">{item.label}</span>
+                                    {item.badge && (
+                                        <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                                            {item.badge}
+                                        </span>
+                                    )}
                                 </button>
                             );
                         })}

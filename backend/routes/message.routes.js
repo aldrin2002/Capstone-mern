@@ -11,8 +11,16 @@ import {
   deleteMessage,
   deleteConversation 
 } from "../controllers/message.controller.js";
+import fs from 'fs';
 
 const router = express.Router();
+
+// Make sure uploads directory exists
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('Created uploads directory at:', uploadsDir);
+}
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -39,6 +47,21 @@ const upload = multer({
   }
 });
 
+// Error handling middleware for multer errors
+const handleMulterError = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    // A multer error occurred
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ message: 'File is too large. Maximum size is 5MB.' });
+    }
+    return res.status(400).json({ message: `Upload error: ${err.message}` });
+  } else if (err) {
+    // A non-multer error occurred
+    return res.status(400).json({ message: err.message });
+  }
+  next();
+};
+
 // Get customer conversation
 router.get("/conversation", verifyToken, getOrCreateConversation);
 
@@ -48,8 +71,16 @@ router.get("/conversations", verifyToken, getAllConversations);
 // Get messages for a conversation
 router.get("/:conversationId", verifyToken, getMessages);
 
-// Upload attachment
-router.post("/attachment", verifyToken, upload.single("attachment"), uploadAttachment);
+// Upload attachment with error handling
+router.post("/attachment", verifyToken, (req, res, next) => {
+  upload.single("attachment")(req, res, (err) => {
+    if (err) {
+      console.error("Multer error:", err);
+      return res.status(400).json({ message: err.message });
+    }
+    next();
+  });
+}, uploadAttachment);
 
 // Delete a single message
 router.delete("/:id", verifyToken, deleteMessage);
