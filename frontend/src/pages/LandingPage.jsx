@@ -98,13 +98,6 @@ const LandingPage = () => {
               >
                 Order Now
               </Link>
-              <Link 
-                to="/login"
-                className="bg-white/20 backdrop-blur-sm text-white px-8 py-3 rounded-lg 
-                                             font-semibold hover:bg-white/30 transition duration-200 text-center"
-              >
-                Admin Portal
-              </Link>
             </div>
           </div>
         </section>
