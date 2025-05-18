@@ -39,6 +39,11 @@ self.addEventListener('activate', event => {
 
 // Serve cached content when offline
 self.addEventListener('fetch', event => {
+  // Only cache GET requests - skip for other methods
+  if (event.request.method !== 'GET') {
+    return event.respondWith(fetch(event.request));
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {
