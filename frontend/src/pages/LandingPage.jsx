@@ -1,6 +1,74 @@
 import { Link } from 'react-router-dom';
-import { Coffee, Star, Clock, Users } from 'lucide-react';
+import { Coffee, Star, Clock, Users, Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
+
+// Install PWA Component
+const InstallPWA = () => {
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [isAppInstalled, setIsAppInstalled] = useState(false);
+
+  useEffect(() => {
+    // Check if the app is already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsAppInstalled(true);
+    }
+
+    // Listen for the beforeinstallprompt event
+    const handleBeforeInstallPrompt = (e) => {
+      // Prevent Chrome 76+ from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      setInstallPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    
+    // Listen for app installed event
+    window.addEventListener('appinstalled', () => {
+      // Hide the install button, it's no longer needed
+      setInstallPrompt(null);
+      setIsAppInstalled(true);
+      console.log('PWA was installed');
+    });
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', () => {});
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) return;
+    
+    // Show the install prompt
+    installPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
+    const choiceResult = await installPrompt.userChoice;
+    
+    // Reset the deferred prompt variable
+    setInstallPrompt(null);
+    
+    if (choiceResult.outcome === 'accepted') {
+      console.log('User accepted the install prompt');
+    } else {
+      console.log('User dismissed the install prompt');
+    }
+  };
+
+  // Only show the button if installation is available and app is not installed
+  if (!installPrompt || isAppInstalled) return null;
+
+  return (
+    <button
+      onClick={handleInstallClick}
+      className="flex items-center gap-2 bg-white text-primary-700 px-4 py-2 rounded-lg font-semibold hover:bg-white/90 transition duration-200"
+    >
+      <Download className="w-4 h-4" />
+      Install App
+    </button>
+  );
+};
 
 // Contact Section Component
 const ContactSection = () => {
@@ -68,7 +136,8 @@ const LandingPage = () => {
       <header className="relative z-10 bg-white/10 backdrop-blur-md border-b border-white/20">
         <div className="container mx-auto flex justify-between items-center py-4 px-6">
           <h1 className="text-2xl font-bold text-white">CafeX</h1>
-          <nav className="space-x-4">
+          <nav className="flex items-center space-x-4">
+            <InstallPWA />
             <Link to="/login" className="text-white hover:text-primary-200 transition-colors">
               Admin
             </Link> 
