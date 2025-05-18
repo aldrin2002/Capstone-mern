@@ -25,7 +25,7 @@ const InstallPWA = () => {
     
     // Listen for app installed event
     window.addEventListener('appinstalled', () => {
-      // Hide the install button, it's no longer needed
+      // Update state to show installed status
       setInstallPrompt(null);
       setIsAppInstalled(true);
       console.log('PWA was installed');
@@ -38,7 +38,19 @@ const InstallPWA = () => {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!installPrompt) return;
+    if (!installPrompt) {
+      // If on iOS, show instructions for adding to home screen
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIOS) {
+        alert("To install this app on iOS: tap the share icon and then 'Add to Home Screen'");
+      } else if (isAppInstalled) {
+        alert("App is already installed!");
+      } else {
+        // For other browsers that don't support installation
+        alert("Installation is not supported on this browser");
+      }
+      return;
+    }
     
     // Show the install prompt
     installPrompt.prompt();
@@ -56,16 +68,21 @@ const InstallPWA = () => {
     }
   };
 
-  // Only show the button if installation is available and app is not installed
-  if (!installPrompt || isAppInstalled) return null;
-
+  // Determine button text and styles based on installation status
+  const buttonText = isAppInstalled ? "Open App" : "Install App";
+  const buttonIcon = isAppInstalled ? "external-link" : "download";
+  
   return (
     <button
       onClick={handleInstallClick}
-      className="flex items-center gap-2 bg-white text-primary-700 px-4 py-2 rounded-lg font-semibold hover:bg-white/90 transition duration-200"
+      className="flex items-center justify-center gap-1.5 bg-white text-primary-700 
+                px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-semibold 
+                hover:bg-white/90 transition duration-200 text-sm sm:text-base 
+                whitespace-nowrap min-w-[106px] sm:min-w-[120px]"
+      aria-label={buttonText}
     >
-      <Download className="w-4 h-4" />
-      Install App
+      <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+      <span>{buttonText}</span>
     </button>
   );
 };

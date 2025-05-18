@@ -901,16 +901,19 @@ useEffect(() => {
               filteredConversations.map((conv) => (
                 <div
                   key={conv._id}
-                  className={`p-3 border-b border-gray-100 cursor-pointer transition-colors
+                  className={`p-3 border-b border-gray-100 cursor-pointer transition-colors relative group
                     ${selectedConversation?._id === conv._id 
                       ? 'bg-blue-50 border-l-4 border-l-blue-500' 
                       : 'hover:bg-gray-50 border-l-4 border-l-transparent'
                     }
                     ${conv.unreadCount > 0 ? 'bg-amber-50' : ''}
                   `}
-                  onClick={() => setSelectedConversation(conv)}
                 >
-                  <div className="flex items-center space-x-3">
+                  {/* Make the entire div clickable except for delete button */}
+                  <div 
+                    className="flex items-center space-x-3"
+                    onClick={() => setSelectedConversation(conv)}
+                  >
                     <div className="relative flex-shrink-0">
                       <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-medium">
                         {conv.customer?.name?.charAt(0).toUpperCase() || 'C'}
@@ -932,6 +935,17 @@ useEffect(() => {
                       </div>
                     )}
                   </div>
+                  
+                  {/* Mobile-friendly delete button */}
+                  <button
+                    className={`absolute ${isMobile ? 'right-3 top-1/2 -translate-y-1/2' : 'top-2 right-2'} 
+                      ${isMobile ? 'p-2 bg-red-100' : 'p-1.5 bg-red-50 opacity-0 group-hover:opacity-100'}
+                      rounded-full text-red-500 hover:bg-red-100 transition-all`}
+                    onClick={(e) => handleDeleteConversation(conv._id, e)}
+                    aria-label="Delete conversation"
+                  >
+                    <Trash2 size={isMobile ? 18 : 14} />
+                  </button>
                 </div>
               ))
             )}

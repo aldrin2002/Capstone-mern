@@ -104,34 +104,6 @@ export const useAuthStore = create((set) => ({
         }
     },
 
-    // Add this function to your existing authStore
-    customerGoogleLogin: async (credential) => {
-        set({ isLoading: true, error: null });
-        try {
-            console.log("Sending Google credential to backend...");
-            const response = await axios.post(`${API_URL}/google-login`, { credential });
-            
-            if (response.data.token) {
-                localStorage.setItem('token', response.data.token);
-            }
-            
-            set({ 
-                user: response.data.user, 
-                isAuthenticated: true, 
-                isLoading: false 
-            });
-            
-            return response.data;
-        } catch (error) {
-            console.error("Google login error:", error);
-            set({ 
-                error: error.response?.data?.message || "Google login failed", 
-                isLoading: false 
-            });
-            throw error;
-        }
-    },
-
     // Common logout for both admin and customer
     logout: async () => {
         set({ isLoading: true, error: null });

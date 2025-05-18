@@ -6,15 +6,13 @@ import { useAuthStore } from "../../store/authStore";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
 import Swal from "sweetalert2";
-import { GoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from "jwt-decode";
 
 const CostumerLoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const { customerLogin, customerGoogleLogin, isLoading } = useAuthStore();
+  const { customerLogin, isLoading } = useAuthStore();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -43,32 +41,6 @@ const CostumerLoginPage = () => {
         toast.error(error.response?.data?.message || "Invalid credentials. Please try again.");
       }
     }
-  };
-
-  const handleGoogleSuccess = async (credentialResponse) => {
-    try {
-      await customerGoogleLogin(credentialResponse.credential);
-      
-      Swal.fire({
-        title: "Welcome Customer!",
-        text: "You have successfully logged in with Google",
-        icon: "success",
-        confirmButtonText: "Continue to Dashboard",
-        confirmButtonColor: "#3B82F6",
-        background: "rgba(255, 255, 255, 0.9)",
-        backdrop: `rgba(59, 130, 246, 0.4)`
-      }).then((result) => {
-        if (result.isConfirmed) {
-          navigate("/customer-dashboard");
-        }
-      });
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Google login failed. Please try again.");
-    }
-  };
-
-  const handleGoogleError = () => {
-    toast.error("Google sign-in was unsuccessful. Please try again.");
   };
 
   return (
@@ -108,27 +80,6 @@ const CostumerLoginPage = () => {
               {isLoading ? <Loader className="w-6 h-6 animate-spin mx-auto" /> : "Login"}
             </button>
           </form>
-          
-          <div className="mt-4 relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/30"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-transparent text-white">Or continue with</span>
-            </div>
-          </div>
-          
-          <div className="mt-4 flex justify-center">
-            <GoogleLogin
-              onSuccess={handleGoogleSuccess}
-              onError={handleGoogleError}
-              size="large"
-              theme="filled_blue"
-              text="signin_with"
-              shape="pill"
-              width="100%"
-            />
-          </div>
         </div>
         <div className="px-8 py-4 bg-gray-50 bg-opacity-20 flex justify-center">
           <p className="text-sm text-white">
