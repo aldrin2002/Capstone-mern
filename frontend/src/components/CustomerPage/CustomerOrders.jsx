@@ -202,6 +202,14 @@ const CustomerOrders = () => {
                                     src={`${API_BASE_URL}${item.product.image}`} 
                                     alt={item.product.name} 
                                     className="w-12 h-12 object-cover rounded mr-3"
+                                    onError={(e) => {
+                                      e.target.onerror = null; // Prevent infinite error loop
+                                      e.target.src = "https://via.placeholder.com/48?text=Product"; // Fallback image
+                                      
+                                      // Or use the ShoppingBag icon as fallback:
+                                      // e.target.style.display = 'none';
+                                      // e.target.parentNode.innerHTML = '<div class="w-12 h-12 bg-gray-200 rounded flex items-center justify-center"><svg class="h-6 w-6 text-gray-400">...</svg></div>';
+                                    }}
                                   />
                                 ) : (
                                   <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center mr-3">
@@ -257,7 +265,7 @@ const CustomerOrders = () => {
                       <div className="mt-4 border-t pt-4">
                         <div className="flex justify-between mb-1">
                           <span className="text-gray-600">Subtotal</span>
-                          <span>₱{order.total.toFixed(2)}</span>
+                          <span>₱{(order.total - 50).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between mb-1">
                           <span className="text-gray-600">Delivery</span>
@@ -265,7 +273,7 @@ const CustomerOrders = () => {
                         </div>
                         <div className="flex justify-between font-bold text-lg mt-2">
                           <span>Total</span>
-                          <span>₱{(order.total + 50).toFixed(2)}</span>
+                          <span>₱{order.total.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
