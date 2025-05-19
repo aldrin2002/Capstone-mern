@@ -174,7 +174,7 @@ const LandingPage = () => {
               Welcome to CafeX
             </h1>
             <p className="text-xl mb-8 text-white/80 text-center">
-              Your Premium Coffee Experience Management System
+              Your Centralized Platform for Cafe
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
@@ -218,7 +218,7 @@ const LandingPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
               <h3 className="text-xl font-bold mb-4 text-white">CafeX</h3>
-              <p className="text-white/70">Your Cafe Centralize Showcasing and Ordering System</p>
+              <p className="text-white/70">Your Cafe Centralize Platform For Cafe</p>
             </div>
             <ContactSection />
             <div>
