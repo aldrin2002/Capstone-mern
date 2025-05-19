@@ -83,11 +83,11 @@ const ProductManager = () => {
       const file = files[0];
       
       // Validate file size before setting
-      if (file && file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file && file.size > 50 * 1024 * 1024) { // 50MB limit
         Swal.fire({
           icon: 'error',
           title: 'File Too Large',
-          text: 'Image must be less than 5MB',
+          text: 'Image must be less than 50MB',
           confirmButtonColor: '#3085d6',
         });
         e.target.value = null; // Reset input
