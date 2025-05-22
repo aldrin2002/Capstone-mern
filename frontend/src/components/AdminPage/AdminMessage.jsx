@@ -858,7 +858,7 @@ useEffect(() => {
       )}
 
       {/* Main chat container */}
-      <div className={`${isMobile ? 'h-[calc(100vh-4rem)]' : 'h-[calc(100vh-8rem)]'} bg-white shadow-sm flex`}>
+      <div className={`${isMobile ? 'h-[calc(100vh-4rem)]' : 'h-full'} bg-white shadow-sm flex`}>
         {/* Conversation list - Hide on mobile when conversation selected */}
         <div className={`${
           isMobile && selectedConversation ? 'hidden' : 'w-full'
