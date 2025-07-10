@@ -75,7 +75,7 @@ const InstallPWA = () => {
   return (
     <button
       onClick={handleInstallClick}
-      className="flex items-center justify-center gap-1.5 bg-white text-primary-700 
+      className="flex items-center justify-center gap-1.5 bg-white text-blue-700 
                 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-semibold 
                 hover:bg-white/90 transition duration-200 text-sm sm:text-base 
                 whitespace-nowrap min-w-[106px] sm:min-w-[120px]"
@@ -127,7 +127,7 @@ const ContactSection = () => {
 // Main Landing Page Component
 const LandingPage = () => {
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-b from-primary-500 to-primary-900">
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-b from-blue-500 to-blue-900">
       {/* Meteor Effect */}
       <div className="fixed inset-0 pointer-events-none">
         {[...Array(30)].map((_, i) => (
@@ -155,10 +155,10 @@ const LandingPage = () => {
           <h1 className="text-2xl font-bold text-white">CafeX</h1>
           <nav className="flex items-center space-x-4">
             <InstallPWA />
-            <Link to="/login" className="text-white hover:text-primary-200 transition-colors">
+            <Link to="/login" className="text-white hover:text-blue-200 transition-colors">
               Admin
             </Link> 
-            <Link to="/costumerLogin" className="text-white hover:text-primary-200 transition-colors">
+            <Link to="/costumerLogin" className="text-white hover:text-blue-200 transition-colors">
               Customer
             </Link>
           </nav>
@@ -179,8 +179,8 @@ const LandingPage = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
                 to="/costumerLogin"
-                className="bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold 
-                                             hover:bg-primary-700 transition duration-200 text-center"
+                className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold 
+                                             hover:bg-blue-700 transition duration-200 text-center"
               >
                 Order Now
               </Link>
@@ -202,7 +202,7 @@ const LandingPage = () => {
                 { icon: Users, title: "Customer First", desc: "Dedicated to customer satisfaction" }
               ].map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="bg-white/5 backdrop-blur-sm rounded-xl p-6 hover:bg-white/10 transition duration-300">
-                  <Icon className="w-12 h-12 mx-auto mb-4 text-primary-200" />
+                  <Icon className="w-12 h-12 mx-auto mb-4 text-blue-200" />
                   <h3 className="text-xl font-semibold mb-2 text-white">{title}</h3>
                   <p className="text-white/70">{desc}</p>
                 </div>
