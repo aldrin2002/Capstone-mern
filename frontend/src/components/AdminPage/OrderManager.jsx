@@ -339,180 +339,202 @@ const OrderManager = () => {
             
             {selectedOrder && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
-                    <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-                        <div className="border-b border-gray-200 px-4 py-3 md:px-6 md:py-4 flex justify-between items-center sticky top-0 bg-white z-10">
-                            <h3 className="text-base md:text-lg font-medium text-gray-900 truncate pr-2">
-                                Order Details - {selectedOrder._id}
-                            </h3>
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
+                        {/* Enhanced Header */}
+                        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-4 md:px-6 md:py-5 flex justify-between items-center">
+                            <div>
+                                <h3 className="text-lg md:text-xl font-bold">Order Details</h3>
+                                <p className="text-blue-100 text-sm">ID: {selectedOrder._id}</p>
+                            </div>
                             <button 
                                 onClick={() => setSelectedOrder(null)}
-                                className="text-gray-400 hover:text-gray-500"
+                                className="text-white hover:text-red-300 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-all duration-200"
                             >
-                                <XCircle className="h-5 w-5" />
+                                <X className="h-5 w-5" />
                             </button>
                         </div>
                         
-                        <div className="px-4 py-3 md:px-6 md:py-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
-                                <div>
-                                    <p className="text-xs md:text-sm text-gray-500">Customer</p>
-                                    <p className="font-medium text-sm md:text-base">{selectedOrder.customer.name}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs md:text-sm text-gray-500">Contact</p>
-                                    <p className="font-medium text-sm md:text-base">{selectedOrder.customer.email}</p>
-                                    {selectedOrder.customer.phone && (
-                                        <p className="text-xs md:text-sm text-gray-600">{selectedOrder.customer.phone}</p>
-                                    )}
-                                </div>
-                                <div>
-                                    <p className="text-xs md:text-sm text-gray-500">Date</p>
-                                    <p className="font-medium text-sm md:text-base">{formatDate(selectedOrder.createdAt)}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs md:text-sm text-gray-500">Status</p>
-                                    <p className={`inline-flex items-center ${getStatusClass(selectedOrder.status)} px-2 py-1 rounded-full text-xs font-medium`}>
-                                        {getStatusIcon(selectedOrder.status)}
-                                        <span className="ml-1">{selectedOrder.status}</span>
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-xs md:text-sm text-gray-500">Payment Method</p>
-                                    <div className="mt-1">{getPaymentBadge(selectedOrder.paymentMethod)}</div>
-                                </div>
-                                <div>
-                                    <p className="text-xs md:text-sm text-gray-500">Payment Status</p>
-                                    <div className="mt-1">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                            selectedOrder.paymentStatus === "Paid" 
-                                                ? "bg-green-100 text-green-800" 
-                                                : selectedOrder.paymentStatus === "Failed"
-                                                ? "bg-red-100 text-red-800"
-                                                : "bg-yellow-100 text-yellow-800"
-                                        }`}>
-                                            {selectedOrder.paymentStatus}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            {selectedOrder.notes && (
-                                <div className="mb-4 md:mb-6">
-                                    <p className="text-xs md:text-sm text-gray-500">Notes</p>
-                                    <p className="text-sm md:text-base text-gray-700">{selectedOrder.notes}</p>
-                                </div>
-                            )}
-
-                            {/* Proof of Payment Section */}
-                            {selectedOrder.proofOfPayment && (
-                                <div className="mb-4 md:mb-6 border-t border-gray-200 pt-3 md:pt-4">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <h4 className="font-medium text-sm md:text-base">Proof of Payment</h4>
-                                        <button 
-                                            onClick={() => setShowProofImage(!showProofImage)}
-                                            className="text-blue-600 hover:text-blue-800 text-xs md:text-sm flex items-center"
-                                        >
-                                            {showProofImage ? "Hide Image" : "Show Image"}
-                                            <Image className="ml-1 h-3 w-3 md:h-4 md:w-4" />
-                                        </button>
-                                    </div>
-                                    
-                                    {showProofImage && (
-                                        <div className="mt-2">
-                                            <div className="flex justify-center">
-                                                <img 
-                                                    src={`${API_BASE_URL}${selectedOrder.proofOfPayment}`}
-                                                    alt="Proof of Payment" 
-                                                    className="max-h-48 md:max-h-64 rounded-lg shadow border border-gray-200"
-                                                    onClick={() => setFullScreenImage(`${API_BASE_URL}${selectedOrder.proofOfPayment}`)}
-                                                    style={{ cursor: 'pointer' }}
-                                                />
+                        {/* Content - Scrollable */}
+                        <div className="flex-1 overflow-y-auto">
+                            <div className="p-4 md:p-6">
+                                {/* Customer & Order Info Cards */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
+                                    {/* Customer Information Card */}
+                                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                        <div className="flex items-center mb-3">
+                                            <div className="bg-blue-100 p-2 rounded-full mr-3">
+                                                <Eye className="h-4 w-4 text-blue-600" />
                                             </div>
-                                            <div className="flex justify-center mt-2">
-                                                <button 
-                                                    onClick={() => setFullScreenImage(`${API_BASE_URL}${selectedOrder.proofOfPayment}`)}
-                                                    className="text-blue-600 hover:text-blue-800 text-xs md:text-sm flex items-center"
-                                                >
-                                                    <ZoomIn className="mr-1 h-3 w-3 md:h-4 md:w-4" />
-                                                    View Full Size
-                                                </button>
+                                            <h4 className="font-semibold text-gray-900">Customer Information</h4>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex items-center">
+                                                <span className="text-gray-600 text-sm w-16">Name:</span>
+                                                <span className="font-medium text-sm">{selectedOrder.customer.name}</span>
+                                            </div>
+                                            <div className="flex items-center">
+                                                <span className="text-gray-600 text-sm w-16">Email:</span>
+                                                <span className="text-sm text-gray-700">{selectedOrder.customer.email}</span>
+                                            </div>
+                                            {selectedOrder.customer.phone && (
+                                                <div className="flex items-center">
+                                                    <span className="text-gray-600 text-sm w-16">Phone:</span>
+                                                    <span className="text-sm text-gray-700">{selectedOrder.customer.phone}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Order Information Card */}
+                                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                        <div className="flex items-center mb-3">
+                                            <div className="bg-green-100 p-2 rounded-full mr-3">
+                                                <ShoppingCart className="h-4 w-4 text-green-600" />
+                                            </div>
+                                            <h4 className="font-semibold text-gray-900">Order Information</h4>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-600 text-sm">Date:</span>
+                                                <span className="font-medium text-sm">{formatDate(selectedOrder.createdAt)}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-600 text-sm">Status:</span>
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium border flex items-center ${getStatusClass(selectedOrder.status)}`}>
+                                                    {getStatusIcon(selectedOrder.status)}
+                                                    <span className="ml-1">{selectedOrder.status}</span>
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-600 text-sm">Payment:</span>
+                                                {getPaymentBadge(selectedOrder.paymentMethod)}
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-600 text-sm">Total:</span>
+                                                <span className="font-bold text-lg text-green-600">₱{selectedOrder.total.toFixed(2)}</span>
                                             </div>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
-                            )}
-                            
-                            <div className="border-t border-gray-200 pt-3 md:pt-4">
-                                <h4 className="font-medium mb-2 text-sm md:text-base">Order Items</h4>
-                                <div className="overflow-x-auto -mx-4 md:mx-0">
-                                    <table className="min-w-full">
-                                        <thead>
-                                            <tr>
-                                                <th className="py-2 pl-4 md:pl-0 pr-2 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
-                                                <th className="py-2 px-2 text-right text-xs font-medium text-gray-500 uppercase">Qty</th>
-                                                <th className="py-2 px-2 text-right text-xs font-medium text-gray-500 uppercase">Price</th>
-                                                <th className="py-2 pl-2 pr-4 md:pr-0 text-right text-xs font-medium text-gray-500 uppercase">Subtotal</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-200">
-                                            {selectedOrder.items.map((item, index) => (
-                                                <tr key={index}>
-                                                    <td className="py-3 pl-4 md:pl-0 pr-2 text-xs md:text-sm">{item.name}</td>
-                                                    <td className="py-3 px-2 text-xs md:text-sm text-right">{item.quantity}</td>
-                                                    <td className="py-3 px-2 text-xs md:text-sm text-right">₱{item.price.toFixed(2)}</td>
-                                                    <td className="py-3 pl-2 pr-4 md:pr-0 text-xs md:text-sm text-right">₱{(item.price * item.quantity).toFixed(2)}</td>
+
+                                {/* Notes Section */}
+                                {selectedOrder.notes && (
+                                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                                        <div className="flex items-center mb-2">
+                                            <div className="bg-yellow-100 p-1 rounded-full mr-2">
+                                                <Search className="h-3 w-3 text-yellow-600" />
+                                            </div>
+                                            <h4 className="font-semibold text-yellow-800">Order Notes</h4>
+                                        </div>
+                                        <p className="text-sm text-yellow-700">{selectedOrder.notes}</p>
+                                    </div>
+                                )}
+
+                                {/* Proof of Payment Section */}
+                                {selectedOrder.proofOfPayment && (
+                                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <div className="flex items-center">
+                                                <div className="bg-purple-100 p-1 rounded-full mr-2">
+                                                    <Image className="h-3 w-3 text-purple-600" />
+                                                </div>
+                                                <h4 className="font-semibold text-purple-800">Proof of Payment</h4>
+                                            </div>
+                                            <button 
+                                                onClick={() => setShowProofImage(!showProofImage)}
+                                                className="text-purple-600 hover:text-purple-800 text-sm font-medium px-3 py-1 bg-purple-100 hover:bg-purple-200 rounded-md transition-colors"
+                                            >
+                                                {showProofImage ? "Hide" : "Show"} Image
+                                            </button>
+                                        </div>
+                                        
+                                        {showProofImage && (
+                                            <div className="mt-3">
+                                                <div className="flex justify-center">
+                                                    <img 
+                                                        src={`${API_BASE_URL}${selectedOrder.proofOfPayment}`}
+                                                        alt="Proof of Payment" 
+                                                        className="max-h-48 md:max-h-64 rounded-lg shadow-md border border-purple-200 cursor-pointer hover:shadow-lg transition-shadow"
+                                                        onClick={() => setFullScreenImage(`${API_BASE_URL}${selectedOrder.proofOfPayment}`)}
+                                                    />
+                                                </div>
+                                                <div className="flex justify-center mt-3">
+                                                    <button 
+                                                        onClick={() => setFullScreenImage(`${API_BASE_URL}${selectedOrder.proofOfPayment}`)}
+                                                        className="text-purple-600 hover:text-purple-800 text-sm flex items-center font-medium"
+                                                    >
+                                                        <ZoomIn className="mr-1 h-4 w-4" />
+                                                        View Full Size
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                
+                                {/* Order Items */}
+                                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                                        <h4 className="font-semibold text-gray-900 flex items-center">
+                                            <ShoppingCart className="h-4 w-4 mr-2" />
+                                            Order Items ({selectedOrder.items.length})
+                                        </h4>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full">
+                                            <thead className="bg-gray-50">
+                                                <tr>
+                                                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                                                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <td colSpan="3" className="py-3 pl-4 md:pl-0 text-right font-medium text-xs md:text-sm">Total:</td>
-                                                <td className="py-3 pl-2 pr-4 md:pr-0 text-right font-medium text-xs md:text-sm">₱{selectedOrder.total.toFixed(2)}</td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
+                                            </thead>
+                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                {selectedOrder.items.map((item, index) => (
+                                                    <tr key={index} className="hover:bg-gray-50">
+                                                        <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</td>
+                                                        <td className="px-4 py-3 text-sm text-gray-700 text-center">
+                                                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                                                                {item.quantity}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm text-gray-700 text-right">₱{item.price.toFixed(2)}</td>
+                                                        <td className="px-4 py-3 text-sm font-medium text-gray-900 text-right">₱{(item.price * item.quantity).toFixed(2)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                            <tfoot className="bg-gray-50">
+                                                <tr>
+                                                    <td colSpan="3" className="px-4 py-3 text-right text-sm font-bold text-gray-900">Total Amount:</td>
+                                                    <td className="px-4 py-3 text-right text-lg font-bold text-green-600">₱{selectedOrder.total.toFixed(2)}</td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div className="border-t border-gray-200 px-4 py-3 md:px-6 md:py-4 flex flex-col sm:flex-row sm:justify-between gap-3">
-                            <button 
-                                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center justify-center text-xs md:text-sm"
-                                onClick={() => {
-                                    Swal.fire({
-                                        title: 'Delete this order?',
-                                        text: "This action cannot be undone!",
-                                        icon: 'warning',
-                                        showCancelButton: true,
-                                        confirmButtonColor: '#d33',
-                                        cancelButtonColor: '#3085d6',
-                                        confirmButtonText: 'Yes, delete it!'
-                                    }).then((result) => {
-                                        if (result.isConfirmed) {
-                                            deleteOrder(selectedOrder._id);
-                                        }
-                                    });
-                                }}
-                                disabled={isLoading}
-                            >
-                                <Trash className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                                Delete Order
-                            </button>
-                        
-                            <div className="flex flex-col sm:flex-row gap-2">
+                        {/* Enhanced Action Buttons Footer */}
+                        <div className="bg-gray-50 border-t border-gray-200 px-4 py-4 md:px-6 md:py-5">
+                            {/* Mobile Layout */}
+                            <div className="block md:hidden space-y-3">
+                                {/* Status Action Buttons */}
                                 {selectedOrder.status === "Pending" && (
-                                    <>
+                                    <div className="grid grid-cols-2 gap-2">
                                         <button 
-                                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs md:text-sm"
+                                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center transition-colors shadow-md hover:shadow-lg text-sm"
                                             onClick={() => {
                                                 Swal.fire({
-                                                    title: 'Process this order?',
-                                                    text: "You are about to change the status to Processing",
+                                                    title: 'Process Order?',
+                                                    text: "Status will be changed to Processing",
                                                     icon: 'question',
                                                     showCancelButton: true,
-                                                    confirmButtonColor: '#3085d6',
-                                                    cancelButtonColor: '#d33',
-                                                    confirmButtonText: 'Yes, process it!'
+                                                    confirmButtonColor: '#2563eb',
+                                                    cancelButtonColor: '#6b7280',
+                                                    confirmButtonText: 'Yes, process it!',
+                                                    customClass: { popup: 'rounded-lg' }
                                                 }).then((result) => {
                                                     if (result.isConfirmed) {
                                                         updateOrderStatus(selectedOrder._id, "Processing");
@@ -521,19 +543,21 @@ const OrderManager = () => {
                                             }}
                                             disabled={isLoading}
                                         >
-                                            Process Order
+                                            <Clock className="h-4 w-4 mr-2" />
+                                            Process
                                         </button>
                                         <button 
-                                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs md:text-sm"
+                                            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center transition-colors shadow-md hover:shadow-lg text-sm"
                                             onClick={() => {
                                                 Swal.fire({
-                                                    title: 'Cancel this order?',
+                                                    title: 'Cancel Order?',
                                                     text: "This action cannot be undone",
                                                     icon: 'warning',
                                                     showCancelButton: true,
-                                                    confirmButtonColor: '#3085d6',
-                                                    cancelButtonColor: '#d33',
-                                                    confirmButtonText: 'Yes, cancel it!'
+                                                    confirmButtonColor: '#ea580c',
+                                                    cancelButtonColor: '#6b7280',
+                                                    confirmButtonText: 'Yes, cancel it!',
+                                                    customClass: { popup: 'rounded-lg' }
                                                 }).then((result) => {
                                                     if (result.isConfirmed) {
                                                         updateOrderStatus(selectedOrder._id, "Cancelled");
@@ -542,22 +566,25 @@ const OrderManager = () => {
                                             }}
                                             disabled={isLoading}
                                         >
-                                            Cancel Order
+                                            <XCircle className="h-4 w-4 mr-2" />
+                                            Cancel
                                         </button>
-                                    </>
+                                    </div>
                                 )}
+                                
                                 {selectedOrder.status === "Processing" && (
                                     <button 
-                                        className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-xs md:text-sm"
+                                        className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center transition-colors shadow-md hover:shadow-lg"
                                         onClick={() => {
                                             Swal.fire({
-                                                title: 'Complete this order?',
-                                                text: "You are marking this order as completed",
-                                                icon: 'info',
+                                                title: 'Complete Order?',
+                                                text: "Order will be marked as completed",
+                                                icon: 'success',
                                                 showCancelButton: true,
-                                                confirmButtonColor: '#28a745',
-                                                cancelButtonColor: '#d33',
-                                                confirmButtonText: 'Yes, complete it!'
+                                                confirmButtonColor: '#16a34a',
+                                                cancelButtonColor: '#6b7280',
+                                                confirmButtonText: 'Yes, complete it!',
+                                                customClass: { popup: 'rounded-lg' }
                                             }).then((result) => {
                                                 if (result.isConfirmed) {
                                                     updateOrderStatus(selectedOrder._id, "Completed");
@@ -566,9 +593,156 @@ const OrderManager = () => {
                                         }}
                                         disabled={isLoading}
                                     >
+                                        <CheckCircle className="h-4 w-4 mr-2" />
                                         Mark as Completed
                                     </button>
                                 )}
+                                
+                                {/* Delete Button */}
+                                <button 
+                                    className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center transition-colors shadow-md hover:shadow-lg"
+                                    onClick={() => {
+                                        Swal.fire({
+                                            title: 'Delete Order?',
+                                            text: "This action cannot be undone!",
+                                            icon: 'warning',
+                                            showCancelButton: true,
+                                            confirmButtonColor: '#dc2626',
+                                            cancelButtonColor: '#6b7280',
+                                            confirmButtonText: 'Yes, delete it!',
+                                            customClass: { popup: 'rounded-lg' }
+                                        }).then((result) => {
+                                            if (result.isConfirmed) {
+                                                deleteOrder(selectedOrder._id);
+                                            }
+                                        });
+                                    }}
+                                    disabled={isLoading}
+                                >
+                                    <Trash className="h-4 w-4 mr-2" />
+                                    Delete Order
+                                </button>
+                                
+                                {/* Status info for completed/cancelled orders */}
+                                {(selectedOrder.status === "Completed" || selectedOrder.status === "Cancelled") && (
+                                    <div className="text-center py-3 bg-gray-100 rounded-lg">
+                                        <span className="text-gray-500 text-sm">
+                                            No actions available for {selectedOrder.status.toLowerCase()} orders
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Desktop Layout */}
+                            <div className="hidden md:flex justify-between items-center">
+                                {/* Delete Button - Left side */}
+                                <button 
+                                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-colors shadow-md hover:shadow-lg"
+                                    onClick={() => {
+                                        Swal.fire({
+                                            title: 'Delete this order?',
+                                            text: "This action cannot be undone!",
+                                            icon: 'warning',
+                                            showCancelButton: true,
+                                            confirmButtonColor: '#dc2626',
+                                            cancelButtonColor: '#6b7280',
+                                            confirmButtonText: 'Yes, delete it!',
+                                            customClass: { popup: 'rounded-lg' }
+                                        }).then((result) => {
+                                            if (result.isConfirmed) {
+                                                deleteOrder(selectedOrder._id);
+                                            }
+                                        });
+                                    }}
+                                    disabled={isLoading}
+                                >
+                                    <Trash className="h-4 w-4 mr-2" />
+                                    Delete Order
+                                </button>
+                            
+                                {/* Status Action Buttons - Right side */}
+                                <div className="flex gap-3">
+                                    {selectedOrder.status === "Pending" && (
+                                        <>
+                                            <button 
+                                                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-colors shadow-md hover:shadow-lg"
+                                                onClick={() => {
+                                                    Swal.fire({
+                                                        title: 'Process this order?',
+                                                        text: "Status will be changed to Processing",
+                                                        icon: 'question',
+                                                        showCancelButton: true,
+                                                        confirmButtonColor: '#2563eb',
+                                                        cancelButtonColor: '#6b7280',
+                                                        confirmButtonText: 'Yes, process it!',
+                                                        customClass: { popup: 'rounded-lg' }
+                                                    }).then((result) => {
+                                                        if (result.isConfirmed) {
+                                                            updateOrderStatus(selectedOrder._id, "Processing");
+                                                        }
+                                                    });
+                                                }}
+                                                disabled={isLoading}
+                                            >
+                                                <Clock className="h-4 w-4 mr-2" />
+                                                Process Order
+                                            </button>
+                                            <button 
+                                                className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-colors shadow-md hover:shadow-lg"
+                                                onClick={() => {
+                                                    Swal.fire({
+                                                        title: 'Cancel this order?',
+                                                        text: "This action cannot be undone",
+                                                        icon: 'warning',
+                                                        showCancelButton: true,
+                                                        confirmButtonColor: '#ea580c',
+                                                        cancelButtonColor: '#6b7280',
+                                                        confirmButtonText: 'Yes, cancel it!',
+                                                        customClass: { popup: 'rounded-lg' }
+                                                    }).then((result) => {
+                                                        if (result.isConfirmed) {
+                                                            updateOrderStatus(selectedOrder._id, "Cancelled");
+                                                        }
+                                                    });
+                                                }}
+                                                disabled={isLoading}
+                                            >
+                                                <XCircle className="h-4 w-4 mr-2" />
+                                                Cancel Order
+                                            </button>
+                                        </>
+                                    )}
+                                    {selectedOrder.status === "Processing" && (
+                                        <button 
+                                            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-colors shadow-md hover:shadow-lg"
+                                            onClick={() => {
+                                                Swal.fire({
+                                                    title: 'Complete this order?',
+                                                    text: "Order will be marked as completed",
+                                                    icon: 'success',
+                                                    showCancelButton: true,
+                                                    confirmButtonColor: '#16a34a',
+                                                    cancelButtonColor: '#6b7280',
+                                                    confirmButtonText: 'Yes, complete it!',
+                                                    customClass: { popup: 'rounded-lg' }
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        updateOrderStatus(selectedOrder._id, "Completed");
+                                                    }
+                                                });
+                                            }}
+                                            disabled={isLoading}
+                                        >
+                                            <CheckCircle className="h-4 w-4 mr-2" />
+                                            Mark as Completed
+                                        </button>
+                                    )}
+                                    {(selectedOrder.status === "Completed" || selectedOrder.status === "Cancelled") && (
+                                        <div className="flex items-center text-gray-500 text-sm bg-gray-100 px-4 py-3 rounded-lg">
+                                            <span>No actions available for {selectedOrder.status.toLowerCase()} orders</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

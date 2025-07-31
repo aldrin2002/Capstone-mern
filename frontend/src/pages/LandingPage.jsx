@@ -6,34 +6,98 @@ import { useEffect, useState } from 'react';
 const InstallPWA = () => {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
+  const [showInstallButton, setShowInstallButton] = useState(false);
 
   useEffect(() => {
-    // Check if the app is already installed
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsAppInstalled(true);
-    }
+    // Function to check if app is currently installed
+    const checkInstallationStatus = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isInWebApk = window.navigator.standalone === true; // iOS
+      return isStandalone || isInWebApk;
+    };
+
+    // Function to check if we should show install button
+    const shouldShowInstallButton = () => {
+      const isCurrentlyInstalled = checkInstallationStatus();
+      const wasInstalledBefore = localStorage.getItem('pwa-installed') === 'true';
+      
+      // If currently installed, mark as installed and don't show button
+      if (isCurrentlyInstalled) {
+        setIsAppInstalled(true);
+        setShowInstallButton(false);
+        // Update localStorage to reflect current status
+        localStorage.setItem('pwa-installed', 'true');
+        return false;
+      }
+      
+      // If not currently installed but was installed before, 
+      // it means the app was uninstalled - reset the state
+      if (!isCurrentlyInstalled && wasInstalledBefore) {
+        console.log('App was uninstalled, resetting install state');
+        localStorage.removeItem('pwa-installed');
+        setIsAppInstalled(false);
+        // Don't show button yet, wait for beforeinstallprompt
+        return false;
+      }
+      
+      // If never installed and not currently installed
+      if (!isCurrentlyInstalled && !wasInstalledBefore) {
+        setIsAppInstalled(false);
+        // Will show button when beforeinstallprompt fires
+        return false;
+      }
+      
+      return false;
+    };
+
+    // Initial check
+    shouldShowInstallButton();
 
     // Listen for the beforeinstallprompt event
     const handleBeforeInstallPrompt = (e) => {
-      // Prevent Chrome 76+ from automatically showing the prompt
+      console.log('beforeinstallprompt fired');
+      // Prevent Chrome from automatically showing the prompt
       e.preventDefault();
-      // Stash the event so it can be triggered later
-      setInstallPrompt(e);
+      // Only store prompt and show button if app is not installed
+      if (!checkInstallationStatus()) {
+        setInstallPrompt(e);
+        setShowInstallButton(true);
+        setIsAppInstalled(false);
+      }
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    
     // Listen for app installed event
-    window.addEventListener('appinstalled', () => {
-      // Update state to show installed status
+    const handleAppInstalled = () => {
+      console.log('PWA was installed');
       setInstallPrompt(null);
       setIsAppInstalled(true);
-      console.log('PWA was installed');
-    });
+      setShowInstallButton(false);
+      // Store installation status
+      localStorage.setItem('pwa-installed', 'true');
+    };
+
+    // Add event listeners
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    // Check periodically if app status changed (for uninstall detection)
+    const intervalId = setInterval(() => {
+      const currentlyInstalled = checkInstallationStatus();
+      const wasInstalledBefore = localStorage.getItem('pwa-installed') === 'true';
+      
+      // If was installed before but not currently installed = uninstalled
+      if (wasInstalledBefore && !currentlyInstalled) {
+        console.log('App uninstalled detected');
+        localStorage.removeItem('pwa-installed');
+        setIsAppInstalled(false);
+        setShowInstallButton(false); // Will show when beforeinstallprompt fires again
+      }
+    }, 5000); // Check every 5 seconds
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', () => {});
+      window.removeEventListener('appinstalled', handleAppInstalled);
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -46,31 +110,38 @@ const InstallPWA = () => {
       } else if (isAppInstalled) {
         alert("App is already installed!");
       } else {
-        // For other browsers that don't support installation
-        alert("Installation is not supported on this browser");
+        alert("Installation is not supported on this browser or app is not ready for installation");
       }
       return;
     }
     
-    // Show the install prompt
-    installPrompt.prompt();
-    
-    // Wait for the user to respond to the prompt
-    const choiceResult = await installPrompt.userChoice;
-    
-    // Reset the deferred prompt variable
-    setInstallPrompt(null);
-    
-    if (choiceResult.outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-    } else {
-      console.log('User dismissed the install prompt');
+    try {
+      // Show the install prompt
+      installPrompt.prompt();
+      
+      // Wait for the user to respond to the prompt
+      const choiceResult = await installPrompt.userChoice;
+      
+      console.log(`User response: ${choiceResult.outcome}`);
+      
+      if (choiceResult.outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+        // The appinstalled event will handle the state update
+      } else {
+        console.log('User dismissed the install prompt');
+        // Reset prompt but keep showing button for next time
+        setInstallPrompt(null);
+      }
+    } catch (error) {
+      console.error('Error during installation:', error);
+      setInstallPrompt(null);
     }
   };
 
-  // Determine button text and styles based on installation status
-  const buttonText = isAppInstalled ? "Open App" : "Install App";
-  const buttonIcon = isAppInstalled ? "external-link" : "download";
+  // Only show button if app is not installed and we have an install prompt or it's installable
+  if (isAppInstalled || !showInstallButton) {
+    return null;
+  }
   
   return (
     <button
@@ -79,10 +150,10 @@ const InstallPWA = () => {
                 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-semibold 
                 hover:bg-white/90 transition duration-200 text-sm sm:text-base 
                 whitespace-nowrap min-w-[106px] sm:min-w-[120px]"
-      aria-label={buttonText}
+      aria-label="Install App"
     >
       <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-      <span>{buttonText}</span>
+      <span>Install App</span>
     </button>
   );
 };
