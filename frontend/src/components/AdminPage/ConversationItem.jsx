@@ -16,7 +16,7 @@ const ConversationItem = ({
 
   return (
     <div
-      className={`relative p-4 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] group rounded-2xl mx-2 mb-3 overflow-hidden
+      className={`relative p-4 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] group rounded-2xl mx-2 mb-3 mt-3 overflow-hidden
         ${isSelected 
           ? 'bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 border-2 border-blue-500/30 shadow-xl backdrop-blur-sm' 
           : 'bg-white/80 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 border border-white/50 hover:border-blue-200/50 shadow-lg hover:shadow-xl backdrop-blur-sm'
