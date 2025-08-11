@@ -357,8 +357,8 @@ const CustomerMessage = () => {
           style={{ 
             scrollbarWidth: "thin",
             scrollbarColor: "#cbd5e0 #f7fafc",
-            paddingBottom: isMobile ? "160px" : "0px" // Add extra padding at bottom to prevent messages from being hidden behind input
-          }}  
+            paddingBottom: isMobile ? "120px" : "80px" // Add extra padding at bottom to prevent messages from being hidden behind input
+          }}
         >
           {isLoading ? (
             <div className="flex justify-center items-center h-full">

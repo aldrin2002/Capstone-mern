@@ -24,8 +24,9 @@ const MessageInput = ({
   };
 
   return (
-    // Remove sticky, use simple positioning
-    <div className="bg-gradient-to-r from-white/95 via-blue-50/90 to-white/95 backdrop-blur-xl border-t border-white/30 p-4 shadow-2xl">
+    <div className={`bg-gradient-to-r from-white/90 via-blue-50/80 to-white/90 backdrop-blur-xl border-t border-white/30 p-4 shadow-2xl ${
+      isMobile ? 'fixed bottom-16 left-0 right-0 border-t-2 border-blue-200/50' : 'sticky bottom-0'
+    }`}>
       {/* Subtle background glow */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-blue-500/5 pointer-events-none"></div>
       
