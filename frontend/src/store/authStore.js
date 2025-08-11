@@ -58,15 +58,25 @@ export const useAuthStore = create((set) => ({
         }
     },
 
-    // Admin login
+    // Admin login - with role verification
     login: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
+            // Clear any existing session first
+            localStorage.clear();
+            sessionStorage.clear();
+            
             const response = await axios.post(`${API_URL}/login`, { email, password });
             
-            // Store token in localStorage (add this)
+            // Verify user role is admin
+            if (response.data.user.role !== 'admin') {
+                throw new Error('Access denied. Admin credentials required.');
+            }
+            
+            // Store token in localStorage
             if (response.data.token) {
                 localStorage.setItem('token', response.data.token);
+                localStorage.setItem('userRole', 'admin');
             }
             
             set({
@@ -76,20 +86,30 @@ export const useAuthStore = create((set) => ({
                 isLoading: false,
             });
         } catch (error) {
-            set({ error: error.response?.data?.message || "Error logging in", isLoading: false });
+            set({ error: error.response?.data?.message || error.message || "Error logging in", isLoading: false });
             throw error;
         }
     },
 
-    // Customer login
+    // Customer login - with role verification
     customerLogin: async (email, password) => {
         set({ isLoading: true, error: null });
         try {
+            // Clear any existing session first
+            localStorage.clear();
+            sessionStorage.clear();
+            
             const response = await axios.post(`${API_URL}/costumerLogin`, { email, password });
+            
+            // Verify user role is customer
+            if (response.data.user.role !== 'customer') {
+                throw new Error('Access denied. Customer credentials required.');
+            }
             
             // Save token to localStorage
             if (response.data.token) {
                 localStorage.setItem('token', response.data.token);
+                localStorage.setItem('userRole', 'customer');
             }
             
             set({
@@ -99,7 +119,7 @@ export const useAuthStore = create((set) => ({
                 isLoading: false,
             });
         } catch (error) {
-            set({ error: error.response?.data?.message || "Error logging in", isLoading: false });
+            set({ error: error.response?.data?.message || error.message || "Error logging in", isLoading: false });
             throw error;
         }
     },
@@ -109,21 +129,76 @@ export const useAuthStore = create((set) => ({
         set({ isLoading: true, error: null });
         try {
             await axios.post(`${API_URL}/logout`);
-            // Remove token from localStorage
+            
+            // Clear ALL stored tokens and user data
             localStorage.removeItem('token');
-            set({ user: null, isAuthenticated: false, error: null, isLoading: false });
+            localStorage.removeItem('user');
+            localStorage.removeItem('userRole');
+            sessionStorage.clear();
+            
+            // Clear axios default headers if any
+            delete axios.defaults.headers.common['Authorization'];
+            
+            // Reset all auth state
+            set({ 
+                user: null, 
+                isAuthenticated: false, 
+                error: null, 
+                isLoading: false,
+                isCheckingAuth: false,
+                message: null
+            });
+            
+            // Force page reload to clear any cached state
+            window.location.href = '/';
+            
         } catch (error) {
-            set({ error: "Error logging out", isLoading: false });
-            throw error;
+            // Even if logout fails on server, clear local state
+            localStorage.clear();
+            sessionStorage.clear();
+            delete axios.defaults.headers.common['Authorization'];
+            
+            set({ 
+                user: null, 
+                isAuthenticated: false, 
+                error: null, 
+                isLoading: false,
+                isCheckingAuth: false 
+            });
+            
+            window.location.href = '/';
         }
     },
     
     checkAuth: async () => {
         set({ isCheckingAuth: true, error: null });
         try {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                set({ error: null, isCheckingAuth: false, isAuthenticated: false });
+                return;
+            }
+            
+            // Set authorization header
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            
             const response = await axios.get(`${API_URL}/check-auth`);
+            
+            // Verify the stored role matches the response
+            const storedRole = localStorage.getItem('userRole');
+            if (storedRole && storedRole !== response.data.user.role) {
+                // Role mismatch, clear session
+                localStorage.clear();
+                delete axios.defaults.headers.common['Authorization'];
+                set({ error: null, isCheckingAuth: false, isAuthenticated: false });
+                return;
+            }
+            
             set({ user: response.data.user, isAuthenticated: true, isCheckingAuth: false });
         } catch (error) {
+            localStorage.clear();
+            delete axios.defaults.headers.common['Authorization'];
             set({ error: null, isCheckingAuth: false, isAuthenticated: false });
         }
     }

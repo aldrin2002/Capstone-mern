@@ -196,8 +196,29 @@ export const costumerSignup = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
-    res.clearCookie("token");
-    res.status(200).json({ success: true, message: "Logged out successfully" });
+    try {
+        // Clear the token cookie with all possible configurations
+        res.clearCookie("token", {
+            httpOnly: true,
+            sameSite: "strict",
+            secure: process.env.NODE_ENV === "production",
+            path: "/"
+        });
+        
+        // Also try clearing with different path configurations
+        res.clearCookie("token");
+        
+        res.status(200).json({ 
+            success: true, 
+            message: "Logged out successfully" 
+        });
+    } catch (error) {
+        console.error("Error in logout:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Error logging out" 
+        });
+    }
 };
 
 export const checkAuth = async (req, res) => {
