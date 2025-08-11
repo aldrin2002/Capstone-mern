@@ -5,7 +5,7 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/vite.svg'
+  '/cafex-logo.png',
   // Add other important assets like CSS, JS, and images
 ];
 
@@ -90,8 +90,8 @@ self.addEventListener('push', event => {
   const data = event.data.json();
   const options = {
     body: data.body,
-    icon: '/vite.svg',
-    badge: '/vite.svg',
+    icon: '/cafex-logo.png',
+    badge: '/cafex-logo.png',
     data: {
       url: data.url
     }
