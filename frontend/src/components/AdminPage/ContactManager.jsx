@@ -1,26 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Clock, 
-  Globe, 
-  Save, 
-  Loader, 
-  Edit2, 
-  X, 
-  Facebook, 
-  Instagram, 
-  Twitter,
-  Building,
-  Users,
-  Contact
-} from "lucide-react";
+import { Phone, Mail, MapPin, Clock, Globe, Save, Loader } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import Swal from "sweetalert2";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
+// Add console log to debug mode detection
+console.log("Current environment mode:", import.meta.env.MODE);
 const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api/contact" : "/api/contact";
+console.log("API URL resolved to:", API_URL);
 
 const ContactManager = () => {
     const [contactInfo, setContactInfo] = useState({
@@ -202,384 +189,253 @@ const ContactManager = () => {
             setIsEditing(false);
         }
     };
-
-    if (isLoading && !isEditing) {
-        return (
-            <div className="p-6 h-full flex justify-center items-center">
-                <div className="text-center">
-                    <div className="relative">
-                        <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                            <div className="w-8 h-8 bg-blue-600 rounded-full animate-pulse"></div>
-                        </div>
-                    </div>
-                    <p className="mt-4 text-gray-600 font-medium">Loading contact information...</p>
-                </div>
-            </div>
-        );
-    }
     
     return (
-        <div className={`p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-full ${isMobile ? 'pb-28' : ''}`}>
-            {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-                <div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center">
-                        <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full mr-3"></div>
-                        Contact Management
-                    </h2>
-                    <p className="text-gray-600 mt-1">Manage your cafe contact information</p>
-                </div>
+        <div className={`p-6 ${isMobile ? 'pb-28' : ''}`}>
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-800">Contact Information</h2>
                 {!isEditing && (
                     <button
                         onClick={() => setIsEditing(true)}
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-2xl flex items-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                     >
-                        <Edit2 className="h-5 w-5" />
-                        <span className="font-medium">Edit Information</span>
+                        Edit Information
                     </button>
                 )}
             </div>
-
-            {/* Contact Information Display/Edit */}
-            {isEditing ? (
-                <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
-                        <div className="flex justify-between items-center">
-                            <h3 className="text-xl font-bold">Edit Contact Information</h3>
-                            <button
-                                onClick={handleCancel}
-                                className="text-white hover:text-gray-200 transition-colors"
-                            >
-                                <X className="h-6 w-6" />
-                            </button>
+            
+            {isLoading && !isEditing ? (
+                <div className="flex justify-center my-12">
+                    <Loader className="h-8 w-8 text-blue-600 animate-spin" />
+                </div>
+            ) : isEditing ? (
+                <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg overflow-hidden">
+                    <div className="p-6">
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Phone Number
+                            </label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Phone className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="+1 (123) 456-7890"
+                                />
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label className="block text-gray-700 font-medium mb-2">Email Address</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Mail className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className="pl-10 w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
+                                    required
+                                />
+                            </div>
+                        </div>
+                        
+                        <div className="md:col-span-2">
+                            <label className="block text-gray-700 font-medium mb-2">Address</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <MapPin className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    name="address"
+                                    value={formData.address}
+                                    onChange={handleChange}
+                                    className="pl-10 w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
+                                    required
+                                />
+                            </div>
+                        </div>
+                        
+                        <div className="md:col-span-2">
+                            <label className="block text-gray-700 font-medium mb-2">Business Hours</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Clock className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    name="hours"
+                                    value={formData.hours}
+                                    onChange={handleChange}
+                                    className="pl-10 w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Mon-Fri: 8am-8pm, Sat-Sun: 9am-5pm"
+                                    required
+                                />
+                            </div>
+                        </div>
+                        
+                        <div className="md:col-span-2">
+                            <label className="block text-gray-700 font-medium mb-2">Website</label>
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Globe className="h-5 w-5 text-gray-400" />
+                                </div>
+                                <input
+                                    type="url"
+                                    name="website"
+                                    value={formData.website}
+                                    onChange={handleChange}
+                                    className="pl-10 w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="https://example.com"
+                                />
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label className="block text-gray-700 font-medium mb-2">Facebook</label>
+                            <input
+                                type="text"
+                                name="socialMedia.facebook"
+                                value={formData.socialMedia.facebook}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="https://facebook.com/yourpage"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-gray-700 font-medium mb-2">Instagram</label>
+                            <input
+                                type="text"
+                                name="socialMedia.instagram"
+                                value={formData.socialMedia.instagram}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="https://instagram.com/yourhandle"
+                            />
+                        </div>
+                        
+                        <div className="md:col-span-2">
+                            <label className="block text-gray-700 font-medium mb-2">Twitter</label>
+                            <input
+                                type="text"
+                                name="socialMedia.twitter"
+                                value={formData.socialMedia.twitter}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="https://twitter.com/yourhandle"
+                            />
                         </div>
                     </div>
-
-                    <form onSubmit={handleSubmit} className="p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Phone */}
-                            <div className="space-y-2">
-                                <label className="block text-sm font-bold text-gray-700">
-                                    Phone Number
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <Phone className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        name="phone"
-                                        value={formData.phone}
-                                        onChange={handleChange}
-                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                                        placeholder="+1 (123) 456-7890"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Email */}
-                            <div className="space-y-2">
-                                <label className="block text-sm font-bold text-gray-700">
-                                    Email Address *
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <Mail className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                                        placeholder="contact@yourcafe.com"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Address */}
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="block text-sm font-bold text-gray-700">
-                                    Address *
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <MapPin className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        name="address"
-                                        value={formData.address}
-                                        onChange={handleChange}
-                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                                        placeholder="123 Main Street, City, State 12345"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Business Hours */}
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="block text-sm font-bold text-gray-700">
-                                    Business Hours *
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <Clock className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        name="hours"
-                                        value={formData.hours}
-                                        onChange={handleChange}
-                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                                        placeholder="Mon-Fri: 8am-8pm, Sat-Sun: 9am-5pm"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Website */}
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="block text-sm font-bold text-gray-700">
-                                    Website
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <Globe className="h-5 w-5 text-gray-400" />
-                                    </div>
-                                    <input
-                                        type="url"
-                                        name="website"
-                                        value={formData.website}
-                                        onChange={handleChange}
-                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                                        placeholder="https://yourcafe.com"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Social Media Section */}
-                        <div className="mt-8">
-                            <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                                <Users className="h-5 w-5 mr-2 text-blue-600" />
-                                Social Media Links
-                            </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                {/* Facebook */}
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-bold text-gray-700">
-                                        Facebook
-                                    </label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <Facebook className="h-5 w-5 text-blue-600" />
-                                        </div>
-                                        <input
-                                            type="text"
-                                            name="socialMedia.facebook"
-                                            value={formData.socialMedia.facebook}
-                                            onChange={handleChange}
-                                            className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                                            placeholder="https://facebook.com/yourpage"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Instagram */}
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-bold text-gray-700">
-                                        Instagram
-                                    </label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <Instagram className="h-5 w-5 text-pink-600" />
-                                        </div>
-                                        <input
-                                            type="text"
-                                            name="socialMedia.instagram"
-                                            value={formData.socialMedia.instagram}
-                                            onChange={handleChange}
-                                            className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                                            placeholder="https://instagram.com/yourhandle"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Twitter */}
-                                <div className="space-y-2">
-                                    <label className="block text-sm font-bold text-gray-700">
-                                        Twitter
-                                    </label>
-                                    <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <Twitter className="h-5 w-5 text-blue-400" />
-                                        </div>
-                                        <input
-                                            type="text"
-                                            name="socialMedia.twitter"
-                                            value={formData.socialMedia.twitter}
-                                            onChange={handleChange}
-                                            className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                                            placeholder="https://twitter.com/yourhandle"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Form Actions */}
-                        <div className="flex justify-end space-x-3 pt-8 border-t border-gray-200 mt-8">
-                            <button
-                                type="button"
-                                onClick={handleCancel}
-                                className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors"
-                                disabled={isLoading}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
-                                disabled={isLoading}
-                            >
-                                {isLoading ? (
-                                    <Loader className="w-5 h-5 animate-spin" />
-                                ) : (
-                                    <Save className="h-5 w-5" />
-                                )}
-                                <span>Save Changes</span>
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                    
+                    <div className={`mt-6 flex justify-end ${isMobile ? 'sticky bottom-0 bg-white py-4 border-t' : ''}`}>
+                        <button
+                            type="button"
+                            onClick={handleCancel}
+                            className="mr-3 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                            disabled={isLoading}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+                            disabled={isLoading}
+                        >
+                            {isLoading ? (
+                                <Loader className="h-5 w-5 mr-2 animate-spin" />
+                            ) : (
+                                <Save className="h-5 w-5 mr-2" />
+                            )}
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
             ) : (
-                /* Display Mode */
-                <div className="space-y-6">
-                    {/* Contact Information Cards */}
+                <div className="bg-white shadow-md rounded-lg overflow-hidden">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Phone Card */}
-                        <div className="bg-white rounded-2xl shadow-lg p-6 group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                            <div className="flex items-center space-x-4">
-                                <div className="p-3 bg-blue-50 rounded-xl group-hover:bg-blue-100 group-hover:scale-110 transition-all duration-300">
-                                    <Phone className="h-6 w-6 text-blue-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-800 group-hover:text-blue-600 transition-colors">Phone</h3>
-                                    <p className="text-gray-600">{contactInfo.phone || "Not set"}</p>
-                                </div>
+                        <div className="flex items-start">
+                            <Phone className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
+                            <div>
+                                <h3 className="font-medium text-gray-800">Phone</h3>
+                                <p className="text-gray-600">{contactInfo.phone}</p>
                             </div>
                         </div>
-
-                        {/* Email Card */}
-                        <div className="bg-white rounded-2xl shadow-lg p-6 group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                            <div className="flex items-center space-x-4">
-                                <div className="p-3 bg-green-50 rounded-xl group-hover:bg-green-100 group-hover:scale-110 transition-all duration-300">
-                                    <Mail className="h-6 w-6 text-green-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-800 group-hover:text-green-600 transition-colors">Email</h3>
-                                    <p className="text-gray-600">{contactInfo.email || "Not set"}</p>
-                                </div>
+                        
+                        <div className="flex items-start">
+                            <Mail className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
+                            <div>
+                                <h3 className="font-medium text-gray-800">Email</h3>
+                                <p className="text-gray-600">{contactInfo.email}</p>
                             </div>
                         </div>
-
-                        {/* Address Card */}
-                        <div className="bg-white rounded-2xl shadow-lg p-6 group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 md:col-span-2">
-                            <div className="flex items-start space-x-4">
-                                <div className="p-3 bg-purple-50 rounded-xl group-hover:bg-purple-100 group-hover:scale-110 transition-all duration-300">
-                                    <MapPin className="h-6 w-6 text-purple-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-800 group-hover:text-purple-600 transition-colors">Address</h3>
-                                    <p className="text-gray-600">{contactInfo.address || "Not set"}</p>
-                                </div>
+                        
+                        <div className="flex items-start md:col-span-2">
+                            <MapPin className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
+                            <div>
+                                <h3 className="font-medium text-gray-800">Address</h3>
+                                <p className="text-gray-600">{contactInfo.address}</p>
                             </div>
                         </div>
-
-                        {/* Business Hours Card */}
-                        <div className="bg-white rounded-2xl shadow-lg p-6 group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 md:col-span-2">
-                            <div className="flex items-start space-x-4">
-                                <div className="p-3 bg-orange-50 rounded-xl group-hover:bg-orange-100 group-hover:scale-110 transition-all duration-300">
-                                    <Clock className="h-6 w-6 text-orange-600" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-gray-800 group-hover:text-orange-600 transition-colors">Business Hours</h3>
-                                    <p className="text-gray-600">{contactInfo.hours || "Not set"}</p>
-                                </div>
+                        
+                        <div className="flex items-start md:col-span-2">
+                            <Clock className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
+                            <div>
+                                <h3 className="font-medium text-gray-800">Business Hours</h3>
+                                <p className="text-gray-600">{contactInfo.hours}</p>
                             </div>
                         </div>
-
-                        {/* Website Card */}
+                        
                         {contactInfo.website && (
-                            <div className="bg-white rounded-2xl shadow-lg p-6 group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 md:col-span-2">
-                                <div className="flex items-center space-x-4">
-                                    <div className="p-3 bg-indigo-50 rounded-xl group-hover:bg-indigo-100 group-hover:scale-110 transition-all duration-300">
-                                        <Globe className="h-6 w-6 text-indigo-600" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-gray-800 group-hover:text-indigo-600 transition-colors">Website</h3>
-                                        <a 
-                                            href={contactInfo.website} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                                        >
-                                            {contactInfo.website}
-                                        </a>
+                            <div className="flex items-start md:col-span-2">
+                                <Globe className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
+                                <div>
+                                    <h3 className="font-medium text-gray-800">Website</h3>
+                                    <a 
+                                        href={contactInfo.website} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 hover:underline"
+                                    >
+                                        {contactInfo.website}
+                                    </a>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {(contactInfo.socialMedia.facebook || contactInfo.socialMedia.instagram || contactInfo.socialMedia.twitter) && (
+                            <div className="flex items-start md:col-span-2">
+                                <div className="h-5 w-5 text-blue-600 mr-3 mt-0.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="font-medium text-gray-800">Social Media</h3>
+                                    <div className="flex flex-wrap gap-3 mt-2">
+                                        {contactInfo.socialMedia.facebook && (
+                                            <a 
+                                                href={contactInfo.socialMedia.facebook} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 hover:underline"
+                                            >
+                                                Facebook
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         )}
                     </div>
-
-                    {/* Social Media Section */}
-                    {(contactInfo.socialMedia?.facebook || contactInfo.socialMedia?.instagram || contactInfo.socialMedia?.twitter) && (
-                        <div className="bg-white rounded-2xl shadow-lg p-6">
-                            <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
-                                <Users className="h-6 w-6 mr-3 text-blue-600" />
-                                Social Media
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {contactInfo.socialMedia?.facebook && (
-                                    <a 
-                                        href={contactInfo.socialMedia.facebook} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="flex items-center space-x-3 p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-all duration-300 transform hover:scale-105"
-                                    >
-                                        <Facebook className="h-6 w-6 text-blue-600" />
-                                        <span className="font-medium text-blue-800">Facebook</span>
-                                    </a>
-                                )}
-                                {contactInfo.socialMedia?.instagram && (
-                                    <a 
-                                        href={contactInfo.socialMedia.instagram} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="flex items-center space-x-3 p-4 bg-pink-50 rounded-xl hover:bg-pink-100 transition-all duration-300 transform hover:scale-105"
-                                    >
-                                        <Instagram className="h-6 w-6 text-pink-600" />
-                                        <span className="font-medium text-pink-800">Instagram</span>
-                                    </a>
-                                )}
-                                {contactInfo.socialMedia?.twitter && (
-                                    <a 
-                                        href={contactInfo.socialMedia.twitter} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="flex items-center space-x-3 p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-all duration-300 transform hover:scale-105"
-                                    >
-                                        <Twitter className="h-6 w-6 text-blue-400" />
-                                        <span className="font-medium text-blue-800">Twitter</span>
-                                    </a>
-                                )}
-                            </div>
-                        </div>
-                    )}
                 </div>
             )}
         </div>
