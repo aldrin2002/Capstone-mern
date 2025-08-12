@@ -90,97 +90,107 @@ const AdminMessage = () => {
     return onlineCustomers.includes(customerId);
   };
 
-  const setupMessageHandlers = () => {
-    if (!socketRef.current) return;
+const setupMessageHandlers = () => {
+  if (!socketRef.current) return;
+  
+  socketRef.current.off('new-message');
+  socketRef.current.off('customer-status-update');
+  socketRef.current.off('customer-typing');
+  
+  socketRef.current.on('new-message', (message) => {
+    console.log("Received new message:", message); // Add this for debugging
     
-    socketRef.current.off('new-message');
-    socketRef.current.off('customer-status-update');
-    socketRef.current.off('customer-typing');
+    const messageConvId = message.conversation?._id || message.conversation;
+    const selectedConvId = selectedConversation?._id;
+    const messageConvString = typeof messageConvId === 'object' ? messageConvId.toString() : String(messageConvId);
+    const selectedConvString = typeof selectedConvId === 'object' ? selectedConvId.toString() : String(selectedConvId);
     
-    socketRef.current.on('new-message', (message) => {
-      const messageConvId = message.conversation?._id || message.conversation;
-      const selectedConvId = selectedConversation?._id;
-      const messageConvString = typeof messageConvId === 'object' ? messageConvId.toString() : String(messageConvId);
-      const selectedConvString = typeof selectedConvId === 'object' ? selectedConvId.toString() : String(selectedConvId);
+    if (selectedConversation && messageConvString === selectedConvString) {
+      if (message.sender.role === 'customer') {
+        try {
+          const activeNotification = new Audio('/notification-subtle.mp3');
+          activeNotification.volume = 0.3;
+          activeNotification.play().catch(err => console.log("Audio play prevented:", err));
+        } catch (error) {
+          console.log("Audio error:", error);
+        }
+      }
       
-      if (selectedConversation && messageConvString === selectedConvString) {
-        if (message.sender.role === 'customer') {
-          try {
-            const activeNotification = new Audio('/notification-subtle.mp3');
-            activeNotification.volume = 0.3;
-            activeNotification.play().catch(err => console.log("Audio play prevented:", err));
-          } catch (error) {
-            console.log("Audio error:", error);
-          }
+      setMessages(prevMessages => {
+        // FIXED: Simplified duplicate detection - only check for exact ID matches
+        const isDuplicate = prevMessages.some(m => m._id === message._id);
+        
+        if (isDuplicate) {
+          console.log("Duplicate message detected, skipping:", message._id);
+          return prevMessages;
         }
         
-        setMessages(prevMessages => {
-          const isDuplicate = prevMessages.some(m => 
-            m._id === message._id || 
-            (m._id.toString().startsWith('temp-') && 
-             m.content === message.content && 
-             m.sender.role === message.sender.role &&
-             Math.abs(new Date(m.createdAt) - new Date(message.createdAt)) < 5000)
+        // FIXED: For temp messages from admin, replace them with real messages
+        if (message.sender.role === 'admin') {
+          const tempMessageIndex = prevMessages.findIndex(m => 
+            m._id.toString().startsWith('temp-') && 
+            m.content === message.content && 
+            Math.abs(new Date(m.createdAt) - new Date(message.createdAt)) < 10000 // 10 seconds window
           );
           
-          if (isDuplicate) {
-            return prevMessages.map(m => {
-              if (m._id.toString().startsWith('temp-') && 
-                  m.content === message.content && 
-                  m.sender.role === message.sender.role &&
-                  Math.abs(new Date(m.createdAt) - new Date(message.createdAt)) < 5000) {
-                return message;
-              }
-              return m;
-            });
+          if (tempMessageIndex !== -1) {
+            console.log("Replacing temp message with real message");
+            const updatedMessages = [...prevMessages];
+            updatedMessages[tempMessageIndex] = message;
+            return updatedMessages;
           }
-          
-          const updatedMessages = [...prevMessages, message];
-          setTimeout(scrollToBottom, 100);
-          return updatedMessages;
-        });
-        
-        if (message.sender.role === 'customer') {
-          socketRef.current.emit('mark-read', { conversationId: selectedConvString });
         }
-      }
-      
-      setConversations(prev => {
-        const updatedConversations = prev.map(conv => {
-          const convId = typeof conv._id === 'object' ? conv._id.toString() : String(conv._id);
-          if (convId === messageConvString) {
-            const isCurrentlySelected = selectedConversation && selectedConvString === convId;
-            
-            return { 
-              ...conv, 
-              lastMessage: new Date(),
-              lastMessageContent: message.content,
-              lastMessageSender: message.sender.role,
-              unreadCount: isCurrentlySelected ? 0 : (conv.unreadCount || 0) + 1
-            };
-          }
-          return conv;
-        });
         
-        return sortConversationsByLatest(updatedConversations);
+        // FIXED: Always add customer messages, they're never duplicates from temp
+        console.log("Adding new message:", message);
+        const updatedMessages = [...prevMessages, message];
+        setTimeout(scrollToBottom, 100);
+        return updatedMessages;
       });
-    });
-    
-    socketRef.current.on('customer-status-update', (data) => {
-      if (data.customers) {
-        setOnlineCustomers(data.customers);
+      
+      // Mark customer messages as read
+      if (message.sender.role === 'customer') {
+        socketRef.current.emit('mark-read', { conversationId: selectedConvString });
       }
-    });
+    }
     
-    socketRef.current.on('customer-typing', ({ customerId, conversationId, isTyping }) => {
-      setTypingCustomers(prev => ({
-        ...prev,
-        [customerId]: isTyping
-      }));
+    // Update conversations list
+    setConversations(prev => {
+      const updatedConversations = prev.map(conv => {
+        const convId = typeof conv._id === 'object' ? conv._id.toString() : String(conv._id);
+        if (convId === messageConvString) {
+          const isCurrentlySelected = selectedConversation && selectedConvString === convId;
+          
+          return { 
+            ...conv, 
+            lastMessage: new Date(),
+            lastMessageContent: message.content,
+            lastMessageSender: message.sender.role,
+            unreadCount: isCurrentlySelected ? 0 : (conv.unreadCount || 0) + 1
+          };
+        }
+        return conv;
+      });
+      
+      return sortConversationsByLatest(updatedConversations);
     });
-    
-    socketRef.current.emit('get-online-customers');
-  };
+  });
+  
+  socketRef.current.on('customer-status-update', (data) => {
+    if (data.customers) {
+      setOnlineCustomers(data.customers);
+    }
+  });
+  
+  socketRef.current.on('customer-typing', ({ customerId, conversationId, isTyping }) => {
+    setTypingCustomers(prev => ({
+      ...prev,
+      [customerId]: isTyping
+    }));
+  });
+  
+  socketRef.current.emit('get-online-customers');
+};
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
