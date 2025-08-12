@@ -101,77 +101,94 @@ const CustomerSideNav = () => {
         
         return (
             <>
-                {/* Floating Expandable Button */}
+                {/* Enhanced Floating Expandable Button */}
                 <div className="fixed right-4 bottom-32 z-50 flex flex-col-reverse items-center space-y-reverse space-y-4">
-                    {/* Logout Button - Only visible when expanded */}
+                    {/* Logout Button - Enhanced with animation */}
                     {isExpanded && (
                         <button
                             onClick={handleLogout}
-                            className="bg-red-500 text-white p-3 rounded-full shadow-lg hover:bg-red-600 transition-all transform animate-fadeIn"
+                            className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform animate-fadeIn hover:scale-110"
                         >
                             <LogOut size={24} />
                         </button>
                     )}
                     
-                    {/* Messages Button - Only visible when expanded */}
+                    {/* Messages Button - Enhanced */}
                     {isExpanded && (
                         <Link 
                             to="/customer-messages"
-                            className="bg-blue-500 text-white p-3 rounded-full shadow-lg hover:bg-blue-600 transition-all transform animate-fadeIn"
+                            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform animate-fadeIn hover:scale-110"
                         >
                             <MessageCircle size={24} />
                         </Link>
                     )}
                     
-                    {/* Orders Button - Only visible when expanded */}
+                    {/* Orders Button - Enhanced */}
                     {isExpanded && (
                         <Link 
                             to="/customer-orders"
-                            className="bg-purple-500 text-white p-3 rounded-full shadow-lg hover:bg-purple-600 transition-all transform animate-fadeIn"
+                            className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform animate-fadeIn hover:scale-110"
                         >
                             <ShoppingBag size={24} />
                         </Link>
                     )}
                     
-                    {/* Buy Button - Different icon to avoid confusion */}
+                    {/* Buy Button - Enhanced */}
                     {isExpanded && (
                         <Link 
                             to="/customer-buy"
-                            className="bg-yellow-500 text-blue-900 p-3 rounded-full shadow-lg hover:bg-yellow-600 transition-all transform animate-fadeIn"
+                            className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-blue-900 p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform animate-fadeIn hover:scale-110"
                         >
                             <ShoppingCart size={24} />
                         </Link>
                     )}
                     
-                    {/* Main Toggle Button */}
+                    {/* Enhanced Main Toggle Button */}
                     <button
                         onClick={toggleExpand}
-                        className={`p-4 rounded-full shadow-lg transition-all transform ${
+                        className={`p-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform ${
                             isExpanded 
-                                ? "bg-gray-700 text-white rotate-45" 
-                                : "bg-blue-600 text-white"
+                                ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white rotate-45 scale-110" 
+                                : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:scale-110"
                         }`}
                     >
                         <Plus size={24} />
                     </button>
                 </div>
                 
-                {/* Bottom Navigation */}
+                {/* Enhanced Bottom Navigation */}
                 <div 
-                    className="fixed bottom-0 left-0 right-0 bg-blue-900 text-white z-40"
+                    className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-800 via-blue-900 to-indigo-900 text-white z-40 backdrop-blur-sm border-t border-blue-700/50"
                     style={{ height: `${MOBILE_NAV_HEIGHT}px` }}
                 >
-                    <div className="flex justify-around items-center h-full">
+                    {/* Subtle glow effect */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-blue-600/20 to-transparent"></div>
+                    
+                    <div className="relative flex justify-around items-center h-full">
                         {bottomNavItems.map((item) => (
                             <Link 
                                 key={item.path} 
                                 to={item.path}
-                                className={`flex flex-col items-center justify-center w-full h-full ${
-                                    isActive(item.path) ? "text-yellow-400" : "text-white"
+                                className={`relative flex flex-col items-center justify-center w-full h-full transition-all duration-300 transform ${
+                                    isActive(item.path) 
+                                        ? "text-amber-400 scale-110" 
+                                        : "text-white hover:text-blue-200 hover:scale-105"
                                 }`}
                             >
-                                <div className="mb-1">{item.icon}</div>
-                                <span className="text-xs">{item.label}</span>
+                                {/* Active indicator */}
+                                {isActive(item.path) && (
+                                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-gradient-to-r from-amber-400 to-yellow-400 rounded-full"></div>
+                                )}
+                                
+                                <div className="mb-1 transition-transform duration-300">
+                                    {item.icon}
+                                </div>
+                                <span className="text-xs font-medium">{item.label}</span>
+                                
+                                {/* Ripple effect for active item */}
+                                {isActive(item.path) && (
+                                    <div className="absolute inset-0 bg-amber-400/10 rounded-lg animate-pulse"></div>
+                                )}
                             </Link>
                         ))}
                     </div>
@@ -180,68 +197,93 @@ const CustomerSideNav = () => {
         );
     }
 
-    // Desktop sidebar
+    // FIXED Desktop sidebar - NO SCROLLING
     return (
-        <aside className="w-64 bg-blue-900 text-white flex flex-col justify-between">
-            <div className="p-6">
-                {/* Logo */}
-                <div className="mb-8">
-                    <div className="bg-gray-300 w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden">
-                        <img src={logoImage} alt="Cafe X Logo" className="w-full h-full object-cover" />
+        <aside className="fixed left-0 top-0 w-64 h-screen bg-gradient-to-b from-blue-800 via-blue-900 to-indigo-900 text-white z-20 shadow-2xl">
+            {/* Logo Section - Fixed at top */}
+            <div className="p-6 border-b border-blue-700/50">
+                <div className="text-center">
+                    <div className="relative mx-auto mb-4 w-16 h-16">
+                        <div className="w-full h-full rounded-full overflow-hidden border-2 border-white/20 shadow-lg">
+                            <img src={logoImage} alt="Cafe X Logo" className="w-full h-full object-cover" />
+                        </div>
                     </div>
-                    <h1 className="text-center text-xl font-bold">CafeX</h1>
+                    <h1 className="text-xl font-bold text-white">CafeX</h1>
+                    <p className="text-blue-200 text-sm">Customer Portal</p>
                 </div>
+            </div>
 
-                {/* Navigation Links */}
-                <nav className="space-y-4">
+            {/* Navigation Links - Scrollable middle section */}
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+                <nav className="space-y-2">
                     {navItems.map((item) => (
                         <Link 
                             key={item.path} 
                             to={item.path} 
-                            className={`flex items-center text-lg hover:text-gray-300 ${
-                                isActive(item.path) ? "text-yellow-400" : ""
-                            }`}
+                            className={`group relative flex items-center text-sm font-medium transition-all duration-200 ${
+                                isActive(item.path) 
+                                    ? "text-amber-400 bg-white/10" 
+                                    : "text-white hover:text-blue-200 hover:bg-white/5"
+                            } p-3 rounded-lg`}
                         >
-                            <span className="mr-3">{item.icon}</span>
-                            {item.label}
+                            {/* Active indicator */}
+                            {isActive(item.path) && (
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400 rounded-r-full"></div>
+                            )}
+                            
+                            <span className="mr-3">
+                                {item.icon}
+                            </span>
+                            
+                            <span>{item.label}</span>
                         </Link>
                     ))}
                 </nav>
 
-                {/* Button */}
-                <div className="mt-8">
+                {/* Action Buttons */}
+                <div className="mt-6 space-y-3">
                     <Link to="/customer-buy" className="block w-full">
-                        <button className="w-full bg-yellow-500 text-blue-900 font-bold py-2 px-4 rounded hover:bg-yellow-600 flex items-center justify-center">
+                        <button className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-blue-900 font-bold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center">
                             <ShoppingBag className="mr-2" size={18} />
-                            BUY NOW &gt;
+                            <span>BUY NOW</span>
                         </button>
                     </Link>
-                </div>
-                
-                {/* Logout Button */}
-                <div className="mt-4">
+                    
                     <button 
                         onClick={handleLogout}
-                        className="w-full bg-red-500 text-white font-bold py-2 px-4 rounded hover:bg-red-600 flex items-center justify-center"
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center"
                     >
                         <LogOut className="mr-2" size={18} />
-                        LOGOUT
+                        <span>LOGOUT</span>
                     </button>
                 </div>
             </div>
 
-            {/* Footer */}
-            <div className="p-6 text-sm">
-                {contactInfo ? (
-                    <>
-                        <p>{contactInfo.address}</p>
-                        <p className="mt-4">{contactInfo.hours}</p>
-                        <p className="mt-2">{contactInfo.phone}</p>
-                        <p className="mt-2">{contactInfo.email}</p>
-                    </>
-                ) : (
-                    <p>Loading contact information...</p>
-                )}
+            {/* Footer - Fixed at bottom */}
+            <div className="p-4 border-t border-blue-700/50 bg-blue-900/50">
+                <div className="bg-white/5 rounded-lg p-3">
+                    {contactInfo ? (
+                        <div className="space-y-1 text-xs text-blue-200">
+                            <div className="flex items-start">
+                                <div className="w-1 h-1 bg-blue-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
+                                <p className="leading-tight">{contactInfo.address}</p>
+                            </div>
+                            <div className="flex items-center">
+                                <div className="w-1 h-1 bg-green-400 rounded-full mr-2 flex-shrink-0"></div>
+                                <p>{contactInfo.hours}</p>
+                            </div>
+                            <div className="flex items-center">
+                                <div className="w-1 h-1 bg-yellow-400 rounded-full mr-2 flex-shrink-0"></div>
+                                <p>{contactInfo.phone}</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex items-center text-xs text-blue-200">
+                            <div className="animate-spin rounded-full h-3 w-3 border-b border-blue-400 mr-2"></div>
+                            <p>Loading...</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </aside>
     );

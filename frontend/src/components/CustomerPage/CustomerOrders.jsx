@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import CustomerSideNav from "../../pages/customer/customerSideNav";
+import CustomerSideNav, { MOBILE_NAV_HEIGHT } from "../../pages/customer/customerSideNav";
 import { useNavigate } from "react-router-dom";
 import { ShoppingBag, Truck, Calendar, Clock, ChevronDown, ChevronUp, Package } from "lucide-react";
 import { format } from "date-fns";
@@ -107,12 +107,12 @@ const CustomerOrders = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 relative">
+    <div className="min-h-screen bg-gray-100">
       {/* Sidebar */}
       <CustomerSideNav />
 
-      {/* Main Content */}
-      <main className={`flex-1 ${isMobile ? 'pb-20' : 'pb-0'}`}>
+      {/* Main Content - Adjusted for fixed sidebar */}
+      <main className={`${isMobile ? 'pb-20' : 'ml-64'}`}>
         <div className="container mx-auto px-4 py-6">
           <h1 className="text-2xl font-bold text-blue-900 mb-6">My Orders</h1>
 

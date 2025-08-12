@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import CustomerSideNav from "../../pages/customer/customerSideNav";
+import CustomerSideNav, { MOBILE_NAV_HEIGHT } from "../../pages/customer/customerSideNav";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, Plus, Minus, Trash2, Coffee, CreditCard, Truck, Upload, X, Check, ShoppingBag } from "lucide-react";
+import { ShoppingCart, Plus, Minus, Trash2, Coffee, CreditCard, Truck, Upload, X, Check, ShoppingBag, Star, Sparkles, Zap, Filter } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import Swal from "sweetalert2";
 
@@ -301,74 +301,130 @@ const submitOrder = async () => {
   }
 };
 
+  // Get category icon
+  const getCategoryIcon = (category) => {
+    switch(category) {
+      case 'Coffee': return <Coffee className="h-5 w-5" />;
+      case 'Tea': return <Sparkles className="h-5 w-5" />;
+      case 'Pastry': return <Star className="h-5 w-5" />;
+      case 'Sandwich': return <Zap className="h-5 w-5" />;
+      case 'Dessert': return <Star className="h-5 w-5" />;
+      default: return <Filter className="h-5 w-5" />;
+    }
+  };
+
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 relative">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+      {/* Enhanced animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-400/15 to-purple-500/15 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-indigo-400/10 to-pink-400/10 rounded-full blur-3xl animate-float-delayed"></div>
+        <div className="absolute top-1/2 left-1/4 w-72 h-72 bg-gradient-to-br from-purple-400/8 to-blue-400/8 rounded-full blur-3xl animate-pulse-slow"></div>
+        
+        {/* Floating sparkles */}
+        <div className="absolute top-20 left-1/4 w-2 h-2 bg-blue-400 rounded-full opacity-60 animate-twinkle"></div>
+        <div className="absolute top-40 right-1/3 w-1 h-1 bg-purple-400 rounded-full opacity-40 animate-twinkle-delayed"></div>
+        <div className="absolute bottom-32 left-1/3 w-1.5 h-1.5 bg-indigo-400 rounded-full opacity-50 animate-twinkle"></div>
+      </div>
+
       {/* Sidebar */}
       <CustomerSideNav />
 
-      {/* Main Content */}
-      <main className={`flex-1 bg-white ${isMobile ? 'pb-20' : 'pb-0'}`}>
-        {/* Category Navigation with Cart Button */}
-        <div className="border-t border-b border-orange-300 sticky top-0 bg-white z-10">
-          <div className="container mx-auto px-4">
+      {/* Main Content - Adjusted for fixed sidebar */}
+      <main className={`relative z-10 ${isMobile ? 'pb-20' : 'ml-64 pb-0'}`}>
+        {/* Enhanced Category Navigation with Cart Button */}
+        <div className="sticky top-0 bg-white/90 backdrop-blur-xl border-b border-gray-200/50 z-30 shadow-lg">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5"></div>
+          
+          <div className="relative container mx-auto px-4 py-4 md:py-6">
             <div className="flex items-center justify-between">
-              {/* Categories */}
-              <nav className="flex overflow-x-auto py-4 space-x-4 no-scrollbar flex-1">
-                {categories.map((category) => (
+              {/* Enhanced Categories */}
+              <nav className="flex overflow-x-auto pb-2 hide-scrollbar space-x-3 md:space-x-4 flex-1">
+                {categories.map((category, index) => (
                   <button
                     key={category}
-                    className={`whitespace-nowrap text-sm md:text-lg font-medium transition-colors px-3 py-1 rounded-full ${
+                    className={`group flex items-center justify-center px-4 py-2.5 md:px-6 md:py-3 whitespace-nowrap text-sm md:text-base font-semibold rounded-xl md:rounded-2xl transition-all duration-500 transform hover:scale-105 relative overflow-hidden min-w-0 flex-shrink-0 ${
                       activeCategory === category
-                        ? "bg-blue-100 text-blue-900 font-semibold"
-                        : "text-gray-600 hover:text-blue-800 hover:bg-gray-100"
+                        ? "bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white shadow-xl shadow-blue-500/25"
+                        : "bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-lg border border-gray-200/50 hover:border-blue-300/50"
                     }`}
                     onClick={() => setActiveCategory(category)}
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    {category}
+                    {/* Button glow effect */}
+                    <div className={`absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl md:rounded-2xl ${
+                      activeCategory === category ? 'opacity-100' : ''
+                    }`}></div>
+                    
+                    {/* Icon */}
+                    <span className="relative mr-2 transition-transform duration-300 group-hover:scale-110">
+                      {getCategoryIcon(category)}
+                    </span>
+                    
+                    {/* Text */}
+                    <span className="relative font-bold tracking-wide">
+                      {category}
+                    </span>
+                    
+                    {/* Product count badge */}
+                    <div className={`relative ml-1.5 md:ml-3 px-2 md:px-3 py-0.5 md:py-1 text-xs font-bold rounded-full transition-all duration-300 flex items-center justify-center ${
+                      activeCategory === category
+                        ? "bg-white/20 text-white border border-white/30"
+                        : "bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-700 border border-gray-200"
+                    }`}>
+                      {products.filter(p => p.category === category).length}
+                    </div>
                   </button>
                 ))}
               </nav>
               
-              {/* Cart Button - Mobile: Inline with categories, Desktop: Fixed */}
+              {/* Enhanced Cart Button - Mobile: Inline with categories, Desktop: Fixed */}
               {isMobile ? (
                 <div className="ml-4 flex-shrink-0">
                   <button
                     onClick={() => setShowCartModal(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full shadow-lg transition-all duration-300 hover:scale-110 relative"
-                  >
-                    <div className="relative">
-                      <ShoppingCart className="w-8 h-8" />
-                      {cart.length > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center animate-pulse font-bold">
-                          {cart.reduce((total, item) => total + item.quantity, 0)}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                </div>
-              ) : (
-                /* Desktop: Fixed position cart button */
-                <div className="fixed bottom-6 right-6 z-40">
-                  <button
-                    onClick={() => setShowCartModal(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 group relative"
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 relative group"
                   >
                     <div className="relative">
                       <ShoppingCart className="w-6 h-6" />
                       {cart.length > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse font-bold">
+                        <span className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse font-bold shadow-lg">
                           {cart.reduce((total, item) => total + item.quantity, 0)}
                         </span>
                       )}
                     </div>
                     
-                    {/* Cart preview tooltip on hover */}
+                    {/* Ripple effect */}
+                    <div className="absolute inset-0 bg-white/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </button>
+                </div>
+              ) : (
+                /* Enhanced Desktop: Fixed position cart button */
+                <div className="fixed bottom-6 right-6 z-40">
+                  <button
+                    onClick={() => setShowCartModal(true)}
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-4 rounded-2xl shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-110 group relative overflow-hidden"
+                  >
+                    {/* Background animation */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    <div className="relative flex items-center">
+                      <ShoppingCart className="w-6 h-6 mr-2" />
+                      <span className="font-semibold">Cart</span>
+                      {cart.length > 0 && (
+                        <span className="ml-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm rounded-full h-6 w-6 flex items-center justify-center animate-bounce font-bold shadow-lg">
+                          {cart.reduce((total, item) => total + item.quantity, 0)}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Hover tooltip */}
                     {cart.length > 0 && (
-                      <div className="absolute bottom-full right-0 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                        <div className="bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                        <div className="bg-black/90 backdrop-blur-sm text-white text-sm px-4 py-2 rounded-xl whitespace-nowrap shadow-xl border border-white/10">
                           {cart.length} item{cart.length > 1 ? 's' : ''} • ₱{cartTotal.toFixed(2)}
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black/90"></div>
                         </div>
-                        <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"></div>
                       </div>
                     )}
                   </button>
@@ -378,61 +434,185 @@ const submitOrder = async () => {
           </div>
         </div>
 
-        {/* Products Section */}
-        <div className="container mx-auto px-4 py-6">
-          <div className="w-full">
-            <h2 className="text-xl md:text-2xl font-bold text-blue-900 mb-6">{activeCategory}</h2>
-
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-              </div>
-            ) : filteredProducts.length === 0 ? (
-              <p className="text-center text-gray-500 py-12">No products available in this category.</p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 pb-6">
-                {filteredProducts.map((product) => (
-                  <div
-                    key={product._id}
-                    className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group"
-                  >
-                    {/* Product Image */}
-                    <div className="h-40 md:h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden relative">
-                      {product.image ? (
-                        <img
-                          src={`${API_BASE_URL}${product.image}`}
-                          alt={product.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                      ) : (
-                        <Coffee className="h-12 w-12 md:h-16 md:w-16 text-gray-400" />
-                      )}
-                      {/* Price Badge */}
-                      <div className="absolute top-2 md:top-3 right-2 md:right-3 bg-blue-600 text-white px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-bold shadow-lg">
-                        ₱{product.price.toFixed(2)}
-                      </div>
-                    </div>
-                    
-                    {/* Product Details */}
-                    <div className="p-4 md:p-5">
-                      <h3 className="text-base md:text-lg font-bold text-gray-900 mb-2 line-clamp-1">{product.name}</h3>
-                      <p className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4 line-clamp-2 h-8 md:h-10">{product.description}</p>
-                      
-                      {/* Add to Cart Button */}
-                      <button 
-                        onClick={() => addToCart(product)}
-                        className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 md:py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center shadow-md hover:shadow-lg transform hover:scale-105 text-sm md:text-base"
-                        disabled={product.stock <= 0}
-                      >
-                        <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-2" />
-                        {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
-                      </button>
-                    </div>
+        {/* Enhanced Products Section */}
+        <div className="container mx-auto px-4 py-8 md:py-12">
+          {/* Enhanced Section Header */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-10 space-y-6 lg:space-y-0">
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg">
+                  <div className="text-white">
+                    {getCategoryIcon(activeCategory)}
                   </div>
-                ))}
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent">
+                  {activeCategory}
+                </h2>
+              </div>
+              <p className="text-gray-600 text-lg">
+                {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'} available
+              </p>
+            </div>
+            
+            {/* Featured count badge if any */}
+            {filteredProducts.some(product => product.featured) && (
+              <div className="group">
+                <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-amber-50 to-yellow-50 hover:from-amber-100 hover:to-yellow-100 rounded-2xl border-2 border-amber-200/50 hover:border-amber-300/50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
+                  <Star className="h-5 w-5 text-amber-600 mr-3 group-hover:rotate-12 transition-transform duration-300" fill="currentColor" />
+                  <span className="text-sm font-bold text-amber-800">
+                    {filteredProducts.filter(product => product.featured).length} Featured Item{filteredProducts.filter(product => product.featured).length !== 1 ? 's' : ''}
+                  </span>
+                  <div className="ml-2 w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
+                </div>
               </div>
             )}
           </div>
+
+          {isLoading ? (
+            <div className="flex justify-center items-center h-96">
+              <div className="text-center">
+                <div className="relative mb-8">
+                  {/* Enhanced loading animation */}
+                  <div className="w-20 h-20 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto shadow-lg"></div>
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <ShoppingCart className="h-8 w-8 text-blue-600 animate-pulse" />
+                  </div>
+                  {/* Outer ring */}
+                  <div className="absolute inset-0 w-20 h-20 border-2 border-purple-300 rounded-full animate-ping mx-auto opacity-30"></div>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">Loading Products</h3>
+                <p className="text-gray-600 text-lg">Preparing delicious items...</p>
+                <div className="flex justify-center space-x-1 mt-4">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-100"></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-200"></div>
+                </div>
+              </div>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-24">
+              <div className="max-w-lg mx-auto">
+                <div className="relative mb-12">
+                  {/* Enhanced empty state illustration */}
+                  <div className="w-32 h-32 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto shadow-2xl border-4 border-white">
+                    <ShoppingCart className="h-14 w-14 text-gray-400" />
+                  </div>
+                  <div className="absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-xl animate-bounce-gentle">
+                    <Coffee size={24} className="text-white" />
+                  </div>
+                  <div className="absolute -bottom-2 -left-2 w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                    <Sparkles size={16} className="text-white" />
+                  </div>
+                </div>
+                
+                <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent mb-6">No Products Available</h3>
+                <p className="text-gray-600 leading-relaxed text-lg">
+                  No products available in the {activeCategory} category at the moment. Try exploring other categories!
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+              {filteredProducts.map((product, index) => (
+                <div
+                  key={product._id}
+                  className="group bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl overflow-hidden transform transition-all duration-700 hover:scale-[1.03] hover:shadow-2xl border border-white/60 hover:border-blue-300/60 animate-fade-in-up relative"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  {/* Card glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
+                  
+                  {/* Enhanced Product Image */}
+                  <div className="relative h-48 md:h-56 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                    {product.image ? (
+                      <img
+                        src={`${API_BASE_URL}${product.image}`}
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-1"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Coffee className="h-16 w-16 text-gray-400 group-hover:scale-110 transition-transform duration-300" />
+                      </div>
+                    )}
+                    
+                    {/* Enhanced featured badge */}
+                    {product.featured && (
+                      <div className="absolute top-4 right-4 group-hover:scale-110 transition-transform duration-300">
+                        <div className="flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full shadow-xl backdrop-blur-sm border-2 border-white/30 hover:from-amber-600 hover:to-yellow-600">
+                          <Star className="h-4 w-4 mr-2 animate-spin-slow" fill="currentColor" />
+                          <span className="text-xs font-bold tracking-wide">POPULAR</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Enhanced price overlay */}
+                    <div className="absolute bottom-4 left-4">
+                      <div className="px-4 py-2 bg-black/80 backdrop-blur-sm text-white text-lg font-bold rounded-full shadow-xl border border-white/20 group-hover:scale-105 transition-transform duration-300">
+                        ₱{product.price.toFixed(2)}
+                      </div>
+                    </div>
+
+                    {/* Stock indicator */}
+                    <div className="absolute top-4 left-4">
+                      <span className={`px-3 py-1.5 text-xs font-bold rounded-full shadow-lg ${
+                        product.stock > 5 
+                          ? "bg-green-500/90 text-white" 
+                          : product.stock > 0 
+                            ? "bg-orange-500/90 text-white" 
+                            : "bg-red-500/90 text-white"
+                      }`}>
+                        {product.stock > 5 ? "In Stock" : product.stock > 0 ? `${product.stock} left` : "Out of Stock"}
+                      </span>
+                    </div>
+                    
+                    {/* Corner decoration */}
+                    <div className="absolute top-0 left-0 w-16 h-16 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  </div>
+                  
+                  {/* Enhanced Product Info */}
+                  <div className="p-6 relative">
+                    <div className="mb-4">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors duration-300 group-hover:scale-105 transform transition-transform duration-300">
+                        {product.name}
+                      </h3>
+                      <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-700 transition-colors duration-300">
+                        {product.description}
+                      </p>
+                    </div>
+                    
+                    {/* Enhanced Add to Cart Button */}
+                    <button 
+                      onClick={() => addToCart(product)}
+                      disabled={product.stock <= 0}
+                      className={`w-full py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 flex items-center justify-center shadow-lg hover:shadow-xl text-base relative overflow-hidden group ${
+                        product.stock > 0 
+                          ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white" 
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      }`}
+                    >
+                      {/* Button background effect */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      
+                      <ShoppingCart className="w-5 h-5 mr-2 relative" />
+                      <span className="relative">
+                        {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+                      </span>
+                      
+                      {/* Ripple effect */}
+                      {product.stock > 0 && (
+                        <div className="absolute inset-0 bg-white/10 rounded-xl opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-opacity duration-300"></div>
+                      )}
+                    </button>
+                    
+                    {/* Decorative elements */}
+                    <div className="absolute bottom-2 right-2 w-2 h-2 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
@@ -745,6 +925,142 @@ const submitOrder = async () => {
           </div>
         </div>
       )}
+
+      {/* Enhanced custom animations and styles */}
+      <style jsx>{`
+        @keyframes fade-in-up {
+          from {
+            opacity: 0;
+            transform: translateY(40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-20px) rotate(2deg);
+          }
+        }
+        
+        @keyframes float-delayed {
+          0%, 100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-15px) rotate(-1deg);
+          }
+        }
+        
+        @keyframes pulse-slow {
+          0%, 100% {
+            opacity: 0.1;
+          }
+          50% {
+            opacity: 0.2;
+          }
+        }
+        
+        @keyframes twinkle {
+          0%, 100% {
+            opacity: 0.3;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.2);
+          }
+        }
+        
+        @keyframes twinkle-delayed {
+          0%, 100% {
+            opacity: 0.2;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 0.8;
+            transform: scale(1.1);
+          }
+        }
+        
+        @keyframes spin-slow {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        
+        @keyframes bounce-gentle {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+        
+        .animate-fade-in-up {
+          animation: fade-in-up 0.8s ease-out forwards;
+          opacity: 0;
+        }
+        
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
+        }
+        
+        .animate-float-delayed {
+          animation: float-delayed 8s ease-in-out infinite;
+        }
+        
+        .animate-pulse-slow {
+          animation: pulse-slow 4s ease-in-out infinite;
+        }
+        
+        .animate-twinkle {
+          animation: twinkle 3s ease-in-out infinite;
+        }
+        
+        .animate-twinkle-delayed {
+          animation: twinkle-delayed 4s ease-in-out infinite 1s;
+        }
+        
+        .animate-spin-slow {
+          animation: spin-slow 20s linear infinite;
+        }
+        
+        .animate-bounce-gentle {
+          animation: bounce-gentle 3s ease-in-out infinite;
+        }
+        
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        
+        .line-clamp-1 {
+          display: -webkit-box;
+          -webkit-line-clamp: 1;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+        
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
     </div>
   );
 };

@@ -11,7 +11,10 @@ import {
   Paperclip, 
   Image, 
   X, 
-  ChevronDown
+  ChevronDown,
+  Wifi,
+  WifiOff,
+  MessageCircle
 } from "lucide-react";
 import { io } from "socket.io-client";
 
@@ -328,52 +331,99 @@ const CustomerMessage = () => {
   };
 
   return (
-    // Make the outer container fixed height with no scrolling
-    <div className="flex h-screen overflow-hidden bg-gray-100">
-      {/* Sidebar - fixed height, no scroll */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-indigo-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      {/* Sidebar */}
       <CustomerSideNav />
 
-      {/* Main Content - fixed height with proper internal scrolling */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-white">
-        {/* Header - fixed at top */}
-        <div className="bg-blue-900 text-white p-4 shrink-0">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold">Store Owner</h1>
-            <div className="flex items-center">
-              <span className={`inline-block h-2 w-2 rounded-full mr-1.5 ${
-                isConnected ? 'bg-green-400' : 'bg-red-400'
-              }`}></span>
-              <p className="text-sm">
-                {isConnected ? 'Connected' : 'Disconnected'}
-              </p>
+      {/* Main Content - Adjusted for fixed sidebar */}
+      <main className={`h-screen flex flex-col overflow-hidden relative ${isMobile ? '' : 'ml-64'}`}>
+        {/* Glassmorphism overlay */}
+        <div className="absolute inset-0 bg-white/20 backdrop-blur-sm"></div>
+        
+        {/* Header - Enhanced with glassmorphism */}
+        <div className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white p-4 shrink-0 shadow-lg backdrop-blur-xl border-b border-white/10">
+          {/* Header background pattern */}
+          <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent"></div>
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+          
+          <div className="relative flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              {/* Enhanced admin avatar */}
+              <div className="relative">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg border-2 border-white/20">
+                  <User size={20} className="text-white" />
+                </div>
+              </div>
+              
+              <div>
+                <h1 className="text-xl font-bold">Store Owner</h1>
+                <p className="text-xs text-blue-100 flex items-center">
+                  <MessageCircle size={12} className="mr-1" />
+                  {adminOnlineCount > 0 ? 'Available to chat' : 'Offline'}
+                </p>
+              </div>
+            </div>
+            
+            {/* Enhanced connection status */}
+            <div className="flex items-center space-x-3">
+              <div className={`flex items-center px-3 py-1.5 rounded-full ${
+                isConnected 
+                  ? 'bg-green-500/20 border border-green-400/30' 
+                  : 'bg-red-500/20 border border-red-400/30'
+              } backdrop-blur-sm`}>
+                {isConnected ? (
+                  <Wifi size={14} className="text-green-300 mr-1.5" />
+                ) : (
+                  <WifiOff size={14} className="text-red-300 mr-1.5" />
+                )}
+                <span className="text-xs font-medium">
+                  {isConnected ? 'Connected' : 'Disconnected'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Messages Container - only this part scrolls */}
+        {/* Messages Container - Enhanced with modern scrolling */}
         <div 
           ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto p-4 relative pb-16"
+          className="flex-1 overflow-y-auto p-6 relative"
           style={{ 
             scrollbarWidth: "thin",
-            scrollbarColor: "#cbd5e0 #f7fafc",
-            paddingBottom: isMobile ? "160px" : "0px" // Add extra padding at bottom to prevent messages from being hidden behind input
+            scrollbarColor: "rgba(59, 130, 246, 0.3) transparent",
+            paddingBottom: isMobile ? "160px" : "0px"
           }}  
         >
           {isLoading ? (
             <div className="flex justify-center items-center h-full">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              <div className="relative">
+                <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin animate-reverse"></div>
+              </div>
             </div>
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-500">
-              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                <Send className="h-8 w-8 text-blue-500" />
+              <div className="relative mb-6">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center shadow-lg border border-white/50">
+                  <Send className="h-12 w-12 text-blue-500" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                  <MessageCircle size={16} className="text-white" />
+                </div>
               </div>
-              <p>No messages yet</p>
-              <p className="text-sm mt-1">Start the conversation!</p>
+              <div className="text-center">
+                <p className="text-lg font-semibold text-gray-700 mb-2">No messages yet</p>
+                <p className="text-sm text-gray-500">Start the conversation with the store owner!</p>
+              </div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Group messages by date */}
               {Object.entries(
                 messages.reduce((groups, message) => {
@@ -384,10 +434,12 @@ const CustomerMessage = () => {
                 }, {})
               ).map(([date, dateMessages]) => (
                 <div key={date}>
-                  <div className="flex justify-center my-4">
-                    <span className="px-3 py-1 bg-gray-200 rounded-full text-xs text-gray-600">
-                      {formatDate(date)}
-                    </span>
+                  <div className="flex justify-center my-6">
+                    <div className="relative">
+                      <span className="px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full text-xs font-medium text-gray-600 shadow-lg border border-gray-200/50">
+                        {formatDate(date)}
+                      </span>
+                    </div>
                   </div>
                   
                   {/* Group consecutive messages by same sender */}
@@ -409,60 +461,75 @@ const CustomerMessage = () => {
                     return (
                       <div 
                         key={groupIndex} 
-                        className={`flex ${isCustomer ? 'justify-end' : 'justify-start'} mb-4`}
+                        className={`flex ${isCustomer ? 'justify-end' : 'justify-start'} mb-6 animate-fade-in`}
                       >
                         {!isCustomer && (
-                          <div className="h-8 w-8 rounded-full bg-blue-500 flex-shrink-0 mr-2 mt-1 flex items-center justify-center">
-                            <User size={16} className="text-white" />
+                          <div className="relative mr-3 mt-1">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg border-2 border-white">
+                              <User size={16} className="text-white" />
+                            </div>
                           </div>
                         )}
                         
                         <div className="max-w-[75%]">
-                          <div className="space-y-1">
-                            {group.map((message) => (
+                          <div className="space-y-2">
+                            {group.map((message, index) => (
                               <div
                                 key={message._id} 
-                                className={`rounded-lg px-4 py-2 relative ${
-                                  isCustomer 
-                                    ? 'bg-blue-600 text-white rounded-br-none' 
-                                    : 'bg-gray-200 text-gray-800 rounded-bl-none'
+                                className={`group relative animate-slide-in ${
+                                  isCustomer ? 'animate-slide-in-right' : 'animate-slide-in-left'
                                 }`}
+                                style={{ animationDelay: `${index * 100}ms` }}
                               >
-                                {message.attachment && (
-                                  <div className="mb-2">
-                                    <img 
-                                      src={message.attachment.startsWith('data:') ? message.attachment : `${API_BASE_URL}${message.attachment}`}
-                                      alt="Attachment" 
-                                      className="rounded-md max-h-60 max-w-full cursor-pointer hover:opacity-90 transition-opacity"
-                                      onClick={() => window.open(
-                                        message.attachment.startsWith('data:') 
-                                          ? message.attachment 
-                                          : `${API_BASE_URL}${message.attachment}`, 
-                                        '_blank'
-                                      )}
-                                    />
-                                  </div>
-                                )}
-                                <p>{message.content}</p>
-                                <div 
-                                  className={`flex items-center text-xs mt-1 ${
-                                    isCustomer ? 'text-blue-100 justify-end' : 'text-gray-500'
-                                  }`}
-                                >
-                                  <Clock size={12} className="mr-1" />
-                                  <span>{formatTime(message.timestamp || message.createdAt)}</span>
+                                <div className={`relative rounded-2xl px-4 py-3 shadow-lg transform transition-all duration-300 hover:scale-[1.02] ${
+                                  isCustomer 
+                                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-br-lg ml-auto' 
+                                    : 'bg-white/90 backdrop-blur-sm text-gray-800 rounded-bl-lg border border-gray-200/50'
+                                }`}>
+                                  {/* Message tail */}
+                                  <div className={`absolute bottom-0 ${
+                                    isCustomer 
+                                      ? 'right-0 w-0 h-0 border-l-[12px] border-l-transparent border-t-[12px] border-t-blue-600' 
+                                      : 'left-0 w-0 h-0 border-r-[12px] border-r-transparent border-t-[12px] border-t-white'
+                                  }`}></div>
                                   
-                                  {isCustomer && (
-                                    <span 
-                                      className={`material-symbols-outlined ml-1 text-sm ${
-                                        message.isRead ? 'text-blue-100' : 'text-blue-300'
-                                      }`}
-                                      title={message.isRead ? "Read" : "Delivered"}
-                                      style={{ fontSize: "14px" }} // Match the previous icon size
-                                    >
-                                      done_all
-                                    </span>
+                                  {message.attachment && (
+                                    <div className="mb-3 relative overflow-hidden rounded-xl">
+                                      <img 
+                                        src={message.attachment.startsWith('data:') ? message.attachment : `${API_BASE_URL}${message.attachment}`}
+                                        alt="Attachment" 
+                                        className="rounded-xl max-h-60 max-w-full cursor-pointer hover:opacity-90 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                                        onClick={() => window.open(
+                                          message.attachment.startsWith('data:') 
+                                            ? message.attachment 
+                                            : `${API_BASE_URL}${message.attachment}`, 
+                                          '_blank'
+                                        )}
+                                      />
+                                    </div>
                                   )}
+                                  
+                                  {message.content && (
+                                    <p className="leading-relaxed">{message.content}</p>
+                                  )}
+                                  
+                                  <div className={`flex items-center text-xs mt-2 ${
+                                    isCustomer ? 'text-blue-100 justify-end' : 'text-gray-500'
+                                  }`}>
+                                    <Clock size={12} className="mr-1.5" />
+                                    <span className="font-medium">{formatTime(message.timestamp || message.createdAt)}</span>
+                                    
+                                    {isCustomer && (
+                                      <div className="ml-2 flex items-center">
+                                        <div className={`w-3 h-3 rounded-full ${
+                                          message.isRead ? 'bg-green-300' : 'bg-blue-300'
+                                        } animate-pulse`}></div>
+                                        <span className="ml-1 text-xs font-medium">
+                                          {message.isRead ? "Read" : "Sent"}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             ))}
@@ -470,8 +537,10 @@ const CustomerMessage = () => {
                         </div>
                         
                         {isCustomer && (
-                          <div className="h-8 w-8 rounded-full bg-blue-600 flex-shrink-0 ml-2 mt-1 flex items-center justify-center">
-                            <User size={16} className="text-white" />
+                          <div className="relative ml-3 mt-1">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg border-2 border-white">
+                              <User size={16} className="text-white" />
+                            </div>
                           </div>
                         )}
                       </div>
@@ -480,17 +549,20 @@ const CustomerMessage = () => {
                 </div>
               ))}
 
-              {/* Typing indicator */}
+              {/* Enhanced typing indicator */}
               {isAdminTyping && (
-                <div className="flex items-center mt-2">
-                  <div className="h-8 w-8 rounded-full bg-blue-500 flex-shrink-0 mr-2 flex items-center justify-center">
-                    <User size={16} className="text-white" />
+                <div className="flex items-center mt-4 animate-fade-in">
+                  <div className="relative mr-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg border-2 border-white">
+                      <User size={16} className="text-white" />
+                    </div>
                   </div>
-                  <div className="bg-gray-200 rounded-lg px-4 py-2 text-gray-500 inline-block">
-                    <div className="flex items-center">
-                      <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce mr-1" style={{ animationDelay: "0ms" }}></span>
-                      <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce mr-1" style={{ animationDelay: "300ms" }}></span>
-                      <span className="h-2 w-2 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "600ms" }}></span>
+                  <div className="bg-white/90 backdrop-blur-sm rounded-2xl rounded-bl-lg px-5 py-3 text-gray-600 shadow-lg border border-gray-200/50">
+                    <div className="flex items-center space-x-1">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                      <span className="ml-2 text-xs font-medium">Store owner is typing...</span>
                     </div>
                   </div>
                 </div>
@@ -501,89 +573,86 @@ const CustomerMessage = () => {
             </div>
           )}
           
-          {/* Scroll to bottom button */}
+          {/* Enhanced scroll to bottom button */}
           {showScrollButton && (
             <button
               onClick={scrollToBottom}
-              className="fixed bottom-32 md:bottom-24 right-6 bg-blue-600 text-white p-2 rounded-full shadow-lg hover:bg-blue-700 transition-all z-20"
+              className="fixed bottom-32 md:bottom-28 right-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 z-20 border border-white/20 backdrop-blur-sm"
             >
-              <ChevronDown size={24} />
+              <ChevronDown size={20} />
             </button>
           )}
         </div>
 
-        {/* Input Area - fixed at bottom */}
+        {/* Enhanced Input Area */}
         <div 
-          className="bg-white border-t border-gray-200 p-4 shrink-0 z-10"
+          className="relative bg-white/80 backdrop-blur-xl border-t border-white/20 p-4 shrink-0 z-10 shadow-lg"
           style={isMobile ? { 
             position: "fixed", 
             bottom: `${MOBILE_NAV_HEIGHT}px`, 
             left: 0, 
             right: 0,
             zIndex: 30,
-            boxShadow: "0 -2px 10px rgba(0,0,0,0.05)"
+            boxShadow: "0 -10px 30px rgba(0,0,0,0.1)"
           } : {}}
         >
-          <form onSubmit={handleSendMessage} className="flex flex-col">
-            {/* Attachment preview if any */}
-            {imagePreview && (
-              <div className="mb-2 relative inline-block">
-                <img 
-                  src={imagePreview} 
-                  alt="Attachment preview" 
-                  className="h-20 w-auto rounded border border-gray-300" 
-                />
-                <button 
-                  type="button"
-                  onClick={() => {
-                    setImagePreview(null);
-                    setImageFile(null);
-                  }}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            )}
-            
-            <div className="flex items-center gap-2">
-              <div className="flex flex-1 items-center gap-2 rounded-lg border border-gray-300 px-3 py-2">
-                {/* File input button */}
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current.click()}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <Paperclip size={20} />
-                </button>
-                
-                {/* Message input */}
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => {
-                    setNewMessage(e.target.value);
-                    handleTyping();
-                  }}
-                  placeholder="Type your message..."
-                  className="flex-1 border-0 focus:ring-0 focus:outline-none"
-                  disabled={isSending}
-                />
+          {/* Subtle gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-transparent pointer-events-none"></div>
+          
+          <form onSubmit={handleSendMessage} className="relative flex flex-col max-w-4xl mx-auto">
+            <div className="flex items-center gap-3">
+              {/* Enhanced input container */}
+              <div className="flex-1 relative">
+                <div className="flex items-center bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-gray-200/50 hover:border-blue-300/50 focus-within:border-blue-500/50 shadow-lg hover:shadow-xl transition-all duration-300 px-4 py-3">
+                  {/* Background gradient effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-2xl opacity-0 focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                  
+                  {/* Enhanced message input */}
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => {
+                      setNewMessage(e.target.value);
+                      handleTyping();
+                    }}
+                    placeholder="Type your message..."
+                    className="flex-1 bg-transparent border-0 focus:ring-0 focus:outline-none text-gray-800 placeholder-gray-500 mx-3 font-medium"
+                    disabled={isSending}
+                  />
+                  
+                  {/* Typing indicator for current user */}
+                  {isTyping && (
+                    <div className="flex items-center space-x-1 mr-3">
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse delay-75"></div>
+                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse delay-150"></div>
+                    </div>
+                  )}
+                </div>
               </div>
               
-              {/* Send button */}
+              {/* Enhanced send button */}
               <button
                 type="submit"
-                className={`rounded-lg p-3 text-white ${
+                className={`relative overflow-hidden rounded-2xl p-4 text-white font-medium shadow-lg transition-all duration-300 transform ${
                   isSending || (!newMessage.trim() && !imageFile)
                     ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700"
+                    : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl hover:scale-105 active:scale-95"
                 }`}
                 disabled={isSending || (!newMessage.trim() && !imageFile)}
               >
-                <Send size={20} />
+                {/* Button background effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+                
+                {isSending ? (
+                  <div className="relative w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Send size={20} className="relative" />
+                )}
               </button>
             </div>
+            
+            {/* Hidden file input - preserving functionality */}
             <input
               ref={fileInputRef}
               type="file"
@@ -594,6 +663,76 @@ const CustomerMessage = () => {
           </form>
         </div>
       </main>
+
+      {/* Custom animations and styles */}
+      <style jsx>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes slide-in-left {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        @keyframes slide-in-right {
+          from {
+            opacity: 0;
+            transform: translateX(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-out forwards;
+        }
+        
+        .animate-slide-in-left {
+          animation: slide-in-left 0.5s ease-out forwards;
+        }
+        
+        .animate-slide-in-right {
+          animation: slide-in-right 0.5s ease-out forwards;
+        }
+        
+        .animate-reverse {
+          animation-direction: reverse;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: rgba(59, 130, 246, 0.3);
+          border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(59, 130, 246, 0.5);
+        }
+      `}</style>
     </div>
   );
 };
