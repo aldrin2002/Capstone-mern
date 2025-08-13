@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { io } from "socket.io-client";
@@ -42,11 +42,10 @@ const AdminMessage = () => {
   // Refs
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
-  const socketRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const conversationsContainerRef = useRef(null);
 
-  // Additional state
+  // Additional state - simplified like CustomerMessage
   const [onlineCustomers, setOnlineCustomers] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [messageToEdit, setMessageToEdit] = useState(null);
@@ -54,6 +53,11 @@ const AdminMessage = () => {
   const [typingCustomers, setTypingCustomers] = useState({});
   const [typingTimeout, setTypingTimeout] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
+  // COPIED FROM CUSTOMER MESSAGE - simplified socket state
+  const [socket, setSocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const typingTimeoutRef = useRef(null);
 
   // Helper functions
   const sortConversationsByLatest = (conversationsArray) => {
@@ -90,121 +94,281 @@ const AdminMessage = () => {
     return onlineCustomers.includes(customerId);
   };
 
-const setupMessageHandlers = () => {
-  if (!socketRef.current) return;
-  
-  socketRef.current.off('new-message');
-  socketRef.current.off('customer-status-update');
-  socketRef.current.off('customer-typing');
-  
-  socketRef.current.on('new-message', (message) => {
-    console.log("Received new message:", message); // Add this for debugging
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  // COPIED FROM CUSTOMER MESSAGE - Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
     
-    const messageConvId = message.conversation?._id || message.conversation;
-    const selectedConvId = selectedConversation?._id;
-    const messageConvString = typeof messageConvId === 'object' ? messageConvId.toString() : String(messageConvId);
-    const selectedConvString = typeof selectedConvId === 'object' ? selectedConvId.toString() : String(selectedConvId);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // COPIED FROM CUSTOMER MESSAGE - Socket initialization
+  useEffect(() => {
+    let newSocket = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
     
-    if (selectedConversation && messageConvString === selectedConvString) {
+    const connectSocket = () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No auth token found for socket connection");
+        return;
+      }
+      
+      const socketUrl = import.meta.env.MODE === "development" 
+        ? "http://localhost:5000" 
+        : "";
+        
+      newSocket = io(socketUrl, {
+        auth: { token },
+        withCredentials: true,
+        forceNew: true,
+        transports: ['websocket', 'polling']
+      });
+      
+      newSocket.on("connect", () => {
+        console.log("Admin Socket connected:", newSocket.id);
+        setIsConnected(true);
+        setIsSocketConnected(true);
+        reconnectAttempts = 0;
+      });
+      
+      newSocket.on("connect_error", (err) => {
+        console.error("Socket connection error:", err.message);
+        setIsConnected(false);
+        setIsSocketConnected(false);
+        
+        if (reconnectAttempts < maxReconnectAttempts) {
+          reconnectAttempts++;
+          console.log(`Attempting to reconnect... (${reconnectAttempts}/${maxReconnectAttempts})`);
+          setTimeout(connectSocket, 2000 * reconnectAttempts);
+        } else {
+          toast.error("Chat connection failed. Please refresh the page.");
+        }
+      });
+      
+      newSocket.on("disconnect", (reason) => {
+        console.log("Socket disconnected:", reason);
+        setIsConnected(false);
+        setIsSocketConnected(false);
+        
+        if (reason !== 'io client disconnect') {
+          console.log("Unexpected disconnect, will attempt to reconnect");
+        }
+      });
+      
+      // Handle customer typing
+      newSocket.on("customer-typing", ({ customerId, conversationId, isTyping }) => {
+        setTypingCustomers(prev => {
+          setSelectedConversation(currentConv => {
+            if (currentConv && currentConv._id === conversationId) {
+              setTypingCustomers(prevTyping => ({
+                ...prevTyping,
+                [customerId]: isTyping
+              }));
+            }
+            return currentConv;
+          });
+          return prev;
+        });
+      });
+      
+      // Handle customer status updates
+      newSocket.on('customer-status-update', (data) => {
+        if (data.customers) {
+          setOnlineCustomers(data.customers);
+        }
+      });
+      
+      setSocket(newSocket);
+    };
+    
+    connectSocket();
+    
+    return () => {
+      if (newSocket) {
+        console.log("Cleaning up socket connection");
+        newSocket.disconnect();
+      }
+    };
+  }, []);
+
+  // ADD: Separate useEffect for message handling that has access to current selectedConversation
+  useEffect(() => {
+    if (!socket) return;
+    
+    const handleNewMessage = (message) => {
+      console.log("Admin received new message:", message);
+      console.log("Current selected conversation:", selectedConversation?._id);
+      
+      // Check if message belongs to current conversation
+      const messageConvId = (message.conversation?._id || message.conversation).toString();
+      const currentConvId = selectedConversation?._id?.toString();
+      
+      // FIXED: Always add message if it's for current conversation
+      if (currentConvId && messageConvId === currentConvId) {
+        console.log("✅ Adding message to current conversation");
+        setMessages((prev) => {
+          // IMPORTANT: Check for duplicates more thoroughly
+          const exists = prev.find(m => 
+            m._id === message._id || 
+            (m.content === message.content && 
+             m.sender.id === message.sender.id && 
+             Math.abs(new Date(m.createdAt) - new Date(message.createdAt)) < 1000)
+          );
+          
+          if (exists) {
+            console.log("Duplicate message detected, skipping");
+            return prev;
+          }
+          
+          return [...prev, message];
+        });
+      } else {
+        console.log(`❌ Message for different conversation: ${messageConvId} vs ${currentConvId}`);
+      }
+      
+      // ALWAYS update conversations list
+      setConversations(prev => {
+        const updatedConversations = prev.map(conv => {
+          const convId = conv._id.toString();
+          
+          if (convId === messageConvId) {
+            return { 
+              ...conv, 
+              lastMessage: new Date(),
+              lastMessageContent: message.content || 'Image',
+              lastMessageSender: message.sender.role,
+              unreadCount: message.sender.role === 'customer' ? (conv.unreadCount || 0) + 1 : conv.unreadCount || 0
+            };
+          }
+          return conv;
+        });
+        
+        return sortConversationsByLatest(updatedConversations);
+      });
+      
+      // Play notification for customer messages
       if (message.sender.role === 'customer') {
         try {
-          const activeNotification = new Audio('/notification-subtle.mp3');
-          activeNotification.volume = 0.3;
-          activeNotification.play().catch(err => console.log("Audio play prevented:", err));
+          const audio = new Audio('/notification-subtle.mp3');
+          audio.volume = 0.3;
+          audio.play().catch(err => console.log("Audio play prevented:", err));
         } catch (error) {
           console.log("Audio error:", error);
         }
       }
-      
-      setMessages(prevMessages => {
-        // FIXED: Simplified duplicate detection - only check for exact ID matches
-        const isDuplicate = prevMessages.some(m => m._id === message._id);
-        
-        if (isDuplicate) {
-          console.log("Duplicate message detected, skipping:", message._id);
-          return prevMessages;
-        }
-        
-        // FIXED: For temp messages from admin, replace them with real messages
-        if (message.sender.role === 'admin') {
-          const tempMessageIndex = prevMessages.findIndex(m => 
-            m._id.toString().startsWith('temp-') && 
-            m.content === message.content && 
-            Math.abs(new Date(m.createdAt) - new Date(message.createdAt)) < 10000 // 10 seconds window
-          );
-          
-          if (tempMessageIndex !== -1) {
-            console.log("Replacing temp message with real message");
-            const updatedMessages = [...prevMessages];
-            updatedMessages[tempMessageIndex] = message;
-            return updatedMessages;
-          }
-        }
-        
-        // FIXED: Always add customer messages, they're never duplicates from temp
-        console.log("Adding new message:", message);
-        const updatedMessages = [...prevMessages, message];
-        setTimeout(scrollToBottom, 100);
-        return updatedMessages;
+    };
+    
+    // Add event listener
+    socket.on("new-message", handleNewMessage);
+    
+    // Cleanup
+    return () => {
+      socket.off("new-message", handleNewMessage);
+    };
+  }, [socket, selectedConversation]); // Re-run when selectedConversation changes
+
+  // ADD: Join conversation room when selecting new conversation
+  useEffect(() => {
+    if (socket && isConnected && selectedConversation) {
+      console.log(`🚪 Admin joining room for conversation: ${selectedConversation._id}`);
+      socket.emit('join-conversation', selectedConversation._id);
+    }
+  }, [socket, isConnected, selectedConversation]);
+
+  // KEEP: Join all conversation rooms when socket connects
+  useEffect(() => {
+    if (socket && isConnected && conversations.length > 0) {
+      console.log("🚪 Admin joining ALL conversation rooms");
+      conversations.forEach(conv => {
+        socket.emit('join-conversation', conv._id);
+        console.log(`Admin joined room: ${conv._id}`);
       });
-      
-      // Mark customer messages as read
-      if (message.sender.role === 'customer') {
-        socketRef.current.emit('mark-read', { conversationId: selectedConvString });
+    }
+  }, [socket, isConnected, conversations]);
+
+  // COPIED FROM CUSTOMER MESSAGE - Load conversations and messages
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(`${API_URL}/conversations`, { withCredentials: true });
+        setConversations(sortConversationsByLatest(response.data || []));
+        
+        if (response.data.length > 0) {
+          setSelectedConversation(response.data[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching conversations:", error);
+      } finally {
+        setIsLoading(false);
       }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!selectedConversation) return;
+      
+      setIsLoadingMessages(true);
+      
+      try {
+        const response = await axios.get(`${API_URL}/${selectedConversation._id}`, {
+          withCredentials: true
+        });
+        
+        setMessages(response.data || []);
+        
+        // Mark customer messages as read
+        if (socket && selectedConversation._id) {
+          socket.emit("mark-read", { conversationId: selectedConversation._id });
+        }
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    };
+
+    fetchMessages();
+  }, [selectedConversation, socket]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // COPIED FROM CUSTOMER MESSAGE - Handle typing
+  const handleAdminTyping = () => {
+    if (!socket || !isConnected) return;
+    
+    socket.emit("admin-typing", {
+      conversationId: selectedConversation?._id,
+      isTyping: true
+    });
+    
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
     }
     
-    // Update conversations list
-    setConversations(prev => {
-      const updatedConversations = prev.map(conv => {
-        const convId = typeof conv._id === 'object' ? conv._id.toString() : String(conv._id);
-        if (convId === messageConvString) {
-          const isCurrentlySelected = selectedConversation && selectedConvString === convId;
-          
-          return { 
-            ...conv, 
-            lastMessage: new Date(),
-            lastMessageContent: message.content,
-            lastMessageSender: message.sender.role,
-            unreadCount: isCurrentlySelected ? 0 : (conv.unreadCount || 0) + 1
-          };
-        }
-        return conv;
+    // Set new timeout to stop typing indicator
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("admin-typing", {
+        conversationId: selectedConversation?._id,
+        isTyping: false
       });
-      
-      return sortConversationsByLatest(updatedConversations);
-    });
-  });
-  
-  socketRef.current.on('customer-status-update', (data) => {
-    if (data.customers) {
-      setOnlineCustomers(data.customers);
-    }
-  });
-  
-  socketRef.current.on('customer-typing', ({ customerId, conversationId, isTyping }) => {
-    setTypingCustomers(prev => ({
-      ...prev,
-      [customerId]: isTyping
-    }));
-  });
-  
-  socketRef.current.emit('get-online-customers');
-};
-
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      const container = messagesContainerRef.current;
-      if (!container) return;
-      
-      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 300;
-      
-      if (isNearBottom) {
-        messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-      } else if (showScrollButton === false) {
-        setShowScrollButton(true);
-      }
-    }
+    }, 2000);
   };
 
   // Event handlers
@@ -377,62 +541,54 @@ const setupMessageHandlers = () => {
     setMessageToEdit(null);
   };
 
+  // COPIED FROM CUSTOMER MESSAGE - Simplified message sending
   const handleSubmitMessage = async (e) => {
     e.preventDefault();
     
-    if (!newMessage.trim() && !attachment) return;
-    if (!selectedConversation) {
-      toast.error("No conversation selected");
+    if (!socket || !isConnected || !selectedConversation) {
+      toast.error("Not connected to chat. Please refresh the page.");
+      return;
+    }
+    
+    if (!newMessage.trim() && !attachment) {
       return;
     }
     
     try {
-      setIsSending(true);
-      
       let attachmentPath = null;
+      
+      // Upload attachment if exists
       if (attachment) {
         const formData = new FormData();
-        formData.append('attachment', attachment);
+        formData.append("attachment", attachment);
         
-        const response = await axios.post(`${API_URL}/attachment`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          withCredentials: true
-        });
+        const uploadRes = await axios.post(
+          `${API_URL}/attachment`,
+          formData,
+          {
+            headers: { "Content-Type": "multipart/form-data" },
+            withCredentials: true
+          }
+        );
         
-        attachmentPath = response.data.filePath;
+        attachmentPath = uploadRes.data.filePath;
       }
       
-      const tempMessage = {
-        _id: `temp-${Date.now()}`,
-        sender: {
-          id: 'admin',
-          name: 'You',
-          role: 'admin' 
-        },
-        content: newMessage,
-        attachment: attachmentPath,
-        conversation: selectedConversation._id,
-        createdAt: new Date(),
-        isRead: true
-      };
-      
-      setMessages(prevMessages => [...prevMessages, tempMessage]);
-      
-      socketRef.current.emit('send-message', {
+      // Emit message via socket
+      socket.emit("send-message", {
         conversationId: selectedConversation._id,
         content: newMessage,
         attachment: attachmentPath
       });
       
+      // Clear inputs
       setNewMessage("");
       setAttachment(null);
       setAttachmentPreview(null);
       
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("Failed to send message");
-    } finally {
-      setIsSending(false);
+      toast.error("Failed to send message. Please try again.");
     }
   };
 
@@ -453,106 +609,6 @@ const setupMessageHandlers = () => {
       reader.readAsDataURL(file);
     }
   };
-
-  const handleAdminTyping = () => {
-    if (socketRef.current && socketRef.current.connected && selectedConversation) {
-      socketRef.current.emit('admin-typing', {
-        conversationId: selectedConversation._id,
-        isTyping: true
-      });
-      
-      if (typingTimeout) {
-        clearTimeout(typingTimeout);
-      }
-      
-      setTypingTimeout(setTimeout(() => {
-        socketRef.current.emit('admin-typing', {
-          conversationId: selectedConversation._id,
-          isTyping: false
-        });
-      }, 3000));
-    }
-  };
-
-  // Effects
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get(`${API_URL}/conversations`, { withCredentials: true });
-        setConversations(sortConversationsByLatest(response.data || []));
-        
-        if (response.data.length > 0) {
-          setSelectedConversation(response.data[0]);
-        }
-      } catch (error) {
-        console.error("Error fetching conversations:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-    
-    socketRef.current = io(SOCKET_URL, { 
-      auth: { token: localStorage.getItem('token') },
-      transports: ['websocket'] 
-    });
-    
-    socketRef.current.on('connect', () => {
-      console.log('Socket connected');
-      setIsSocketConnected(true);
-      setupMessageHandlers();
-    });
-    
-    socketRef.current.on('disconnect', () => {
-      console.log('Socket disconnected');
-      setIsSocketConnected(false);
-    });
-    
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!selectedConversation) return;
-      
-      setIsLoadingMessages(true);
-      
-      try {
-        const response = await axios.get(`${API_URL}/${selectedConversation._id}`, {
-          withCredentials: true
-        });
-        
-        setMessages(response.data || []);
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-      } finally {
-        setIsLoadingMessages(false);
-      }
-    };
-
-    fetchMessages();
-  }, [selectedConversation]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    window.addEventListener('resize', handleResize);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
 
   // Filter conversations
   const filteredConversations = conversations.filter(conv => 

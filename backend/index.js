@@ -146,59 +146,41 @@ io.on('connection', async (socket) => {
       role: user.role
     });
     
-    // If admin, add to admin sockets set
+    // FIXED: Consistent room joining pattern
     if (user.role === 'admin') {
       adminSockets.add(socket.id);
       
-      // Emit online admin count to ALL clients immediately
-      io.emit('admin-online-count', adminSockets.size);
+      // Admin joins ALL conversation rooms to receive all messages
+      const conversations = await Conversation.find().select('_id customer');
+      conversations.forEach(conv => {
+        socket.join(`conversation-${conv._id}`);
+        console.log(`Admin joined room: conversation-${conv._id}`);
+      });
       
-      // Also emit current online customers to this admin
+      // Emit counts
+      io.emit('admin-online-count', adminSockets.size);
       socket.emit('customer-status-update', {
         customers: Array.from(onlineCustomers)
       });
-      
-      // Also listen for explicit admin connection announcement
-      socket.on('admin-connected', () => {
-        console.log("Admin explicitly announced connection, broadcasting to all clients");
-        io.emit('admin-online-count', adminSockets.size);
-      });
-      
-      // Handle request for online customers
-      socket.on('get-online-customers', () => {
-        socket.emit('customer-status-update', {
-          customers: Array.from(onlineCustomers)
-        });
-      });
     } 
-    // If customer, update online status
     else if (user.role === 'customer') {
       onlineCustomers.add(socket.userId);
-      // Broadcast updated online customers list to all admins
+      
+      // Customer joins their specific conversation room
+      const conversation = await Conversation.findOne({ customer: socket.userId });
+      if (conversation) {
+        socket.join(`conversation-${conversation._id}`);
+        console.log(`Customer joined room: conversation-${conversation._id}`);
+      }
+      
       broadcastOnlineCustomers();
     }
     
-    // Always emit current admin count to the connecting client
-    socket.emit('admin-online-count', adminSockets.size);
-    
-    // Join appropriate rooms
-    if (user.role === 'customer') {
-      // Join personal conversation room
-      socket.join(`conversation-${socket.userId}`);
-    } else if (user.role === 'admin') {
-      // Admin joins all conversations
-      const conversations = await Conversation.find().select('customer');
-      conversations.forEach(conv => {
-        socket.join(`conversation-${conv.customer}`);
-      });
-    }
-    
-    // Handle new message
+    // Even simpler - just use room broadcasting
     socket.on('send-message', async (data) => {
       try {
         const { conversationId, content, attachment } = data;
         
-        // Get conversation
         const conversation = await Conversation.findById(conversationId);
         if (!conversation) {
           socket.emit('error', { message: "Conversation not found" });
@@ -215,37 +197,31 @@ io.on('connection', async (socket) => {
           content,
           attachment,
           conversation: conversationId,
-          isRead: user.role === 'admin' // Admin messages are automatically read
+          isRead: user.role === 'admin'
         });
         
         await newMessage.save();
         
-        // Update conversation lastMessage time
+        // Update conversation
         conversation.lastMessage = new Date();
+        conversation.lastMessageContent = content || 'Image';
+        conversation.lastMessageSender = user.role;
         
-        // Increment unread count if message is from customer
         if (user.role === 'customer') {
           conversation.unreadCount = (conversation.unreadCount || 0) + 1;
         }
         
         await conversation.save();
         
-        // Broadcast to conversation room
-        io.to(`conversation-${conversation.customer}`).emit('new-message', newMessage);
+        // SIMPLE: Just emit to the conversation room
+        const roomName = `conversation-${conversationId}`;
+        console.log(`📢 Broadcasting message to room: ${roomName}`);
+        io.to(roomName).emit('new-message', newMessage);
         
-        // If customer sent message, also notify admin about new message
-        if (user.role === 'customer') {
-          io.to('admin-notifications').emit('new-customer-message', {
-            conversationId,
-            customer: {
-              id: conversation.customer,
-              name: user.name
-            },
-            message: content
-          });
-        }
+        console.log(`✅ Message sent to room ${roomName}`);
+        
       } catch (error) {
-        console.error('Error sending message:', error);
+        console.error('❌ Error sending message:', error);
         socket.emit('error', { message: "Failed to send message" });
       }
     });
@@ -326,6 +302,14 @@ io.on('connection', async (socket) => {
         console.log(`Admin is ${isTyping ? 'typing to' : 'stopped typing to'} customer ${conversation.customer}`);
       } catch (err) {
         console.error('Error in admin-typing event:', err);
+      }
+    });
+    
+    // Handle explicit room joining
+    socket.on('join-conversation', (conversationId) => {
+      if (conversationId) {
+        socket.join(`conversation-${conversationId}`);
+        console.log(`Socket ${socket.id} joined room: conversation-${conversationId}`);
       }
     });
     
