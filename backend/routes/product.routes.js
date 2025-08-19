@@ -8,7 +8,7 @@ import {
     deleteProduct
 } from "../controllers/product.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
-import upload from "../middleware/upload.js";
+import { upload } from "../config/cloudinary.js";
 
 const router = express.Router();
 
@@ -22,4 +22,4 @@ router.post("/", verifyToken, upload.single('image'), createProduct);
 router.put("/:id", verifyToken, upload.single('image'), updateProduct);
 router.delete("/:id", verifyToken, deleteProduct);
 
-export default router; 
+export default router;

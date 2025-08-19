@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import CustomerSideNav, { MOBILE_NAV_HEIGHT } from "../../pages/customer/customerSideNav";
+import CustomerSideNav from "../../pages/customer/customerSideNav";
 import { useNavigate } from "react-router-dom";
-import { ShoppingBag, Truck, Calendar, Clock, ChevronDown, ChevronUp, Package } from "lucide-react";
-import { format } from "date-fns";
+import { ShoppingBag, Truck, Clock, ChevronDown, ChevronUp, Package, Coffee } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 
 const CustomerOrders = () => {
@@ -14,11 +13,6 @@ const CustomerOrders = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
   const { user } = useAuthStore();
-
-  // API base URL for images
-  const API_BASE_URL = import.meta.env.MODE === "development" 
-    ? "http://localhost:5000" 
-    : "";
 
   // Handle window resize
   useEffect(() => {
@@ -32,10 +26,9 @@ const CustomerOrders = () => {
 
   // Fetch customer's orders
   useEffect(() => {
-    // Check if user is logged in
     if (!user) {
       toast.error("Please log in to view your orders");
-      navigate("/login");
+      navigate("/costumerLogin"); // Fix the route name
       return;
     }
 
@@ -46,16 +39,27 @@ const CustomerOrders = () => {
           ? "http://localhost:5000/api/orders/customer" 
           : "/api/orders/customer";
         
-        // Add user email as query parameter instead of relying on token
+        // Get token from localStorage and set Authorization header
+        const token = localStorage.getItem('token');
+        const headers = {};
+        
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+        
         const response = await axios.get(`${apiUrl}?email=${encodeURIComponent(user.email)}`, { 
-          withCredentials: true
+          withCredentials: true,
+          headers
         });
         
+        console.log("Fetched orders:", response.data);
         setOrders(response.data);
       } catch (error) {
         console.error("Error fetching orders:", error);
-        // Show more specific error message
-        if (error.response?.data?.message) {
+        if (error.response?.status === 401) {
+          toast.error("Session expired. Please log in again.");
+          navigate("/costumerLogin");
+        } else if (error.response?.data?.message) {
           toast.error(error.response.data.message);
         } else {
           toast.error("Could not load your orders");
@@ -70,7 +74,14 @@ const CustomerOrders = () => {
 
   // Toggle order details expansion
   const toggleOrderDetails = (orderId) => {
-    setExpandedOrder(expandedOrder === orderId ? null : orderId);
+    console.log("Toggling order details for:", orderId);
+    console.log("Current expanded order:", expandedOrder);
+    
+    setExpandedOrder(prevExpanded => {
+      const newExpanded = prevExpanded === orderId ? null : orderId;
+      console.log("New expanded order:", newExpanded);
+      return newExpanded;
+    });
   };
 
   // Get status color
@@ -106,6 +117,22 @@ const CustomerOrders = () => {
     }
   };
 
+  // Helper function to safely get product information
+  const getProductInfo = (item) => {
+    if (!item || !item.product) {
+      return {
+        name: "Product no longer available",
+        image: null,
+        isDeleted: true
+      };
+    }
+    return {
+      name: item.product.name,
+      image: item.product.image,
+      isDeleted: false
+    };
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Sidebar */}
@@ -134,152 +161,170 @@ const CustomerOrders = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {orders.map((order) => (
-                <div key={order._id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                  {/* Order Header */}
-                  <div className="p-4 border-b">
-                    <div className="flex flex-wrap justify-between items-center gap-2">
-                      <div>
-                        <p className="text-sm text-gray-500">Order ID</p>
-                        <p className="font-mono text-gray-800">{order._id.slice(-8)}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Date Placed</p>
-                        <p className="text-gray-800">{formatDate(order.createdAt)}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Total</p>
-                        <p className="font-medium text-blue-700">₱{order.total.toFixed(2)}</p>
-                      </div>
-                      <div>
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                          {order.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Order Summary */}
-                  <div 
-                    className="px-4 py-3 flex justify-between items-center cursor-pointer hover:bg-gray-50"
-                    onClick={() => toggleOrderDetails(order._id)}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <Package className="h-5 w-5 text-blue-700" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{order.items.length} {order.items.length === 1 ? 'item' : 'items'}</p>
-                        <p className="text-sm text-gray-500">{order.paymentMethod}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center text-blue-600">
-                      {expandedOrder === order._id ? (
-                        <>
-                          <span className="text-sm mr-1">Hide Details</span>
-                          <ChevronUp className="h-5 w-5" />
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-sm mr-1">View Details</span>
-                          <ChevronDown className="h-5 w-5" />
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Expanded Order Details */}
-                  {expandedOrder === order._id && (
-                    <div className="px-4 py-3 bg-gray-50 border-t">
-                      <div className="mb-4">
-                        <h3 className="font-medium text-gray-900 mb-2">Order Items</h3>
-                        <div className="space-y-2">
-                          {order.items.map((item, index) => (
-                            <div key={index} className="flex justify-between items-center bg-white p-3 rounded-md shadow-sm">
-                              <div className="flex items-center">
-                                {item.product.image ? (
-                                  <img 
-                                    src={`${API_BASE_URL}${item.product.image}`} 
-                                    alt={item.product.name} 
-                                    className="w-12 h-12 object-cover rounded mr-3"
-                                    onError={(e) => {
-                                      e.target.onerror = null; // Prevent infinite error loop
-                                      e.target.src = "https://via.placeholder.com/48?text=Product"; // Fallback image
-                                      
-                                      // Or use the ShoppingBag icon as fallback:
-                                      // e.target.style.display = 'none';
-                                      // e.target.parentNode.innerHTML = '<div class="w-12 h-12 bg-gray-200 rounded flex items-center justify-center"><svg class="h-6 w-6 text-gray-400">...</svg></div>';
-                                    }}
-                                  />
-                                ) : (
-                                  <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center mr-3">
-                                    <ShoppingBag className="h-6 w-6 text-gray-400" />
-                                  </div>
-                                )}
-                                <div>
-                                  <p className="font-medium">{item.product.name}</p>
-                                  <p className="text-sm text-gray-500">₱{item.price.toFixed(2)} × {item.quantity}</p>
-                                </div>
-                              </div>
-                              <p className="font-medium">₱{(item.price * item.quantity).toFixed(2)}</p>
-                            </div>
-                          ))}
+              {orders.map((order) => {
+                const isExpanded = expandedOrder === order._id;
+                
+                return (
+                  <div key={order._id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                    {/* Order Header */}
+                    <div className="p-4 border-b">
+                      <div className="flex flex-wrap justify-between items-center gap-2">
+                        <div>
+                          <p className="text-sm text-gray-500">Order ID</p>
+                          <p className="font-mono text-gray-800">{order._id.slice(-8)}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Date Placed</p>
+                          <p className="text-gray-800">{formatDate(order.createdAt)}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Total</p>
+                          <p className="font-medium text-blue-700">₱{order.total.toFixed(2)}</p>
+                        </div>
+                        <div>
+                          <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                            {order.status}
+                          </span>
                         </div>
                       </div>
+                    </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Order Summary - Clickable */}
+                    <div 
+                      className="px-4 py-3 flex justify-between items-center cursor-pointer hover:bg-gray-50 transition-colors"
+                      onClick={() => toggleOrderDetails(order._id)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-blue-100 p-2 rounded-full">
+                          <Package className="h-5 w-5 text-blue-700" />
+                        </div>
                         <div>
-                          <h3 className="font-medium text-gray-900 mb-2">Delivery Information</h3>
-                          <div className="bg-white p-3 rounded-md shadow-sm">
-                            <div className="flex items-start mb-2">
-                              <Truck className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
-                              <div>
-                                <p className="text-sm text-gray-700">{order.notes || "No delivery instructions provided."}</p>
+                          <p className="font-medium">{order.items?.length || 0} {order.items?.length === 1 ? 'item' : 'items'}</p>
+                          <p className="text-sm text-gray-500">{order.paymentMethod}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center text-blue-600">
+                        {isExpanded ? (
+                          <>
+                            <span className="text-sm mr-1">Hide Details</span>
+                            <ChevronUp className="h-5 w-5" />
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-sm mr-1">View Details</span>
+                            <ChevronDown className="h-5 w-5" />
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Expanded Order Details */}
+                    {isExpanded && (
+                      <div className="px-4 py-3 bg-gray-50 border-t">
+                        <div className="mb-4">
+                          <h3 className="font-medium text-gray-900 mb-2">Order Items</h3>
+                          <div className="space-y-2">
+                            {order.items && order.items.length > 0 ? order.items.map((item, index) => {
+                              const productInfo = getProductInfo(item);
+                              
+                              return (
+                                <div key={index} className="flex justify-between items-center bg-white p-3 rounded-md shadow-sm">
+                                  <div className="flex items-center">
+                                    {productInfo.image && !productInfo.isDeleted ? (
+                                      <img 
+                                        src={productInfo.image} 
+                                        alt={productInfo.name} 
+                                        className="w-12 h-12 object-cover rounded mr-3"
+                                        onError={(e) => {
+                                          e.target.style.display = 'none';
+                                          e.target.nextSibling.style.display = 'flex';
+                                        }}
+                                      />
+                                    ) : null}
+                                    <div 
+                                      className={`w-12 h-12 bg-gray-200 rounded flex items-center justify-center mr-3 ${
+                                        productInfo.image && !productInfo.isDeleted ? 'hidden' : ''
+                                      }`}
+                                    >
+                                      <Coffee className="h-6 w-6 text-gray-400" />
+                                    </div>
+                                    <div>
+                                      <p className={`font-medium ${productInfo.isDeleted ? 'text-gray-500 italic' : ''}`}>
+                                        {productInfo.name}
+                                      </p>
+                                      <p className="text-sm text-gray-500">
+                                        ₱{item.price ? item.price.toFixed(2) : '0.00'} × {item.quantity || 0}
+                                        {productInfo.isDeleted && (
+                                          <span className="ml-2 text-xs text-red-500">(Product deleted)</span>
+                                        )}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <p className="font-medium">₱{((item.price || 0) * (item.quantity || 0)).toFixed(2)}</p>
+                                </div>
+                              );
+                            }) : (
+                              <div className="bg-white p-3 rounded-md shadow-sm text-center">
+                                <p className="text-gray-500">No items found in this order</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h3 className="font-medium text-gray-900 mb-2">Delivery Information</h3>
+                            <div className="bg-white p-3 rounded-md shadow-sm">
+                              <div className="flex items-start mb-2">
+                                <Truck className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
+                                <div>
+                                  <p className="text-sm text-gray-700">{order.notes || "No delivery instructions provided."}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <h3 className="font-medium text-gray-900 mb-2">Order Timeline</h3>
+                            <div className="bg-white p-3 rounded-md shadow-sm">
+                              <div className="flex items-start">
+                                <Clock className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
+                                <div>
+                                  <p className="text-sm font-medium">Order Placed</p>
+                                  <p className="text-xs text-gray-500">{formatDate(order.createdAt)}</p>
+                                  
+                                  {order.status !== "Pending" && (
+                                    <>
+                                      <div className="h-4 border-l border-gray-300 ml-2"></div>
+                                      <p className="text-sm font-medium">Status Updated</p>
+                                      <p className="text-xs text-gray-500">{formatDate(order.updatedAt)}</p>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <h3 className="font-medium text-gray-900 mb-2">Order Timeline</h3>
-                          <div className="bg-white p-3 rounded-md shadow-sm">
-                            <div className="flex items-start">
-                              <Clock className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
-                              <div>
-                                <p className="text-sm font-medium">Order Placed</p>
-                                <p className="text-xs text-gray-500">{formatDate(order.createdAt)}</p>
-                                
-                                {order.status !== "Pending" && (
-                                  <>
-                                    <div className="h-4 border-l border-gray-300 ml-2"></div>
-                                    <p className="text-sm font-medium">Status Updated</p>
-                                    <p className="text-xs text-gray-500">{formatDate(order.updatedAt)}</p>
-                                  </>
-                                )}
-                              </div>
-                            </div>
+                        <div className="mt-4 border-t pt-4">
+                          <div className="flex justify-between mb-1">
+                            <span className="text-gray-600">Subtotal</span>
+                            <span>₱{Math.max(0, (order.total || 0) - 50).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between mb-1">
+                            <span className="text-gray-600">Delivery</span>
+                            <span>₱50.00</span>
+                          </div>
+                          <div className="flex justify-between font-bold text-lg mt-2">
+                            <span>Total</span>
+                            <span>₱{(order.total || 0).toFixed(2)}</span>
                           </div>
                         </div>
                       </div>
-                      
-                      <div className="mt-4 border-t pt-4">
-                        <div className="flex justify-between mb-1">
-                          <span className="text-gray-600">Subtotal</span>
-                          <span>₱{(order.total - 50).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-gray-600">Delivery</span>
-                          <span>₱50.00</span>
-                        </div>
-                        <div className="flex justify-between font-bold text-lg mt-2">
-                          <span>Total</span>
-                          <span>₱{order.total.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

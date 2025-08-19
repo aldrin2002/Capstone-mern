@@ -55,11 +55,6 @@ const CustomerMenu = () => {
     (product) => product.category === activeCategory
   );
 
-  // Define API base URL for images
-  const API_BASE_URL = import.meta.env.MODE === "development" 
-    ? "http://localhost:5000" 
-    : "";
-
   // Get category icon
   const getCategoryIcon = (category) => {
     const iconMap = {
@@ -264,7 +259,7 @@ const CustomerMenu = () => {
                   <div className="relative h-56 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                     {product.image ? (
                       <img
-                        src={`${API_BASE_URL}${product.image}`}
+                        src={product.image}
                         alt={product.name}
                         className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-1"
                         loading="lazy"
@@ -514,7 +509,7 @@ const CustomerMenu = () => {
         
         /* Mobile responsive breakpoints */
         @media (min-width: 475px) {
-          .xs\:inline {
+          .xs:inline {
             display: inline;
           }
         }
