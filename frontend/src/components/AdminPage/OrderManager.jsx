@@ -281,30 +281,18 @@ const OrderManager = () => {
             
             {/* Order Details Modal */}
             {selectedOrder && (
-                <>
-                    <OrderDetailsModal 
-                        selectedOrder={selectedOrder}
-                        setSelectedOrder={setSelectedOrder}
-                        formatDate={formatDate}
-                        showProofImage={showProofImage}
-                        setShowProofImage={setShowProofImage}
-                        setFullScreenImage={setFullScreenImage}
-                        API_BASE_URL={API_BASE_URL}
-                    />
-                    {/* Action Buttons as overlay */}
-                    <div className="fixed inset-0 bg-transparent flex items-center justify-center z-50 p-2 md:p-4 pointer-events-none">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col pointer-events-auto">
-                            {/* Spacer to push buttons to bottom */}
-                            <div className="flex-1"></div>
-                            <OrderActionButtons 
-                                selectedOrder={selectedOrder}
-                                updateOrderStatus={updateOrderStatus}
-                                deleteOrder={deleteOrder}
-                                isLoading={isLoading}
-                            />
-                        </div>
-                    </div>
-                </>
+                <OrderDetailsModal 
+                    selectedOrder={selectedOrder}
+                    setSelectedOrder={setSelectedOrder}
+                    formatDate={formatDate}
+                    showProofImage={showProofImage}
+                    setShowProofImage={setShowProofImage}
+                    setFullScreenImage={setFullScreenImage}
+                    API_BASE_URL={API_BASE_URL}
+                    updateOrderStatus={updateOrderStatus}
+                    deleteOrder={deleteOrder}
+                    isLoading={isLoading}
+                />
             )}
             
             {/* Full screen image modal */}

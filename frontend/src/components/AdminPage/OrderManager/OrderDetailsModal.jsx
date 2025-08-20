@@ -278,12 +278,12 @@ const OrderDetailsModal = ({
                   </button>
                 </div>
                 
-                {/* Debug information (remove in production) */}
+                {/* Debug information (remove in production)
                 <div className="mb-2 text-xs text-gray-500 bg-gray-100 p-2 rounded">
                   <strong>Debug Info:</strong><br/>
                   Raw proof path: {selectedOrder.proofOfPayment}<br/>
                   Final URL: {proofImageUrl}
-                </div>
+                </div> */}
                 
                 {showProofImage && (
                   <div className="mt-4">

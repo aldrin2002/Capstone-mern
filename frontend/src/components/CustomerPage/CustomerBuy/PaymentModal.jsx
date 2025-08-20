@@ -110,21 +110,21 @@ const PaymentModal = ({
           email: user?.email || "guest@example.com",
           phone: user?.phone || ""
         },
-        items: cart.map(item => {
-          console.log("🔍 Processing cart item:", item);
-          return {
-            product: item._id, // Make sure this exists
-            name: item.name,   // Make sure this exists
-            quantity: Number(item.quantity), // Ensure it's a number
-            price: Number(item.price) // Ensure it's a number
-          };
-        }),
-        total: Number(cartTotal + 50), // Include delivery fee and ensure it's a number
+        items: cart.map(item => ({
+          product: item._id,
+          name: item.name,
+          quantity: Number(item.quantity),
+          price: Number(item.price)
+        })),
+        total: Number(cartTotal + 50),
         status: "Pending",
         paymentMethod: paymentMethod,
         paymentStatus: paymentMethod === "GCash" ? "Paid" : "Pending",
-        deliveryAddress: deliveryAddress.trim(),
-        notes: paymentMethod === "GCash" ? `GCash Payment - Ref: ${gcashReference}` : "",
+        deliveryAddress: "", // leave empty for consistency with your host project
+        notes:
+          paymentMethod === "GCash"
+            ? `Delivery Address: ${deliveryAddress.trim()}, GCash Ref: ${gcashReference.trim()}`
+            : `Delivery Address: ${deliveryAddress.trim()}`,
         gcashReference: paymentMethod === "GCash" ? gcashReference.trim() : "",
         proofOfPayment: proofImagePath || ""
       };

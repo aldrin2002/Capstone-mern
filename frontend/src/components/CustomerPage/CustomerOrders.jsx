@@ -278,7 +278,8 @@ const CustomerOrders = () => {
                               <div className="flex items-start mb-2">
                                 <Truck className="h-5 w-5 text-gray-500 mr-2 mt-0.5" />
                                 <div>
-                                  <p className="text-sm text-gray-700">{order.notes || "No delivery instructions provided."}</p>
+                                  <p className="text-sm font-medium text-gray-700 mb-1">Delivery Address:</p>
+                                  <p className="text-sm text-gray-700">{order.notes || "No delivery address provided."}</p>
                                 </div>
                               </div>
                             </div>

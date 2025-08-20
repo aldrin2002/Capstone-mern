@@ -40,27 +40,35 @@ const OrderTable = ({ filteredOrders, getOrderDetails, formatDate }) => {
   };
   
   const getPaymentBadge = (paymentMethod) => {
-    switch(paymentMethod) {
-      case "Online Payment":
-        return (
-          <span className="bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-sm">
-            <Image className="h-3 w-3 mr-1" />
-            Online
-          </span>
-        );
-      case "Cash":
-        return (
-          <span className="bg-gradient-to-r from-green-100 to-green-200 text-green-800 px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-sm">
-            Cash
-          </span>
-        );
-      default:
-        return (
-          <span className="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-sm">
-            {paymentMethod}
-          </span>
-        );
+    // Normalize for all online payments
+    if (
+      paymentMethod === "Online Payment" ||
+      paymentMethod === "GCash"
+    ) {
+      return (
+        <span className="bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-sm">
+          <Image className="h-3 w-3 mr-1" />
+          Online
+        </span>
+      );
     }
+    // Normalize for all cash payments
+    if (
+      paymentMethod === "Cash" ||
+      paymentMethod === "Cash on Delivery"
+    ) {
+      return (
+        <span className="bg-gradient-to-r from-green-100 to-green-200 text-green-800 px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-sm">
+          Cash
+        </span>
+      );
+    }
+    // Fallback for unknown
+    return (
+      <span className="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-sm">
+        {paymentMethod}
+      </span>
+    );
   };
 
   if (filteredOrders.length === 0) {
