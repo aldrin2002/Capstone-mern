@@ -176,13 +176,27 @@ const GalleryManager = () => {
             
             // If a new image is selected, upload to Cloudinary first
             if (formData.image) {
-                imageUrl = await uploadGalleryImageToCloudinary(formData.image);
-                // Add console log to debug
-                console.log("Cloudinary URL received:", imageUrl);
-                
-                if (!imageUrl) {
-                    throw new Error("Failed to upload image to cloud storage");
+                try {
+                    imageUrl = await uploadGalleryImageToCloudinary(formData.image);
+                    console.log("Cloudinary URL received:", imageUrl);
+                } catch (uploadError) {
+                    console.error("Upload error:", uploadError);
+                    // Don't continue with the form submission if upload fails
+                    setIsLoading(false);
+                    return;
                 }
+            }
+            
+            // Only continue if we have a valid image URL
+            if (!imageUrl && !editingImage) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Image Required',
+                    text: 'Failed to upload image. Please try again.',
+                    confirmButtonColor: '#3085d6',
+                });
+                setIsLoading(false);
+                return;
             }
             
             // Debug what we're sending to the server
@@ -324,33 +338,54 @@ const GalleryManager = () => {
         formData.append("image", file);
         
         try {
-            // Log before upload
-            console.log("Uploading to Cloudinary:", CLOUDINARY_UPLOAD_URL);
+            console.log("Starting Cloudinary upload:", {
+                url: CLOUDINARY_UPLOAD_URL,
+                fileSize: file.size,
+                fileName: file.name
+            });
             
+            // Add specific timeout and retry mechanism
             const response = await axios.post(CLOUDINARY_UPLOAD_URL, formData, {
                 headers: { "Content-Type": "multipart/form-data" },
                 withCredentials: true,
+                timeout: 30000, // 30 seconds
+                maxBodyLength: 20 * 1024 * 1024, // Allow larger uploads
+                maxContentLength: 20 * 1024 * 1024
             });
             
-            // Log complete response for debugging
-            console.log("🖼️ Cloudinary upload response:", response.data);
+            console.log("Cloudinary upload successful, response:", response.data);
             
-            // Make sure we have an image path from Cloudinary
-            if (!response.data || !response.data.imagePath) {
-                throw new Error("No image path returned from server");
+            // More explicit validation of the response
+            if (!response.data) {
+                throw new Error("Empty response from server");
             }
             
-            // Return the Cloudinary URL
+            if (!response.data.imagePath) {
+                console.error("Invalid response format:", response.data);
+                throw new Error("Invalid response format: missing imagePath");
+            }
+            
             return response.data.imagePath;
         } catch (error) {
-            console.error("Error uploading gallery image to Cloudinary:", error);
+            // More detailed error logging
+            console.error("Error uploading to Cloudinary:", {
+                message: error.message,
+                status: error.response?.status,
+                data: error.response?.data,
+                url: CLOUDINARY_UPLOAD_URL
+            });
+
+            // Show specific error message
             Swal.fire({
                 icon: "error",
                 title: "Upload Failed",
-                text: error.response?.data?.message || "Failed to upload image. Please try again.",
+                text: error.response?.status === 413 
+                    ? "Image is too large. Please use a smaller image (max 10MB)."
+                    : error.response?.data?.message || "Network error. Please check your connection and try again.",
                 confirmButtonColor: "#3085d6",
             });
-            return "";
+            
+            throw new Error("Image upload failed: " + (error.response?.data?.message || error.message));
         }
     };
 
