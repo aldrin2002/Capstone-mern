@@ -139,7 +139,7 @@ const GalleryManager = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Input validation (keep your existing validation)
+        // Input validation
         if (!formData.title.trim()) {
             Swal.fire({
                 icon: 'warning',
@@ -177,23 +177,40 @@ const GalleryManager = () => {
             // If a new image is selected, upload to Cloudinary first
             if (formData.image) {
                 imageUrl = await uploadGalleryImageToCloudinary(formData.image);
+                // Add console log to debug
+                console.log("Cloudinary URL received:", imageUrl);
+                
                 if (!imageUrl) {
                     throw new Error("Failed to upload image to cloud storage");
                 }
             }
             
-            // Create gallery data object with the Cloudinary URL
+            // Debug what we're sending to the server
+            console.log("Sending to server:", {
+                title: formData.title,
+                description: formData.description,
+                featured: formData.featured,
+                image: imageUrl
+            });
+
+            // Create gallery data object with explicit image URL property
             const galleryData = {
                 title: formData.title,
                 description: formData.description,
                 featured: formData.featured,
-                image: imageUrl  // Use the Cloudinary URL
+                image: imageUrl  // Make sure this is a non-empty string
+            };
+            
+            // Add explicit withCredentials and set content type correctly
+            const config = {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             };
             
             if (editingImage) {
-                await axios.put(`${API_URL}/${editingImage._id}`, galleryData, {
-                    withCredentials: true
-                });
+                await axios.put(`${API_URL}/${editingImage._id}`, galleryData, config);
                 
                 Swal.fire({
                     icon: 'success',
@@ -203,9 +220,7 @@ const GalleryManager = () => {
                     showConfirmButton: false
                 });
             } else {
-                await axios.post(API_URL, galleryData, {
-                    withCredentials: true
-                });
+                await axios.post(API_URL, galleryData, config);
                 
                 Swal.fire({
                     icon: 'success',
@@ -309,20 +324,30 @@ const GalleryManager = () => {
         formData.append("image", file);
         
         try {
+            // Log before upload
+            console.log("Uploading to Cloudinary:", CLOUDINARY_UPLOAD_URL);
+            
             const response = await axios.post(CLOUDINARY_UPLOAD_URL, formData, {
                 headers: { "Content-Type": "multipart/form-data" },
                 withCredentials: true,
             });
             
+            // Log complete response for debugging
             console.log("🖼️ Cloudinary upload response:", response.data);
-            // Return the Cloudinary URL from your backend response
-            return response.data.imagePath || "";
+            
+            // Make sure we have an image path from Cloudinary
+            if (!response.data || !response.data.imagePath) {
+                throw new Error("No image path returned from server");
+            }
+            
+            // Return the Cloudinary URL
+            return response.data.imagePath;
         } catch (error) {
             console.error("Error uploading gallery image to Cloudinary:", error);
             Swal.fire({
                 icon: "error",
                 title: "Upload Failed",
-                text: "Failed to upload image to cloud storage. Please try again.",
+                text: error.response?.data?.message || "Failed to upload image. Please try again.",
                 confirmButtonColor: "#3085d6",
             });
             return "";
