@@ -5,7 +5,6 @@ import { cloudinary } from "../config/cloudinary.js";
 export const getAllProducts = async (req, res) => {
     try {
         const products = await Product.find().sort({ createdAt: -1 });
-        console.log("Fetched products:", products.map(p => ({ name: p.name, image: p.image })));
         res.status(200).json(products);
     } catch (error) {
         console.error("Error in getAllProducts:", error);

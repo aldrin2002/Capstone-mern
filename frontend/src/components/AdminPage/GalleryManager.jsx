@@ -4,8 +4,12 @@ import axios from "axios";
 import { toast } from "react-hot-toast";
 import Swal from "sweetalert2";
 
+// Update these constants at the top
 const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api/gallery" : "/api/gallery";
 const API_BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5000" : "";
+const CLOUDINARY_UPLOAD_URL = import.meta.env.MODE === "development" 
+  ? "http://localhost:5000/api/gallery/upload" 
+  : "/api/gallery/upload";
 
 const GalleryManager = () => {
     const [gallery, setGallery] = useState([]);
@@ -124,13 +128,18 @@ const GalleryManager = () => {
             featured: image.featured || false
         });
         
-        setImagePreview(image.image ? `${API_BASE_URL}${image.image}` : null);
+        setImagePreview(
+  image.image 
+    ? (image.image.startsWith('https://') ? image.image : `${API_BASE_URL}${image.image}`)
+    : null
+);
         setShowModal(true);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         
+        // Input validation (keep your existing validation)
         if (!formData.title.trim()) {
             Swal.fire({
                 icon: 'warning',
@@ -163,21 +172,27 @@ const GalleryManager = () => {
         setIsLoading(true);
 
         try {
-            const galleryData = new FormData();
-            galleryData.append('title', formData.title);
-            galleryData.append('description', formData.description);
-            galleryData.append('featured', formData.featured);
+            let imageUrl = editingImage ? editingImage.image : "";
             
+            // If a new image is selected, upload to Cloudinary first
             if (formData.image) {
-                galleryData.append('image', formData.image);
+                imageUrl = await uploadGalleryImageToCloudinary(formData.image);
+                if (!imageUrl) {
+                    throw new Error("Failed to upload image to cloud storage");
+                }
             }
+            
+            // Create gallery data object with the Cloudinary URL
+            const galleryData = {
+                title: formData.title,
+                description: formData.description,
+                featured: formData.featured,
+                image: imageUrl  // Use the Cloudinary URL
+            };
             
             if (editingImage) {
                 await axios.put(`${API_URL}/${editingImage._id}`, galleryData, {
-                    withCredentials: true,
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
+                    withCredentials: true
                 });
                 
                 Swal.fire({
@@ -189,10 +204,7 @@ const GalleryManager = () => {
                 });
             } else {
                 await axios.post(API_URL, galleryData, {
-                    withCredentials: true,
-                    headers: {
-                        'Content-Type': 'multipart/form-data'
-                    }
+                    withCredentials: true
                 });
                 
                 Swal.fire({
@@ -211,7 +223,7 @@ const GalleryManager = () => {
             Swal.fire({
                 icon: 'error',
                 title: 'Save Failed',
-                text: error.response?.data?.message || 'An error occurred while saving the image',
+                text: error.response?.data?.message || error.message || 'An error occurred while saving the image',
                 confirmButtonColor: '#3085d6',
             });
         } finally {
@@ -288,6 +300,33 @@ const GalleryManager = () => {
         total: gallery.length,
         featured: gallery.filter(img => img.featured).length,
         regular: gallery.filter(img => !img.featured).length
+    };
+
+    const uploadGalleryImageToCloudinary = async (file) => {
+        if (!file) return "";
+        
+        const formData = new FormData();
+        formData.append("image", file);
+        
+        try {
+            const response = await axios.post(CLOUDINARY_UPLOAD_URL, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+                withCredentials: true,
+            });
+            
+            console.log("🖼️ Cloudinary upload response:", response.data);
+            // Return the Cloudinary URL from your backend response
+            return response.data.imagePath || "";
+        } catch (error) {
+            console.error("Error uploading gallery image to Cloudinary:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Upload Failed",
+                text: "Failed to upload image to cloud storage. Please try again.",
+                confirmButtonColor: "#3085d6",
+            });
+            return "";
+        }
     };
 
     if (isLoading && gallery.length === 0) {
@@ -470,7 +509,13 @@ const GalleryManager = () => {
                         <div key={image._id} className="bg-white rounded-2xl shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                             <div className="relative h-48 overflow-hidden">
                                 <img 
-                                    src={`${API_BASE_URL}${image.image}`}
+                                    // Use the image URL directly if it's from Cloudinary (starting with https://res.cloudinary.com)
+                                    src={image.image.startsWith('https://res.cloudinary.com') ? 
+                                        image.image : 
+                                        image.image.startsWith('http') ? 
+                                            image.image : 
+                                            `${API_BASE_URL}${image.image}`
+                                    }
                                     alt={image.title} 
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                 />
@@ -536,7 +581,7 @@ const GalleryManager = () => {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="h-16 w-16 rounded-xl overflow-hidden bg-gray-100 group-hover:scale-110 transition-transform duration-300">
                                                 <img 
-                                                    src={`${API_BASE_URL}${image.image}`}
+                                                    src={image.image.startsWith('http') ? image.image : `${API_BASE_URL}${image.image}`}
                                                     alt={image.title} 
                                                     className="h-full w-full object-cover"
                                                 />

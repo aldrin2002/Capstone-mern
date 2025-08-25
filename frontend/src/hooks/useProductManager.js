@@ -36,22 +36,23 @@ export const useProductManager = () => {
   const fetchProducts = async () => {
     setIsLoading(true);
     try {
-      console.log("🔄 Fetching products from:", API_URL);
       const response = await axios.get(API_URL, {
         headers: getAuthHeaders()
       });
-      
-      console.log("📦 Raw API response:", response.data);
-      
-      // Enhanced logging for each product's image details
-      response.data.forEach((product, index) => {
-        console.log(`Product ${index + 1}: ${product.name}`);
-        console.log(`  - Image URL: ${product.image}`);
-        console.log(`  - Public ID: ${product.imagePublicId}`);
-        console.log(`  - Is Cloudinary: ${product.image?.includes('cloudinary.com') ? 'Yes' : 'No'}`);
-        console.log(`  - URL Valid: ${product.image ? 'Yes' : 'No'}`);
-      });
-      
+
+      // Single summary log for all products
+      console.log(
+        "[Product Manager] Product Summary:",
+        response.data.map((product, index) => ({
+          "#": index + 1,
+          name: product.name,
+          image: product.image,
+          imagePublicId: product.imagePublicId,
+          isCloudinary: product.image?.includes('cloudinary.com'),
+          urlValid: !!product.image
+        }))
+      );
+
       setProducts(response.data);
     } catch (error) {
       console.error("❌ Error fetching products:", error);

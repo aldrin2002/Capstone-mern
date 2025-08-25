@@ -50,65 +50,27 @@ const ProductManager = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Enhanced console logging for image validation
+  // Remove or comment out all console.log except for errors and one summary
   const validateImageFile = (file) => {
-    console.log("🔍 Validating image file:", {
-      name: file?.name,
-      size: file?.size,
-      type: file?.type,
-      lastModified: file?.lastModified ? new Date(file.lastModified).toISOString() : 'N/A'
-    });
-
     if (!file) {
-      console.error("❌ Image validation failed: No file provided");
+      console.error("Image validation failed: No file provided");
       return { isValid: false, error: "No file provided" };
     }
-
-    // Check file type
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      console.error("❌ Image validation failed: Invalid file type", {
-        provided: file.type,
-        allowed: validTypes
-      });
-      return { isValid: false, error: `Invalid file type: ${file.type}. Allowed: ${validTypes.join(', ')}` };
+      console.error("Image validation failed: Invalid file type", file.type);
+      return { isValid: false, error: `Invalid file type: ${file.type}` };
     }
-
-    // Check file size (10MB limit)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      console.error("❌ Image validation failed: File too large", {
-        size: file.size,
-        maxSize: maxSize,
-        sizeInMB: (file.size / 1024 / 1024).toFixed(2)
-      });
+      console.error("Image validation failed: File too large", file.size);
       return { isValid: false, error: `File too large: ${(file.size / 1024 / 1024).toFixed(2)}MB. Max: 10MB` };
     }
-
-    console.log("✅ Image validation passed");
     return { isValid: true, error: null };
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    console.log("📝 Form submission started");
-    console.log("Form data state:", {
-      name: formData.name,
-      price: formData.price,
-      description: formData.description,
-      category: formData.category,
-      stock: formData.stock,
-      hasImage: !!formData.image,
-      imageFile: formData.image ? {
-        name: formData.image.name,
-        size: formData.image.size,
-        type: formData.image.type
-      } : null,
-      isEditing: !!editingProduct,
-      editingProductId: editingProduct?._id,
-      currentImagePreview: imagePreview
-    });
     
     if (!formData.name.trim()) {
       console.error("❌ Validation failed: Name is required");
