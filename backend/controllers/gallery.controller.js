@@ -62,18 +62,23 @@ export const getGalleryImageById = async (req, res) => {
 // Create new gallery image
 export const createGalleryImage = async (req, res) => {
     try {
-        const { title, description, featured, image } = req.body;
+        const { title, description, featured } = req.body;
         
         // Validate required fields
-        if (!title || !image) {
+        if (!title || !req.file) {
             return res.status(400).json({ message: "Title and image are required" });
         }
+        
+        // Get image info from Cloudinary upload
+        const imageUrl = req.file.path;
+        const imagePublicId = req.file.filename;
         
         const newGalleryImage = new Gallery({
             title,
             description: description || "",
             featured: featured === "true",
-            image, // This is now the URL string, not a file
+            image: imageUrl,
+            imagePublicId: imagePublicId,
             displayOrder: 0
         });
         
@@ -88,46 +93,60 @@ export const createGalleryImage = async (req, res) => {
 // Update gallery image
 export const updateGalleryImage = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { title, description, featured, displayOrder, image } = req.body;
+        console.log("👉 Update gallery image request received:", {
+            id: req.params.id,
+            body: req.body,
+            file: req.file ? "File received" : "No file"
+        });
         
-        // First, get the existing image to check if we need to delete anything
+        const { id } = req.params;
+        const { title, description, featured } = req.body;
+        
+        // Find the existing image
         const existingImage = await Gallery.findById(id);
         if (!existingImage) {
             return res.status(404).json({ message: "Gallery image not found" });
         }
-
+        
+        // Build update object
         const updates = {
-            title,
+            title: title || existingImage.title,
             description: description || "",
-            featured: featured === true || featured === "true",
-            displayOrder: Number(displayOrder) || 0
+            featured: featured === "true" || featured === true
         };
         
-        // If new image URL is provided and different from the existing one,
-        // delete the old image from Cloudinary
-        if (image && image !== existingImage.image) {
-            updates.image = image;
+        // If a new image file is uploaded, update the image URL
+        if (req.file) {
+            console.log("📸 New image file received:", {
+                path: req.file.path,
+                filename: req.file.filename
+            });
             
-            // Delete old image from Cloudinary if it's a Cloudinary URL
-            if (existingImage.image && existingImage.image.includes('cloudinary.com')) {
-                const publicId = extractPublicId(existingImage.image);
-                if (publicId) {
-                    try {
-                        await cloudinary.uploader.destroy(publicId);
-                        console.log(`✅ Deleted old image from Cloudinary: ${publicId}`);
-                    } catch (cloudinaryError) {
-                        console.error("Error deleting image from Cloudinary:", cloudinaryError);
-                        // Continue with update even if Cloudinary delete fails
-                    }
+            // Delete old image from Cloudinary if it exists
+            if (existingImage.imagePublicId) {
+                try {
+                    await cloudinary.uploader.destroy(existingImage.imagePublicId);
+                    console.log("🗑️ Deleted old image:", existingImage.imagePublicId);
+                } catch (deleteError) {
+                    console.error("❌ Error deleting old image:", deleteError);
                 }
             }
+            
+            // Set new image info from Cloudinary upload
+            updates.image = req.file.path;
+            updates.imagePublicId = req.file.filename;
+            console.log("✅ Setting new image:", updates.image);
         }
+        
+        console.log("📝 Gallery image updates:", updates);
         
         const updatedImage = await Gallery.findByIdAndUpdate(
             id, 
             updates, 
-            { new: true, runValidators: true }
+            {
+                new: true,
+                runValidators: true
+            }
         );
         
         res.status(200).json(updatedImage);

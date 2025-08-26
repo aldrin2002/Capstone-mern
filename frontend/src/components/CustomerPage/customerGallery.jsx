@@ -119,7 +119,11 @@ const CustomerGallery = () => {
   // Download image
   const downloadImage = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}${selectedImage.image}`);
+      const imageUrl = selectedImage.image.startsWith('http') 
+        ? selectedImage.image 
+        : `${API_BASE_URL}${selectedImage.image}`;
+        
+      const response = await fetch(imageUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -231,7 +235,7 @@ const CustomerGallery = () => {
                   >
                     <div className="relative h-48 md:h-56 overflow-hidden">
                       <img
-                        src={`${API_BASE_URL}${image.image}`}
+                        src={image.image.startsWith('http') ? image.image : `${API_BASE_URL}${image.image}`}
                         alt={image.title}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         loading="lazy"
@@ -368,7 +372,7 @@ const CustomerGallery = () => {
                   </div>
                 )}
                 <img
-                  src={`${API_BASE_URL}${selectedImage.image}`}
+                  src={selectedImage.image.startsWith('http') ? selectedImage.image : `${API_BASE_URL}${selectedImage.image}`}
                   alt={selectedImage.title}
                   className={`
                     w-full h-auto max-w-full
