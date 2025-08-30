@@ -131,3 +131,43 @@ export const deleteConversation = async (req, res) => {
     res.status(500).json({ message: "Server error while deleting conversation" });
   }
 };
+
+// Get unread count for all conversations
+export const getUnreadCount = async (req, res) => {
+  try {
+    console.log("Getting unread count for user:", req.userId, "role:", req.role);
+    
+    // Find all conversations and sum up unread counts
+    const conversations = await Conversation.find();
+    
+    // For admin notifications, we only care about customer messages (unreadCount field)
+    const totalUnreadCount = conversations.reduce((sum, conv) => {
+      return sum + (conv.unreadCount || 0);
+    }, 0);
+    
+    console.log("Total unread messages:", totalUnreadCount);
+    res.status(200).json({ count: totalUnreadCount });
+  } catch (error) {
+    console.error("Error in getUnreadCount:", error);
+    res.status(500).json({ message: "Server error while getting unread count" });
+  }
+};
+
+// Add this function to mark all messages as read
+export const markAllMessagesAsRead = async (req, res) => {
+  try {
+    console.log("Marking all messages as read for admin");
+    
+    // Reset unread count for all conversations
+    await Conversation.updateMany(
+      { unreadCount: { $gt: 0 } },
+      { $set: { unreadCount: 0 } }
+    );
+    
+    console.log("All messages marked as read");
+    res.status(200).json({ message: "All messages marked as read" });
+  } catch (error) {
+    console.error("Error marking messages as read:", error);
+    res.status(500).json({ message: "Server error while marking messages as read" });
+  }
+};

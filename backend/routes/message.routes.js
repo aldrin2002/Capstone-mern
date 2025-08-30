@@ -9,7 +9,9 @@ import {
   getAllConversations,
   uploadAttachment,
   deleteMessage,
-  deleteConversation 
+  deleteConversation,
+  getUnreadCount,
+  markAllMessagesAsRead
 } from "../controllers/message.controller.js";
 import fs from 'fs';
 
@@ -62,6 +64,9 @@ const handleMulterError = (err, req, res, next) => {
   next();
 };
 
+// Get unread message count
+router.get("/unread-count", verifyToken, getUnreadCount);
+
 // Get customer conversation
 router.get("/conversation", verifyToken, getOrCreateConversation);
 
@@ -87,5 +92,8 @@ router.delete("/:id", verifyToken, deleteMessage);
 
 // Delete a conversation and all its messages
 router.delete("/conversation/:id", verifyToken, deleteConversation);
+
+// Add this route
+router.post("/mark-all-read", verifyToken, markAllMessagesAsRead);
 
 export default router;

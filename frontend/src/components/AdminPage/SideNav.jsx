@@ -2,14 +2,15 @@ import { useState, useEffect } from "react";
 import { Users, ShoppingBag, Image, Phone, ShoppingCart, Home, LogOut, Plus, MessageSquare } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useNavigate } from "react-router-dom";
-import Swal from "sweetalert2"; // Add this import
+import { useMessageNotifications } from "../../context/MessageNotificationContext";
+import Swal from "sweetalert2";
 
 const SideNav = ({ active, setActive }) => {
     const { logout } = useAuthStore();
     const navigate = useNavigate();
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [isExpanded, setIsExpanded] = useState(false);
-    const [unreadCount, setUnreadCount] = useState(0); // Example state for unread messages
+    const { unreadCount, resetUnreadCount } = useMessageNotifications();
 
     const navItems = [
         { id: "dashboard", label: "Dashboard", icon: Home },
@@ -21,7 +22,7 @@ const SideNav = ({ active, setActive }) => {
         { id: "messages", label: "Messages", icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : null },
     ];
 
-    // Mobile navigation items (without Messages and Contact)
+    // ADD THIS: Mobile navigation items (only show the most important ones in bottom nav)
     const mobileNavItems = [
         { id: "dashboard", label: "Dashboard", icon: Home },
         { id: "users", label: "Users", icon: Users },
@@ -29,6 +30,14 @@ const SideNav = ({ active, setActive }) => {
         { id: "gallery", label: "Gallery", icon: Image },
         { id: "orders", label: "Orders", icon: ShoppingCart },
     ];
+
+    // Add this function right after where you define navItems
+    const handleNavigation = (itemId) => {
+        setActive(itemId);
+        if (itemId === "messages") {
+            resetUnreadCount(); // This should now work properly
+        }
+    };
 
     // Handle logout with SweetAlert confirmation
     const handleLogout = () => {
@@ -93,7 +102,7 @@ const SideNav = ({ active, setActive }) => {
                             {/* Messages Button */}
                             <button
                                 onClick={() => { 
-                                    setActive("messages");
+                                    handleNavigation("messages"); 
                                     setIsExpanded(false);
                                 }}
                                 className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all transform animate-fadeIn relative"
@@ -179,7 +188,7 @@ const SideNav = ({ active, setActive }) => {
                         return (
                             <li key={item.id}>
                                 <button 
-                                    onClick={() => setActive(item.id)}
+                                    onClick={() => handleNavigation(item.id)}
                                     className={`w-full flex items-center px-4 py-3 rounded-lg transition-colors duration-200 
                                     ${active === item.id 
                                         ? "bg-blue-600 text-white" 

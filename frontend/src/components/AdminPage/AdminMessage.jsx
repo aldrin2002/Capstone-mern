@@ -12,6 +12,8 @@ import {
   Sparkles,
   Zap
 } from "lucide-react";
+import { useMessageNotifications } from "../../context/MessageNotificationContext";
+import { audioService } from "../../utils/audioService";
 
 // Import the new components
 import ConversationItem from "./ConversationItem";
@@ -25,7 +27,9 @@ const API_URL = `${API_BASE_URL}/api/messages`;
 const SOCKET_URL = import.meta.env.MODE === "development" ? "http://localhost:5000" : window.location.origin;
 
 const AdminMessage = () => {
-  // State management
+  const { socket, isConnected, resetUnreadCount, setMessagesPageActive } = useMessageNotifications();
+  
+  // State management (remove socket and isConnected since they come from context)
   const [conversations, setConversations] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -54,9 +58,7 @@ const AdminMessage = () => {
   const [typingTimeout, setTypingTimeout] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   
-  // COPIED FROM CUSTOMER MESSAGE - simplified socket state
-  const [socket, setSocket] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
+  // Keep this ref
   const typingTimeoutRef = useRef(null);
 
   // Helper functions
@@ -100,6 +102,22 @@ const AdminMessage = () => {
     }
   };
 
+  const handleMessageUpdated = (updatedMessage) => {
+    console.log("Message updated:", updatedMessage);
+    setMessages(prevMessages => 
+      prevMessages.map(msg => 
+        msg._id === updatedMessage._id ? updatedMessage : msg
+      )
+    );
+  };
+
+  const handleMessageDeleted = (messageId) => {
+    console.log("Message deleted:", messageId);
+    setMessages(prevMessages => 
+      prevMessages.filter(msg => msg._id !== messageId)
+    );
+  };
+
   // COPIED FROM CUSTOMER MESSAGE - Handle window resize
   useEffect(() => {
     const handleResize = () => {
@@ -110,96 +128,74 @@ const AdminMessage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // COPIED FROM CUSTOMER MESSAGE - Socket initialization
+  // REPLACE with this useEffect that uses the context socket
   useEffect(() => {
-    let newSocket = null;
-    let reconnectAttempts = 0;
-    const maxReconnectAttempts = 5;
+    // Reset unread count when component mounts
+    resetUnreadCount();
     
-    const connectSocket = () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No auth token found for socket connection");
-        return;
-      }
-      
-      const socketUrl = import.meta.env.MODE === "development" 
-        ? "http://localhost:5000" 
-        : "";
-        
-      newSocket = io(socketUrl, {
-        auth: { token },
-        withCredentials: true,
-        forceNew: true,
-        transports: ['websocket', 'polling']
+    // Set up socket event listeners using socket from context
+    if (socket) {
+      console.log("Using socket from context:", socket.id);
+
+      // Listen for online customers
+      socket.on("online-customers", (onlineCustomerIds) => {
+        setOnlineCustomers(onlineCustomerIds);
       });
-      
-      newSocket.on("connect", () => {
-        console.log("Admin Socket connected:", newSocket.id);
-        setIsConnected(true);
-        setIsSocketConnected(true);
-        reconnectAttempts = 0;
+
+      // Listen for typing indicators
+      socket.on("customer-typing", ({ conversationId, isTyping }) => {
+        setTypingCustomers((prev) => ({
+          ...prev,
+          [conversationId]: isTyping,
+        }));
       });
-      
-      newSocket.on("connect_error", (err) => {
-        console.error("Socket connection error:", err.message);
-        setIsConnected(false);
-        setIsSocketConnected(false);
-        
-        if (reconnectAttempts < maxReconnectAttempts) {
-          reconnectAttempts++;
-          console.log(`Attempting to reconnect... (${reconnectAttempts}/${maxReconnectAttempts})`);
-          setTimeout(connectSocket, 2000 * reconnectAttempts);
-        } else {
-          toast.error("Chat connection failed. Please refresh the page.");
-        }
-      });
-      
-      newSocket.on("disconnect", (reason) => {
-        console.log("Socket disconnected:", reason);
-        setIsConnected(false);
-        setIsSocketConnected(false);
-        
-        if (reason !== 'io client disconnect') {
-          console.log("Unexpected disconnect, will attempt to reconnect");
-        }
-      });
-      
-      // Handle customer typing
-      newSocket.on("customer-typing", ({ customerId, conversationId, isTyping }) => {
-        setTypingCustomers(prev => {
-          setSelectedConversation(currentConv => {
-            if (currentConv && currentConv._id === conversationId) {
-              setTypingCustomers(prevTyping => ({
-                ...prevTyping,
-                [customerId]: isTyping
-              }));
-            }
-            return currentConv;
-          });
-          return prev;
-        });
-      });
-      
-      // Handle customer status updates
-      newSocket.on('customer-status-update', (data) => {
-        if (data.customers) {
-          setOnlineCustomers(data.customers);
-        }
-      });
-      
-      setSocket(newSocket);
-    };
+
+      // Listen for message updates and deletions - NOW THESE FUNCTIONS EXIST
+      socket.on("message-updated", handleMessageUpdated);
+      socket.on("message-deleted", handleMessageDeleted);
+
+      // Clean up listeners when component unmounts
+      return () => {
+        socket.off("online-customers");
+        socket.off("customer-typing");
+        socket.off("message-updated");
+        socket.off("message-deleted");
+      };
+    }
+  }, [socket, resetUnreadCount]); // Add resetUnreadCount to dependencies
+
+  // Move this function up, before the useEffects
+  const handleNewMessage = (message) => {
+    console.log("Admin received new message:", message);
+    console.log("Current selected conversation:", selectedConversation?._id);
     
-    connectSocket();
+    // Check if message belongs to current conversation
+    const messageConvId = (message.conversation?._id || message.conversation).toString();
+    const currentConvId = selectedConversation?._id?.toString();
     
-    return () => {
-      if (newSocket) {
-        console.log("Cleaning up socket connection");
-        newSocket.disconnect();
-      }
-    };
-  }, []);
+    // Add message if it's for current conversation
+    if (messageConvId === currentConvId) {
+      setMessages(prevMessages => [...prevMessages, message]);
+    }
+    
+    // Update conversations list
+    setConversations(prevConversations => {
+      const updatedConversations = prevConversations.map(conv => {
+        if (conv._id === messageConvId) {
+          return {
+            ...conv,
+            lastMessage: new Date(),
+            lastMessageContent: message.content || 'Image',
+            lastMessageSender: message.sender.role,
+            unreadCount: message.sender.role === 'customer' ? (conv.unreadCount || 0) + 1 : conv.unreadCount || 0
+          };
+        }
+        return conv;
+      });
+      
+      return sortConversationsByLatest(updatedConversations);
+    });
+  };
 
   // ADD: Separate useEffect for message handling that has access to current selectedConversation
   useEffect(() => {
@@ -232,6 +228,12 @@ const AdminMessage = () => {
           
           return [...prev, message];
         });
+
+        // ADD: Play sound when receiving message in active chat (customer messages only)
+        if (message.sender.role === 'customer') {
+          console.log("🔊 Playing in-chat notification sound");
+          audioService.playNotification();
+        }
       } else {
         console.log(`❌ Message for different conversation: ${messageConvId} vs ${currentConvId}`);
       }
@@ -255,17 +257,6 @@ const AdminMessage = () => {
         
         return sortConversationsByLatest(updatedConversations);
       });
-      
-      // Play notification for customer messages
-      if (message.sender.role === 'customer') {
-        try {
-          const audio = new Audio('/notification-subtle.mp3');
-          audio.volume = 0.3;
-          audio.play().catch(err => console.log("Audio play prevented:", err));
-        } catch (error) {
-          console.log("Audio error:", error);
-        }
-      }
     };
     
     // Add event listener
@@ -616,6 +607,29 @@ const AdminMessage = () => {
     conv.customer?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Remove your existing socket connection code since it's now handled by the context
+  
+  // Call resetUnreadCount when component mounts
+  useEffect(() => {
+    resetUnreadCount();
+    
+    // Update the isSocketConnected state based on the context connection state
+    setIsSocketConnected(isConnected);
+  }, [resetUnreadCount, isConnected]);
+  
+  // Track when component mounts/unmounts
+  useEffect(() => {
+    console.log("📱 AdminMessage component mounted - setting messages page active");
+    setMessagesPageActive(true);
+    resetUnreadCount(); // Reset count when entering messages page
+    
+    return () => {
+      console.log("📱 AdminMessage component unmounted - setting messages page inactive");
+      setMessagesPageActive(false);
+    };
+  }, [setMessagesPageActive, resetUnreadCount]);
+
+  // Rest of your component remains the same, but now using the socket from context
   return (
     <div className={`h-screen bg-gray-50 ${isMobile ? 'pb-16' : 'p-4'}`}>
       {/* Mobile header */}
@@ -704,7 +718,7 @@ const AdminMessage = () => {
               ))
             )}
           </div>
-        </div>
+        </div> {/* ADD THIS CLOSING DIV TAG - It closes the Conversations sidebar */}
 
         {/* Messages area */}
         <div className={`${
