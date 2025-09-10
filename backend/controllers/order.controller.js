@@ -121,6 +121,18 @@ export const createOrder = async (req, res) => {
             );
         }
         
+        // Emit socket event for real-time notification
+        const io = req.app.get('io');
+        if (io) {
+            console.log('📱 Emitting new-order event');
+            io.to('admin-room').emit('new-order', {
+                orderId: savedOrder._id,
+                customerName: savedOrder.customer.name,
+                total: savedOrder.total,
+                createdAt: savedOrder.createdAt
+            });
+        }
+        
         res.status(201).json(savedOrder);
     } catch (error) {
         console.error("Error in createOrder:", error);
@@ -151,27 +163,60 @@ export const updateOrder = async (req, res) => {
     }
 };
 
-// Update order status
+// Get all possible order statuses
+export const getOrderStatuses = async (req, res) => {
+  try {
+    const statuses = ["Pending", "Processing", "Delivered", "Completed", "Cancelled"];
+    res.status(200).json(statuses);
+  } catch (error) {
+    console.error("Error getting order statuses:", error);
+    res.status(500).json({ message: "Server error while getting order statuses" });
+  }
+};
+
+// Update order status with real-time socket broadcast
 export const updateOrderStatus = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { status } = req.body;
-        
-        const updatedOrder = await Order.findByIdAndUpdate(
-            id,
-            { status },
-            { new: true, runValidators: true }
-        );
-        
-        if (!updatedOrder) {
-            return res.status(404).json({ message: "Order not found" });
-        }
-        
-        res.status(200).json(updatedOrder);
-    } catch (error) {
-        console.error("Error in updateOrderStatus:", error);
-        res.status(500).json({ message: "Server error while updating order status" });
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    const validStatuses = ["Pending", "Processing", "Delivered", "Completed", "Cancelled"];
+    
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
     }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      { 
+        status,
+        updatedAt: new Date()
+      },
+      { new: true }
+    ).populate('customer', 'name email');
+
+    if (!updatedOrder) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Broadcast the order update to all connected clients
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('order-status-updated', {
+        orderId: updatedOrder._id,
+        status: updatedOrder.status,
+        customerId: updatedOrder.customer._id,
+        customerName: updatedOrder.customer.name,
+        updatedAt: updatedOrder.updatedAt
+      });
+      console.log(`📡 Broadcasting order status update: ${updatedOrder._id} -> ${status}`);
+    }
+
+    res.status(200).json(updatedOrder);
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    res.status(500).json({ message: "Server error while updating order status" });
+  }
 };
 
 // Delete order

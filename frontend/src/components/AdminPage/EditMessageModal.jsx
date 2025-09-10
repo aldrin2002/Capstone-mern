@@ -90,7 +90,7 @@ const EditMessageModal = ({
       </div>
 
       {/* Custom animation styles */}
-      <style jsx>{`
+      <style>{`
         @keyframes modal-appear {
           from {
             opacity: 0;

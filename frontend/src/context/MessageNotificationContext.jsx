@@ -56,8 +56,14 @@ export const MessageNotificationProvider = ({ children }) => {
     const handleNewMessage = (message) => {
       console.log("🔔 New message received in notification context:", message);
       
-      // Only increment counter for customer messages when NOT on messages page
+      // FIXED: Play notification for ALL incoming customer messages
+      // But only increment counter when NOT on messages page
       if (message.sender.role === 'customer') {
+        // Always play notification sound for received messages
+        console.log("🔊 Playing notification for new customer message");
+        audioService.playNotification();
+        
+        // Only increment counter when not on messages page
         if (!isOnMessagesPage) {
           console.log("🔔 Incrementing unread count (not on messages page)");
           setUnreadCount(prev => {
@@ -65,9 +71,6 @@ export const MessageNotificationProvider = ({ children }) => {
             console.log("🔔 New unread count:", newCount);
             return newCount;
           });
-          
-          // REPLACED: Use centralized audio service
-          audioService.playNotification();
         } else {
           console.log("🔔 On messages page - not incrementing count");
         }

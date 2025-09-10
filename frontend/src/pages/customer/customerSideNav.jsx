@@ -6,6 +6,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useNavigate } from "react-router-dom";
 import logoImage from "../../assets/1.png";
 import Swal from "sweetalert2";
+import { useCustomerMessages } from "../../context/CustomerMessageContext";
 
 // Export this constant to be used by other components
 export const MOBILE_NAV_HEIGHT = 64; // 16 * 4 = 64px (4rem)
@@ -17,6 +18,7 @@ const CustomerSideNav = () => {
     const location = useLocation();
     const { logout } = useAuthStore();
     const navigate = useNavigate();
+    const { unreadCount } = useCustomerMessages();
 
     // Check if current route is active
     const isActive = (path) => location.pathname === path;
@@ -117,9 +119,16 @@ const CustomerSideNav = () => {
                     {isExpanded && (
                         <Link 
                             to="/customer-messages"
-                            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform animate-fadeIn hover:scale-110"
+                            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform animate-fadeIn hover:scale-110 relative"
                         >
                             <MessageCircle size={24} />
+                            {unreadCount > 0 && (
+                                <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                                    <span className="text-white text-xs font-bold">
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </span>
+                                </div>
+                            )}
                         </Link>
                     )}
                     

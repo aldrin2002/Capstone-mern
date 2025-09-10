@@ -3,7 +3,8 @@ import {
   Trash, 
   Clock, 
   XCircle, 
-  CheckCircle 
+  CheckCircle,
+  Truck // Add truck icon for delivery
 } from "lucide-react";
 import Swal from "sweetalert2";
 
@@ -26,6 +27,24 @@ const OrderActionButtons = ({
     }).then((result) => {
       if (result.isConfirmed) {
         updateOrderStatus(selectedOrder._id, "Processing");
+      }
+    });
+  };
+
+  // NEW: Handle delivery confirmation
+  const handleMarkAsDelivered = () => {
+    Swal.fire({
+      title: 'Mark as delivered?',
+      text: "Confirm that this order has been delivered to the customer",
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonColor: '#0ea5e9',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delivered!',
+      customClass: { popup: 'rounded-lg' }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        updateOrderStatus(selectedOrder._id, "Delivered");
       }
     });
   };
@@ -107,7 +126,20 @@ const OrderActionButtons = ({
           </div>
         )}
         
+        {/* NEW: Processing status shows "Mark as Delivered" button */}
         {selectedOrder.status === "Processing" && (
+          <button 
+            className="w-full bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            onClick={handleMarkAsDelivered}
+            disabled={isLoading}
+          >
+            <Truck className="h-4 w-4 mr-2" />
+            Mark as Delivered
+          </button>
+        )}
+
+        {/* NEW: Delivered status shows "Mark as Completed" button */}
+        {selectedOrder.status === "Delivered" && (
           <button 
             className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
             onClick={handleCompleteOrder}
@@ -172,7 +204,21 @@ const OrderActionButtons = ({
               </button>
             </>
           )}
+          
+          {/* NEW: Processing status shows "Mark as Delivered" button */}
           {selectedOrder.status === "Processing" && (
+            <button 
+              className="bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white px-6 py-3 rounded-xl font-bold flex items-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              onClick={handleMarkAsDelivered}
+              disabled={isLoading}
+            >
+              <Truck className="h-4 w-4 mr-2" />
+              Mark as Delivered
+            </button>
+          )}
+
+          {/* NEW: Delivered status shows "Mark as Completed" button */}
+          {selectedOrder.status === "Delivered" && (
             <button 
               className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-xl font-bold flex items-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               onClick={handleCompleteOrder}
@@ -182,6 +228,7 @@ const OrderActionButtons = ({
               Mark as Completed
             </button>
           )}
+
           {(selectedOrder.status === "Completed" || selectedOrder.status === "Cancelled") && (
             <div className="flex items-center text-gray-600 bg-gradient-to-r from-gray-100 to-gray-200 px-6 py-3 rounded-xl border border-gray-300">
               <span className="font-medium">No actions available for {selectedOrder.status.toLowerCase()} orders</span>

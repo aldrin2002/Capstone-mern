@@ -446,7 +446,7 @@ const CustomerGallery = () => {
       )}
 
       {/* Custom styles for line clamping */}
-      <style jsx>{`
+      <style>{`
         .line-clamp-2 {
           display: -webkit-box;
           -webkit-line-clamp: 2;

@@ -228,12 +228,6 @@ const AdminMessage = () => {
           
           return [...prev, message];
         });
-
-        // ADD: Play sound when receiving message in active chat (customer messages only)
-        if (message.sender.role === 'customer') {
-          console.log("🔊 Playing in-chat notification sound");
-          audioService.playNotification();
-        }
       } else {
         console.log(`❌ Message for different conversation: ${messageConvId} vs ${currentConvId}`);
       }
@@ -546,6 +540,7 @@ const AdminMessage = () => {
     }
     
     try {
+      setIsSending(true); // Add this line to show sending state
       let attachmentPath = null;
       
       // Upload attachment if exists
@@ -572,6 +567,12 @@ const AdminMessage = () => {
         attachment: attachmentPath
       });
       
+      // Play sent sound when message is sent successfully
+      if (audioService) {
+        audioService.playSentSound();
+        console.log("🔊 Played sent sound for message");
+      }
+      
       // Clear inputs
       setNewMessage("");
       setAttachment(null);
@@ -580,6 +581,8 @@ const AdminMessage = () => {
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message. Please try again.");
+    } finally {
+      setIsSending(false); // Add this line to reset sending state
     }
   };
 

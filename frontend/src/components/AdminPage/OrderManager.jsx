@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { useMessageNotifications } from "../../context/MessageNotificationContext"; // Import socket context
+import { ShoppingCart } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Import split components
 import OrderStats from "./OrderManager/OrderStats";
@@ -21,19 +24,82 @@ const OrderManager = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [showProofImage, setShowProofImage] = useState(false);
     const [fullScreenImage, setFullScreenImage] = useState(null);
+    const [newOrderCount, setNewOrderCount] = useState(0);
     
-    const statuses = ["All", "Pending", "Processing", "Completed", "Cancelled"];
+    // Get socket for real-time updates
+    const { socket } = useMessageNotifications();
     
-    // Calculate stats
+    // UPDATE: Include "Delivered" status
+    const statuses = ["All", "Pending", "Processing", "Delivered", "Completed", "Cancelled"];
+    
+    // UPDATE: Include delivered in stats calculation
     const stats = {
         total: orders.length,
         pending: orders.filter(order => order.status === "Pending").length,
         processing: orders.filter(order => order.status === "Processing").length,
+        delivered: orders.filter(order => order.status === "Delivered").length,
         completed: orders.filter(order => order.status === "Completed").length,
         cancelled: orders.filter(order => order.status === "Cancelled").length,
         totalRevenue: orders.filter(order => order.status === "Completed").reduce((sum, order) => sum + order.total, 0)
     };
     
+    // NEW: Real-time order status updates
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleOrderStatusUpdate = (data) => {
+            console.log("📡 Received order status update:", data);
+            
+            // Update orders list
+            setOrders(prevOrders => 
+                prevOrders.map(order => 
+                    order._id === data.orderId 
+                        ? { ...order, status: data.status, updatedAt: data.updatedAt }
+                        : order
+                )
+            );
+
+            // Update selected order if it's the one being updated
+            setSelectedOrder(prevSelected => 
+                prevSelected && prevSelected._id === data.orderId
+                    ? { ...prevSelected, status: data.status, updatedAt: data.updatedAt }
+                    : prevSelected
+            );
+
+            // Show notification
+            Swal.fire({
+                icon: 'info',
+                title: 'Order Updated',
+                text: `Order ${data.orderId.slice(-6)} status changed to ${data.status}`,
+                timer: 3000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        };
+
+        socket.on('order-status-updated', handleOrderStatusUpdate);
+
+        return () => {
+            socket.off('order-status-updated', handleOrderStatusUpdate);
+        };
+    }, [socket]);
+
+    // Track new orders since component loaded
+    useEffect(() => {
+        if (!socket) return;
+        
+        const handleNewOrder = () => {
+            setNewOrderCount(prev => prev + 1);
+        };
+        
+        socket.on('new-order', handleNewOrder);
+        
+        return () => {
+            socket.off('new-order', handleNewOrder);
+        };
+    }, [socket]);
+
     // Fetch all orders
     const fetchOrders = async () => {
         setIsLoading(true);
@@ -231,6 +297,12 @@ const OrderManager = () => {
         }
     };
     
+    // Refresh orders when user clicks on notification
+    const handleRefreshOrders = () => {
+        fetchOrders();
+        setNewOrderCount(0);
+    };
+
     if (isLoading && !orders.length) {
         return (
             <div className="p-6 h-full flex justify-center items-center">
@@ -300,6 +372,35 @@ const OrderManager = () => {
                 fullScreenImage={fullScreenImage}
                 setFullScreenImage={setFullScreenImage}
             />
+
+            {/* Notification badge for new orders */}
+            {newOrderCount > 0 && (
+                <AnimatePresence>
+                    <motion.div 
+                        initial={{ opacity: 0, y: -50 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        onClick={handleRefreshOrders}
+                        className="fixed top-20 right-6 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-3 rounded-lg shadow-xl cursor-pointer hover:shadow-2xl transition-all duration-300 transform hover:scale-105 z-50 flex items-center space-x-2"
+                    >
+                        <div className="relative">
+                            <motion.div
+                                animate={{ rotate: [0, 10, -10, 0] }}
+                                transition={{ repeat: Infinity, duration: 1.5 }}
+                            >
+                                <ShoppingCart className="h-5 w-5" />
+                            </motion.div>
+                            <div className="absolute -top-2 -right-2 bg-red-500 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                                {newOrderCount}
+                            </div>
+                        </div>
+                        <div>
+                            <div className="font-bold text-sm">New Orders!</div>
+                            <div className="text-xs">Click to refresh</div>
+                        </div>
+                    </motion.div>
+                </AnimatePresence>
+            )}
         </div>
     );
 };

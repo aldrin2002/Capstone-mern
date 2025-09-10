@@ -36,6 +36,9 @@ const io = new Server(httpServer, {
   }
 });
 
+// Add this after creating the io instance
+app.set('io', io);
+
 // Set up paths - combining both approaches
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);      // For ES modules support
@@ -77,16 +80,24 @@ const connectedUsers = new Map();
 const adminSockets = new Set();
 const onlineCustomers = new Set();
 
-// Add this function to get online customers and emit to admins
+// Add this function to broadcast online customers to admins
 const broadcastOnlineCustomers = () => {
-  const onlineCustomerIds = Array.from(onlineCustomers);
-  console.log(`Broadcasting online customers: ${onlineCustomerIds.length} customers online`);
-  // Emit to all admin sockets
+  // Convert Set to Array for sending via socket
+  const onlineCustomersList = Array.from(onlineCustomers);
+  
+  // Send to all admin sockets
   adminSockets.forEach(socketId => {
-    io.to(socketId).emit('customer-status-update', { 
-      customers: onlineCustomerIds
+    io.to(socketId).emit('customer-status-update', {
+      customers: onlineCustomersList
     });
   });
+  
+  // Alternative: broadcast to admin room
+  io.to('admin-room').emit('customer-status-update', {
+    customers: onlineCustomersList
+  });
+  
+  console.log(`Broadcasted online customers update: ${onlineCustomersList.length} customers online`);
 };
 
 // Socket.IO middleware for authentication
@@ -149,6 +160,9 @@ io.on('connection', async (socket) => {
     // FIXED: Consistent room joining pattern
     if (user.role === 'admin') {
       adminSockets.add(socket.id);
+      // Add admins to a special room for broadcasting
+      socket.join('admin-room');
+      console.log(`Admin ${user.name} joined admin-room`);
       
       // Admin joins ALL conversation rooms to receive all messages
       const conversations = await Conversation.find().select('_id customer');

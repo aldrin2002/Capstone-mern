@@ -1,5 +1,6 @@
 import { Send, Image, Loader, Sparkles } from "lucide-react";
 import { useRef } from "react";
+import { audioService } from "../../utils/audioService";
 
 const MessageInput = ({ 
   newMessage, 
@@ -13,9 +14,10 @@ const MessageInput = ({
 }) => {
   const fileInputRef = useRef(null);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSendWithSound = (e) => {
     onSubmit(e);
+    
+    // No need to play sound here as it's handled in the onSubmit function
   };
 
   const handleInputChange = (e) => {
@@ -48,7 +50,7 @@ const MessageInput = ({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex items-center space-x-3 max-w-4xl mx-auto relative">
+      <form onSubmit={handleSendWithSound} className="flex items-center space-x-3 max-w-4xl mx-auto relative">
         {/* Input container with enhanced styling */}
         <div className="flex-1 bg-white/80 backdrop-blur-sm rounded-2xl flex items-center px-5 py-3 border-2 border-white/50 hover:border-blue-300/50 focus-within:border-blue-500/50 shadow-lg hover:shadow-xl transition-all duration-300 group">
           {/* Background gradient effect */}
@@ -118,7 +120,7 @@ const MessageInput = ({
       <div className="absolute bottom-2 left-1/3 w-1.5 h-1.5 bg-indigo-400/20 rounded-full animate-pulse delay-500"></div>
 
       {/* Custom styles */}
-      <style jsx>{`
+      <style>{`
         @keyframes fade-in {
           from {
             opacity: 0;

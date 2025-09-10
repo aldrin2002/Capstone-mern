@@ -274,7 +274,7 @@ const CustomerAboutUs = () => {
       </main>
 
       {/* Custom styles for animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes fade-in {
           from {
             opacity: 0;

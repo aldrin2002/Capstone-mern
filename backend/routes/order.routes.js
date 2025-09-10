@@ -7,7 +7,8 @@ import {
     updateOrder,
     updateOrderStatus,
     deleteOrder,
-    getCustomerOrders
+    getCustomerOrders,
+    getOrderStatuses // Import the new controller function
 } from "../controllers/order.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 import { upload } from "../config/cloudinary.js"; // Import Cloudinary upload
@@ -48,5 +49,8 @@ router.post("/upload", upload.single('image'), (req, res) => {
 router.put("/:id", verifyToken, updateOrder);
 router.patch("/:id/status", verifyToken, updateOrderStatus);
 router.delete("/:id", verifyToken, deleteOrder);
+
+// Add this route if it doesn't exist
+router.get("/statuses", verifyToken, getOrderStatuses);
 
 export default router;

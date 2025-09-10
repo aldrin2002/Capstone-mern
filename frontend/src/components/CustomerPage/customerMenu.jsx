@@ -342,7 +342,7 @@ const CustomerMenu = () => {
       </main>
 
       {/* Enhanced custom animations and styles */}
-      <style jsx>{`
+      <style>{`
         @keyframes fade-in-up {
           from {
             opacity: 0;

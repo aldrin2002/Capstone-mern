@@ -2,7 +2,7 @@ import React from 'react';
 
 const CustomStyles = () => {
   return (
-    <style jsx>{`
+    <style>{`
       @keyframes fade-in-up {
         from {
           opacity: 0;

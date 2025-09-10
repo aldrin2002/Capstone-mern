@@ -167,7 +167,7 @@ const MessagesList = forwardRef(({
       </div>
 
       {/* Custom animations - moved outside and fixed the isAdmin issue */}
-      <style jsx>{`
+      <style>{`
         @keyframes fade-in-up {
           from {
             opacity: 0;

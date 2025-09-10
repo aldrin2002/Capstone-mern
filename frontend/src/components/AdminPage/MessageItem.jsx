@@ -196,7 +196,7 @@ const MessageItem = ({
       }`}></div>
 
       {/* Enhanced animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes slide-in {
           from {
             opacity: 0;
