@@ -24,18 +24,17 @@ const MessageGroup = ({ dateMessages, API_BASE_URL }) => {
     return (
       <div 
         key={groupIndex} 
-        className={`flex ${isCustomer ? 'justify-end' : 'justify-start'} mb-6 animate-fade-in`}
+        className={`flex ${isCustomer ? 'justify-end' : 'justify-start'} mb-2`}
       >
+        {/* Avatar for admin (left side) */}
         {!isCustomer && (
-          <div className="relative mr-3 mt-1">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg border-2 border-white">
-              <User size={16} className="text-white" />
-            </div>
+          <div className="h-8 w-8 rounded-full bg-gray-400 flex-shrink-0 mr-2 flex items-center justify-center">
+            <User size={16} className="text-white" />
           </div>
         )}
         
-        <div className="max-w-[75%]">
-          <div className="space-y-2">
+        <div className={`max-w-[70%] ${isCustomer ? 'mr-2' : ''}`}>
+          <div className="space-y-1">
             {group.map((message, index) => (
               <MessageItem 
                 key={message._id}
@@ -48,11 +47,10 @@ const MessageGroup = ({ dateMessages, API_BASE_URL }) => {
           </div>
         </div>
         
+        {/* Avatar for customer (right side) */}
         {isCustomer && (
-          <div className="relative ml-3 mt-1">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-lg border-2 border-white">
-              <User size={16} className="text-white" />
-            </div>
+          <div className="h-8 w-8 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center">
+            <User size={16} className="text-white" />
           </div>
         )}
       </div>

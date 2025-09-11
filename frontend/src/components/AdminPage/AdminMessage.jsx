@@ -164,86 +164,48 @@ const AdminMessage = () => {
     }
   }, [socket, resetUnreadCount]); // Add resetUnreadCount to dependencies
 
-  // Move this function up, before the useEffects
-  const handleNewMessage = (message) => {
-    console.log("Admin received new message:", message);
-    console.log("Current selected conversation:", selectedConversation?._id);
-    
-    // Check if message belongs to current conversation
-    const messageConvId = (message.conversation?._id || message.conversation).toString();
-    const currentConvId = selectedConversation?._id?.toString();
-    
-    // Add message if it's for current conversation
-    if (messageConvId === currentConvId) {
-      setMessages(prevMessages => [...prevMessages, message]);
-    }
-    
-    // Update conversations list
-    setConversations(prevConversations => {
-      const updatedConversations = prevConversations.map(conv => {
-        if (conv._id === messageConvId) {
-          return {
-            ...conv,
-            lastMessage: new Date(),
-            lastMessageContent: message.content || 'Image',
-            lastMessageSender: message.sender.role,
-            unreadCount: message.sender.role === 'customer' ? (conv.unreadCount || 0) + 1 : conv.unreadCount || 0
-          };
-        }
-        return conv;
-      });
-      
-      return sortConversationsByLatest(updatedConversations);
-    });
-  };
-
   // ADD: Separate useEffect for message handling that has access to current selectedConversation
   useEffect(() => {
     if (!socket) return;
     
     const handleNewMessage = (message) => {
       console.log("Admin received new message:", message);
-      console.log("Current selected conversation:", selectedConversation?._id);
       
       // Check if message belongs to current conversation
       const messageConvId = (message.conversation?._id || message.conversation).toString();
       const currentConvId = selectedConversation?._id?.toString();
       
-      // FIXED: Always add message if it's for current conversation
+      // Add message if it's for current conversation
       if (currentConvId && messageConvId === currentConvId) {
-        console.log("✅ Adding message to current conversation");
-        setMessages((prev) => {
-          // IMPORTANT: Check for duplicates more thoroughly
-          const exists = prev.find(m => 
+        setMessages(prevMessages => {
+          // Check for duplicates
+          const isDuplicate = prevMessages.some(m => 
             m._id === message._id || 
             (m.content === message.content && 
              m.sender.id === message.sender.id && 
              Math.abs(new Date(m.createdAt) - new Date(message.createdAt)) < 1000)
           );
           
-          if (exists) {
-            console.log("Duplicate message detected, skipping");
-            return prev;
-          }
-          
-          return [...prev, message];
+          return isDuplicate ? prevMessages : [...prevMessages, message];
         });
-      } else {
-        console.log(`❌ Message for different conversation: ${messageConvId} vs ${currentConvId}`);
       }
       
-      // ALWAYS update conversations list
+      // Always update conversations list
       setConversations(prev => {
+        const conversationExists = prev.some(c => c._id.toString() === messageConvId);
+        
+        if (!conversationExists) {
+          return sortConversationsByLatest([...prev]);
+        }
+        
         const updatedConversations = prev.map(conv => {
-          const convId = conv._id.toString();
-          
-          if (convId === messageConvId) {
-            return { 
-              ...conv, 
+          if (conv._id.toString() === messageConvId) {
+            return {
+              ...conv,
               lastMessage: new Date(),
               lastMessageContent: message.content || 'Image',
               lastMessageSender: message.sender.role,
-              unreadCount: message.sender.role === 'customer' ? (conv.unreadCount || 0) + 1 : conv.unreadCount || 0
+              unreadCount: message.sender.role === 'customer' ? (conv.unreadCount || 0) + 1 : 0
             };
           }
           return conv;
@@ -546,24 +508,46 @@ const AdminMessage = () => {
       // Upload attachment if exists
       if (attachment) {
         const formData = new FormData();
-        formData.append("attachment", attachment);
+        formData.append("image", attachment); // Change "attachment" to "image"
         
-        const uploadRes = await axios.post(
-          `${API_URL}/attachment`,
-          formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-            withCredentials: true
+        // Use the orders upload endpoint which is already working with Cloudinary
+        const uploadUrl = import.meta.env.MODE === "development" 
+          ? "http://localhost:5000/api/orders/upload" 
+          : "/api/orders/upload";
+          
+        try {
+          const uploadRes = await axios.post(
+            uploadUrl,
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+              withCredentials: true
+            }
+          );
+          
+          console.log("Upload response:", uploadRes.data);
+          
+          // Extract the Cloudinary URL from the response
+          if (uploadRes.data.imagePath) {
+            attachmentPath = uploadRes.data.imagePath; // This is the Cloudinary URL
+          } else {
+            throw new Error("Failed to get image URL from response");
           }
-        );
-        
-        attachmentPath = uploadRes.data.filePath;
+        } catch (uploadError) {
+          console.error("Error uploading file:", uploadError);
+          toast.error("Failed to upload image. Please try again.");
+          setIsSending(false);
+          return;
+        }
       }
       
       // Emit message via socket
+      // Use a non-empty content string for image-only messages
+      const messageContent = newMessage.trim() || (attachmentPath ? " " : "");
+      
       socket.emit("send-message", {
         conversationId: selectedConversation._id,
-        content: newMessage,
+        content: messageContent,  // Use messageContent instead of newMessage
         attachment: attachmentPath
       });
       
@@ -589,153 +573,161 @@ const AdminMessage = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error("File size too large (max 5MB)");
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        toast.error("File size exceeds 2MB limit.");
         return;
       }
       
       setAttachment(file);
       
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAttachmentPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+      // Preview image if it's an image file
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setAttachmentPreview(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setAttachmentPreview(null);
+      }
     }
   };
 
-  // Filter conversations
-  const filteredConversations = conversations.filter(conv => 
-    conv.customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.customer?.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleRemoveAttachment = () => {
+    setAttachment(null);
+    setAttachmentPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = null;
+    }
+  };
 
-  // Remove your existing socket connection code since it's now handled by the context
-  
-  // Call resetUnreadCount when component mounts
-  useEffect(() => {
-    resetUnreadCount();
+  // SEARCH FUNCTIONALITY
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
     
-    // Update the isSocketConnected state based on the context connection state
-    setIsSocketConnected(isConnected);
-  }, [resetUnreadCount, isConnected]);
-  
-  // Track when component mounts/unmounts
-  useEffect(() => {
-    console.log("📱 AdminMessage component mounted - setting messages page active");
-    setMessagesPageActive(true);
-    resetUnreadCount(); // Reset count when entering messages page
-    
-    return () => {
-      console.log("📱 AdminMessage component unmounted - setting messages page inactive");
-      setMessagesPageActive(false);
-    };
-  }, [setMessagesPageActive, resetUnreadCount]);
+    if (conversationsContainerRef.current) {
+      const conversations = Array.from(conversationsContainerRef.current.children);
+      conversations.forEach(conv => {
+        const text = conv.innerText.toLowerCase();
+        const isVisible = text.includes(value.toLowerCase());
+        conv.style.display = isVisible ? 'block' : 'none';
+      });
+    }
+  };
 
-  // Rest of your component remains the same, but now using the socket from context
+  // LOAD MORE MESSAGES
+  const handleLoadMore = async () => {
+    if (!selectedConversation || isLoadingMessages) return;
+    
+    setIsLoadingMessages(true);
+    
+    try {
+      const response = await axios.get(`${API_URL}/${selectedConversation._id}?page=${messages.length / 20 + 1}`, {
+        withCredentials: true
+      });
+      
+      setMessages(prev => [...prev, ...(response.data || [])]);
+    } catch (error) {
+      console.error("Error loading more messages:", error);
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  };
+
+  // Replace the entire return statement with this mobile-responsive version:
   return (
-    <div className={`h-screen bg-gray-50 ${isMobile ? 'pb-16' : 'p-4'}`}>
-      {/* Mobile header */}
-      {isMobile && selectedConversation ? (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
-          <div className="flex items-center h-14 px-4">
-            <button 
-              onClick={() => setSelectedConversation(null)}
-              className="p-2 -ml-2 rounded-full hover:bg-gray-100"
-            >
-              <ArrowLeft size={20} className="text-gray-600" />
-            </button>
-            <div className="ml-2 flex-1">
-              <h2 className="font-medium truncate">{selectedConversation.customer?.name || 'Customer'}</h2>
-              <p className="text-xs text-gray-500 truncate">{selectedConversation.customer?.email}</p>
-            </div>
-            {isCustomerOnline(selectedConversation.customer?._id) && (
-              <span className="text-xs text-green-500 flex items-center">
-                <span className="h-2 w-2 bg-green-500 rounded-full mr-1"></span>
-                Active
-              </span>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-            <MessageSquare className="h-5 w-5 mr-2 text-blue-600" />
-            Messages
-            {isSocketConnected && (
-              <span className="ml-2 flex items-center text-sm font-normal text-green-600">
-                <span className="h-2 w-2 bg-green-500 rounded-full mr-1"></span>
-                Live
-              </span>
-            )}
-          </h2>
-        </div>
-      )}
-
-      {/* Main container */}
-      <div className={`${isMobile ? 'h-[calc(100vh-4rem)]' : 'h-full'} bg-white shadow-sm flex`}>
-        {/* Conversations sidebar */}
-        <div className={`${
-          isMobile && selectedConversation ? 'hidden' : 'w-full'
-        } md:w-80 border-r border-gray-200 flex flex-col`}>
-          {/* Search */}
-          <div className="p-3 border-b border-gray-200">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <input
-                type="text"
-                placeholder="Search conversations..."
-                className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Conversations list */}
-          <div 
-            ref={conversationsContainerRef}
-            className="flex-1 overflow-y-auto pt-3"
-          >
-            {isLoading ? (
-              <div className="flex justify-center items-center h-32">
-                <Loader className="h-6 w-6 text-blue-500 animate-spin" />
+    <div className="flex h-screen bg-white">
+      {/* Mobile: Show sidebar OR messages, not both */}
+      {isMobile ? (
+        <>
+          {!selectedConversation ? (
+            /* Mobile Sidebar - Conversations list */
+            <div className="w-full h-full flex flex-col bg-gray-50">
+              {/* Mobile Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
+                <h1 className="text-lg font-semibold">Messages</h1>
+                <p className="text-blue-100 text-sm">Manage customer conversations</p>
               </div>
-            ) : filteredConversations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-32 text-gray-500">
-                <SearchX size={24} className="mb-2" />
-                <p className="text-sm">No conversations found</p>
-              </div>
-            ) : (
-              filteredConversations.map((conv) => (
-                <ConversationItem
-                  key={conv._id}
-                  conversation={conv}
-                  isSelected={selectedConversation?._id === conv._id}
-                  isOnline={isCustomerOnline(conv.customer?._id)}
-                  onSelect={setSelectedConversation}
-                  onDelete={handleDeleteConversation}
-                  formatTime={formatTime}
-                  isMobile={isMobile}
-                />
-              ))
-            )}
-          </div>
-        </div> {/* ADD THIS CLOSING DIV TAG - It closes the Conversations sidebar */}
 
-        {/* Messages area */}
-        <div className={`${
-          isMobile && !selectedConversation ? 'hidden' : 'w-full'
-        } md:flex-1 flex flex-col bg-gray-50`}>
-          {selectedConversation ? (
-            <>
-              {/* Messages container */}
+              {/* Search bar */}
+              <div className="p-4 border-b bg-white">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search conversations..."
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+                </div>
+              </div>
+              
+              {/* Conversations list */}
               <div 
-                ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto px-4 py-6"
+                ref={conversationsContainerRef} 
+                className="flex-1 overflow-y-auto bg-white"
               >
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader className="animate-spin h-6 w-6 text-blue-500" />
+                  </div>
+                ) : conversations.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-500 p-8">
+                    <MessageSquare size={48} className="text-gray-300 mb-4" />
+                    <p className="text-lg font-medium">No conversations yet</p>
+                    <p className="text-sm text-center mt-2">Customer messages will appear here</p>
+                  </div>
+                ) : (
+                  conversations.map((conversation) => (
+                    <ConversationItem
+                      key={conversation._id}
+                      conversation={conversation}
+                      onSelect={() => setSelectedConversation(conversation)}
+                      isSelected={false}
+                      onDelete={handleDeleteConversation}
+                      searchTerm={searchTerm}
+                      formatTime={formatTime}
+                      isOnline={isCustomerOnline(conversation.customer?._id)}
+                      isMobile={isMobile}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Mobile Messages View */
+            <div className="w-full h-full flex flex-col">
+              {/* Mobile Chat Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 flex items-center">
+                <button 
+                  onClick={() => setSelectedConversation(null)}
+                  className="p-2 hover:bg-white/10 rounded-full mr-3"
+                >
+                  <ArrowLeft size={20} />
+                </button>
+                
+                <div className="flex items-center flex-1">
+                  <div className={`w-3 h-3 rounded-full mr-3 ${
+                    isCustomerOnline(selectedConversation.customer?._id) 
+                      ? 'bg-green-400' 
+                      : 'bg-gray-400'
+                  }`}></div>
+                  <div>
+                    <h2 className="font-semibold">
+                      {selectedConversation.customer?.name || 'Customer'}
+                    </h2>
+                    <p className="text-xs text-blue-100">
+                      {isCustomerOnline(selectedConversation.customer?._id) ? 'Online' : 'Offline'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Mobile Messages Container - FIXED */}
+              <div className="flex-1 overflow-y-auto">
                 <MessagesList
-                  ref={messagesEndRef}
                   messages={messages}
                   isLoadingMessages={isLoadingMessages}
                   formatTime={formatTime}
@@ -747,11 +739,12 @@ const AdminMessage = () => {
                   API_BASE_URL={API_BASE_URL}
                   isDeleting={isDeleting}
                   isMobile={isMobile}
+                  ref={messagesEndRef}
                 />
               </div>
-
-              {/* Message input */}
-              <div className={isMobile ? 'fixed bottom-16 left-0 right-0' : 'flex-shrink-0 border-t border-gray-200'}>
+              
+              {/* Mobile Message Input - FIXED */}
+              <div className="bg-white border-t shadow-lg">
                 <MessageInput
                   newMessage={newMessage}
                   setNewMessage={setNewMessage}
@@ -759,39 +752,141 @@ const AdminMessage = () => {
                   onTyping={handleAdminTyping}
                   isSending={isSending}
                   attachment={attachment}
+                  attachmentPreview={attachmentPreview}
                   onFileChange={handleFileChange}
+                  onRemoveAttachment={handleRemoveAttachment}
                   isMobile={isMobile}
                 />
               </div>
-            </>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500">
-              <MessageSquare className="h-12 w-12 mb-4 text-gray-400" />
-              <p className="text-lg font-medium">Select a conversation</p>
-              <p className="text-sm">Choose a conversation to start messaging</p>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Loading overlay */}
-      {isDeleting && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white p-4 rounded-lg shadow-md flex items-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500 mr-3"></div>
-            <p>Deleting...</p>
+        </>
+      ) : (
+        /* Desktop: Show sidebar and messages side by side */
+        <>
+          {/* Desktop Sidebar - Conversations list */}
+          <div className="w-80 border-r flex flex-col h-full bg-gray-50">
+            {/* Search bar */}
+            <div className="p-4 border-b bg-white">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search conversations..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+              </div>
+            </div>
+            
+            {/* Conversations list */}
+            <div 
+              ref={conversationsContainerRef} 
+              className="flex-1 overflow-y-auto"
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader className="animate-spin h-5 w-5 text-gray-500" />
+                </div>
+              ) : conversations.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                  <MessageSquare size={32} />
+                  <p className="mt-2">No conversations yet</p>
+                </div>
+              ) : (
+                conversations.map((conversation) => (
+                  <ConversationItem
+                    key={conversation._id}
+                    conversation={conversation}
+                    onSelect={() => setSelectedConversation(conversation)}
+                    isSelected={selectedConversation?._id === conversation._id}
+                    onDelete={handleDeleteConversation}
+                    searchTerm={searchTerm}
+                    formatTime={formatTime}
+                    isOnline={isCustomerOnline(conversation.customer?._id)}
+                    isMobile={isMobile}
+                  />
+                ))
+              )}
+            </div>
           </div>
-        </div>
-      )}
 
+          {/* Desktop Main content - Messages */}
+          <div className="flex-1 flex flex-col h-full">
+            {selectedConversation ? (
+              <>
+                {/* Desktop Conversation header */}
+                <div className="flex items-center justify-between p-4 bg-gray-100 border-b">
+                  <div className="flex items-center">
+                    <div className={`w-3 h-3 rounded-full mr-2 ${
+                      isCustomerOnline(selectedConversation.customer?._id) 
+                        ? 'bg-green-500' 
+                        : 'bg-gray-400'
+                    }`}></div>
+                    <div>
+                      <h2 className="text-lg font-semibold">
+                        {selectedConversation.customer?.name || 'Customer'}
+                      </h2>
+                      <p className="text-xs text-gray-500">
+                        {isCustomerOnline(selectedConversation.customer?._id) ? 'Online' : 'Offline'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Desktop Messages list */}
+                <div className="flex-1 overflow-y-auto p-4">
+                  <MessagesList
+                    messages={messages}
+                    isLoadingMessages={isLoadingMessages}
+                    formatTime={formatTime}
+                    formatDate={formatDate}
+                    onDeleteMessage={handleDeleteMessage}
+                    onEditMessage={handleEditMessage}
+                    typingCustomers={typingCustomers}
+                    selectedConversation={selectedConversation}
+                    API_BASE_URL={API_BASE_URL}
+                    isDeleting={isDeleting}
+                    isMobile={isMobile}
+                    ref={messagesEndRef}
+                  />
+                </div>
+                
+                {/* Desktop Message input */}
+                <div className="border-t">
+                  <MessageInput
+                    newMessage={newMessage}
+                    setNewMessage={setNewMessage}
+                    onSubmit={handleSubmitMessage}
+                    onTyping={handleAdminTyping}
+                    isSending={isSending}
+                    attachment={attachment}
+                    attachmentPreview={attachmentPreview}
+                    onFileChange={handleFileChange}
+                    onRemoveAttachment={handleRemoveAttachment}
+                    isMobile={isMobile}
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <MessageSquare size={48} />
+                <p className="mt-4 text-lg">Select a conversation to start messaging</p>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+      
       {/* Edit message modal */}
-      <EditMessageModal
-        message={messageToEdit}
-        editedContent={editedContent}
-        setEditedContent={setEditedContent}
-        onSave={handleSaveEdit}
-        onClose={() => setMessageToEdit(null)}
-      />
+      {messageToEdit && (
+        <EditMessageModal
+          message={messageToEdit}
+          onSave={handleSaveEdit}
+          onCancel={() => setMessageToEdit(null)}
+        />
+      )}
     </div>
   );
 };

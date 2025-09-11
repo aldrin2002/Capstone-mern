@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { useAuthStore } from "../../../store/authStore";
 import { audioService } from "../../../utils/audioService"; // Add this import
 
+// Update these functions to fix the issues
 export const useMessageState = (API_URL, API_BASE_URL, socket) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -11,8 +12,8 @@ export const useMessageState = (API_URL, API_BASE_URL, socket) => {
   const [isSending, setIsSending] = useState(false);
   const [conversation, setConversation] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
-  const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   
   const fileInputRef = useRef(null);
@@ -25,6 +26,40 @@ export const useMessageState = (API_URL, API_BASE_URL, socket) => {
     
     const handleNewMessage = (message) => {
       console.log("New message received in conversation:", message);
+      
+      // IMPORTANT: Check if this is our own message that we sent
+      // by checking if we already have a message with the same content, sender and close timestamp
+      if (message.sender.role === "customer" && message.sender.name === user.name) {
+        // Check if we have a temporary message with same content
+        const isDuplicate = messages.some(existingMsg => {
+          // If content and attachment match, and was created within 5 seconds, consider it a duplicate
+          const isContentMatch = existingMsg.content === message.content;
+          const isAttachmentMatch = 
+            (!existingMsg.attachment && !message.attachment) ||
+            (existingMsg.attachment === message.attachment);
+          const isRecentMessage = existingMsg._id.toString().startsWith('temp-');
+          
+          return isContentMatch && isAttachmentMatch && isRecentMessage;
+        });
+        
+        if (isDuplicate) {
+          console.log("Skipping duplicate message from server");
+          // Update the temporary message with the real message ID
+          setMessages(prevMessages => 
+            prevMessages.map(msg => 
+              (msg._id.toString().startsWith('temp-') && 
+               msg.content === message.content && 
+               ((!msg.attachment && !message.attachment) || 
+                (msg.attachment === message.attachment)))
+                ? message
+                : msg
+            )
+          );
+          return;
+        }
+      }
+      
+      // If it's not a duplicate or it's from someone else, add it normally
       setMessages((prev) => [...prev, message]);
       
       // Mark admin messages as read immediately
@@ -40,7 +75,7 @@ export const useMessageState = (API_URL, API_BASE_URL, socket) => {
     return () => {
       socket.off("new-message", handleNewMessage);
     };
-  }, [socket, conversation]);
+  }, [socket, conversation, messages, user?.name]);
   
   // Load conversation and messages
   useEffect(() => {
@@ -106,7 +141,43 @@ export const useMessageState = (API_URL, API_BASE_URL, socket) => {
     }, 2000);
   };
   
-  // Handle sending message
+  // Fix the handleFileChange function to properly reset
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+    
+    setImageFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  // Add the handleRemoveImage function
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Fix the handleSendMessage function
   const handleSendMessage = async (e) => {
     e.preventDefault();
     
@@ -115,6 +186,7 @@ export const useMessageState = (API_URL, API_BASE_URL, socket) => {
       return;
     }
     
+    // Check if we have either text or an image to send
     if (!newMessage.trim() && !imageFile) {
       return;
     }
@@ -127,12 +199,14 @@ export const useMessageState = (API_URL, API_BASE_URL, socket) => {
       // Upload image to Cloudinary if exists
       if (imageFile) {
         const formData = new FormData();
-        formData.append("attachment", imageFile);
-        formData.append("type", "message"); // Identify this as a message attachment
+        formData.append("image", imageFile);
         
-        console.log("Uploading to Cloudinary via:", `${API_URL}/attachment`);
+        console.log("Uploading attachment:", imageFile.name);
+        
+        const uploadUrl = `${API_BASE_URL}/api/orders/upload`;
+        
         const uploadRes = await axios.post(
-          `${API_URL}/attachment`,
+          uploadUrl,
           formData,
           {
             headers: { "Content-Type": "multipart/form-data" },
@@ -142,31 +216,65 @@ export const useMessageState = (API_URL, API_BASE_URL, socket) => {
                 (progressEvent.loaded * 100) / progressEvent.total
               );
               setUploadProgress(percentCompleted);
-              console.log(`Upload progress: ${percentCompleted}%`);
             }
           }
         );
         
-        console.log("Cloudinary upload response:", uploadRes.data);
+        console.log("Upload response:", uploadRes.data);
         
-        // The backend should return a Cloudinary URL in the filePath property
-        attachment = uploadRes.data.filePath || uploadRes.data.secure_url;
+        if (uploadRes.data.imagePath) {
+          attachment = uploadRes.data.imagePath;
+          console.log("Image uploaded successfully:", attachment);
+        } else {
+          throw new Error("Failed to upload image: Invalid response");
+        }
         
-        // Reset upload progress
         setUploadProgress(0);
       }
       
-      // Emit message via socket
-      socket.emit("send-message", {
+      // Use a non-empty content string for image-only messages
+      const messageContent = newMessage.trim() || (attachment ? " " : "");
+      
+      // FIXED: Use socket instead of axios for sending messages
+      // This matches your backend implementation that listens for socket events
+      console.log("Sending message via socket:", {
         conversationId: conversation._id,
-        content: newMessage,
+        content: messageContent,
         attachment
       });
+      
+      socket.emit("send-message", {
+        conversationId: conversation._id,
+        content: messageContent,
+        attachment
+      });
+      
+      // Add optimistic message to UI
+      const optimisticMessage = {
+        _id: `temp-${Date.now()}`,
+        content: messageContent,
+        attachment: attachment,
+        sender: {
+          _id: user._id,
+          name: user.name,
+          role: "customer"
+        },
+        createdAt: new Date().toISOString(),
+        isRead: false,
+        conversation: conversation._id
+      };
+      
+      setMessages(prev => [...prev, optimisticMessage]);
       
       // Clear inputs
       setNewMessage("");
       setImageFile(null);
       setImagePreview(null);
+      
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       
       // Stop typing indicator
       setIsTyping(false);
@@ -174,44 +282,13 @@ export const useMessageState = (API_URL, API_BASE_URL, socket) => {
       
     } catch (error) {
       console.error("Error sending message:", error);
-      if (error.response) {
-        console.error("Server error details:", error.response.data);
-        toast.error(error.response.data.error || "Failed to upload image. Please try again.");
-      } else {
-        toast.error("Failed to send message. Please try again.");
-      }
+      toast.error("Failed to send message. Please try again.");
     } finally {
       setIsSending(false);
     }
   };
-  
-  // Handle file selection
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    // Check file type
-    if (!file.type.match("image.*")) {
-      toast.error("Only image files are allowed");
-      return;
-    }
-    
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image must be less than 5MB");
-      return;
-    }
-    
-    setImageFile(file);
-    
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result);
-    };
-    reader.readAsDataURL(file);
-  };
-  
+
+  // Return the new handleRemoveImage function
   return {
     messages,
     setMessages,
@@ -221,12 +298,14 @@ export const useMessageState = (API_URL, API_BASE_URL, socket) => {
     isSending,
     conversation,
     isTyping,
-    imagePreview,
     imageFile,
+    imagePreview,
+    setImagePreview,
     fileInputRef,
-    uploadProgress,
     handleTyping,
     handleSendMessage,
-    handleFileChange
+    handleFileChange,
+    handleRemoveImage, // Export the new function
+    uploadProgress
   };
 };

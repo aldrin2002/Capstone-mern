@@ -1,73 +1,86 @@
-import React from "react";
+import React, { useState } from "react";
 import { Clock } from "lucide-react";
 import { formatTime } from "./messageUtils";
 
 const MessageItem = ({ message, isCustomer, index, API_BASE_URL }) => {
-  // Function to handle image URLs correctly for both Cloudinary and local uploads
+  const [imageError, setImageError] = useState(false);
+
+  // Improved function to handle image URLs correctly for all cases
   const getImageUrl = (attachment) => {
-    // Check if this is a Cloudinary URL (contains cloudinary.com)
-    if (attachment.includes('cloudinary.com')) {
-      return attachment; // Return as is for Cloudinary URLs
-    } 
-    // Check if it's a data URL
-    else if (attachment.startsWith('data:')) {
-      return attachment; // Return as is for data URLs
-    } 
-    // Otherwise treat as local path
-    else {
-      return `${API_BASE_URL}${attachment}`; // Prepend API base for local paths
+    // Skip processing if attachment is falsy
+    if (!attachment) return '';
+    
+    try {
+      // Case 1: Already a complete URL (Cloudinary or otherwise)
+      if (attachment.includes('cloudinary.com') || attachment.startsWith('http')) {
+        return attachment;
+      } 
+      // Case 2: Data URL (base64)
+      else if (attachment.startsWith('data:')) {
+        return attachment;
+      }
+      // Case 3: Path from backend without API_BASE_URL
+      else if (attachment.startsWith('/uploads/')) {
+        return `${API_BASE_URL}${attachment}`;
+      }
+      // Case 4: Any other format - append API_BASE_URL as fallback
+      else {
+        return `${API_BASE_URL}${attachment}`;
+      }
+    } catch (error) {
+      console.error("Error processing image URL:", error);
+      return '';
     }
   };
 
+  // Fallback image handler
+  const handleImageError = () => {
+    console.error("Image failed to load:", message.attachment);
+    setImageError(true);
+  };
+
   return (
-    <div
-      className={`group relative animate-slide-in ${
-        isCustomer ? 'animate-slide-in-right' : 'animate-slide-in-left'
-      }`}
-      style={{ animationDelay: `${index * 100}ms` }}
-    >
-      <div className={`relative rounded-2xl px-4 py-3 shadow-lg transform transition-all duration-300 hover:scale-[1.02] ${
-        isCustomer 
-          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-br-lg ml-auto' 
-          : 'bg-white/90 backdrop-blur-sm text-gray-800 rounded-bl-lg border border-gray-200/50'
-      }`}>
-        {/* Message tail */}
-        <div className={`absolute bottom-0 ${
+    <div className={`group relative ${isCustomer ? 'ml-auto' : ''} w-fit`}>
+      <div 
+        className={`px-4 py-2 rounded-xl inline-block ${
           isCustomer 
-            ? 'right-0 w-0 h-0 border-l-[12px] border-l-transparent border-t-[12px] border-t-blue-600' 
-            : 'left-0 w-0 h-0 border-r-[12px] border-r-transparent border-t-[12px] border-t-white'
-        }`}></div>
-        
-        {message.attachment && (
-          <div className="mb-3 relative overflow-hidden rounded-xl">
+            ? 'bg-blue-500 text-white' 
+            : 'bg-gray-200 text-gray-800'
+        }`}
+      >
+        {/* Message attachment with error handling */}
+        {message.attachment && !imageError && (
+          <div className="mb-2">
             <img 
               src={getImageUrl(message.attachment)}
               alt="Attachment" 
-              className="rounded-xl max-h-60 max-w-full cursor-pointer hover:opacity-90 transition-all duration-300 transform hover:scale-105 shadow-lg"
+              className="rounded-lg max-h-60 max-w-full cursor-pointer"
               onClick={() => window.open(getImageUrl(message.attachment), '_blank')}
+              onError={handleImageError}
             />
           </div>
         )}
-        
+
+        {/* Fallback for failed images */}
+        {message.attachment && imageError && (
+          <div className="mb-2 p-3 bg-gray-100 rounded-lg text-gray-500 text-sm text-center">
+            Image couldn't be loaded
+          </div>
+        )}
+
+        {/* Message content */}
         {message.content && (
-          <p className="leading-relaxed">{message.content}</p>
+          <p className="break-words">{message.content}</p>
         )}
         
-        <div className={`flex items-center text-xs mt-2 ${
-          isCustomer ? 'text-blue-100 justify-end' : 'text-gray-500'
-        }`}>
-          <Clock size={12} className="mr-1.5" />
-          <span className="font-medium">{formatTime(message.timestamp || message.createdAt)}</span>
+        {/* Message time - Fixed to align properly regardless of message length */}
+        <div className={`text-xs mt-1 ${
+          isCustomer ? 'text-blue-100 text-right' : 'text-gray-500'
+        } clear-both`}>
+          {formatTime(message.timestamp || message.createdAt)}
           
-          {isCustomer && (
-            <div className="ml-2 flex items-center">
-              <div className={`w-3 h-3 rounded-full ${
-                message.isRead ? 'bg-green-300' : 'bg-blue-300'
-              } animate-pulse`}></div>
-              <span className="ml-1 text-xs font-medium">
-                {message.isRead ? "Read" : "Sent"}
-              </span>
-            </div>
+          {isCustomer && message.isRead && (
+            <span className="ml-2 inline-block w-2 h-2 bg-green-300 rounded-full"></span>
           )}
         </div>
       </div>

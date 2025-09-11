@@ -46,6 +46,7 @@ const CustomerMessage = () => {
     handleTyping,
     handleSendMessage,
     handleFileChange,
+    handleRemoveImage, // Add this line to extract the function
     uploadProgress
   } = useMessageState(API_URL, API_BASE_URL, socket);
   
@@ -151,8 +152,10 @@ const CustomerMessage = () => {
       {/* Sidebar */}
       <CustomerSideNav />
 
-      {/* Main Content - Adjusted for fixed sidebar */}
-      <main className={`h-screen flex flex-col overflow-hidden relative ${isMobile ? '' : 'ml-64'}`}>
+      {/* Main Content - Adjusted for fixed sidebar and mobile nav */}
+      <main className={`h-screen flex flex-col overflow-hidden relative ${
+        isMobile ? 'pb-16' : 'ml-64' // Add bottom padding for mobile nav
+      }`}>
         {/* Glassmorphism overlay */}
         <div className="absolute inset-0 bg-white/20 backdrop-blur-sm"></div>
         
@@ -162,42 +165,49 @@ const CustomerMessage = () => {
           isConnected={isConnected}
         />
 
-        {/* Messages Container */}
-        <MessageList 
-          messages={messages}
-          isLoading={isLoading}
-          messagesContainerRef={messagesContainerRef}
-          messagesEndRef={messagesEndRef}
-          isAdminTyping={isAdminTyping}
-          API_BASE_URL={API_BASE_URL}
-          isMobile={isMobile}
-        />
+        {/* Messages Container - Adjust height for mobile */}
+        <div className={`flex-1 ${isMobile ? 'pb-32' : 'pb-0'}`}>
+          <MessageList 
+            messages={messages}
+            isLoading={isLoading}
+            messagesContainerRef={messagesContainerRef}
+            messagesEndRef={messagesEndRef}
+            isAdminTyping={isAdminTyping}
+            API_BASE_URL={API_BASE_URL}
+            isMobile={isMobile}
+          />
+        </div>
         
-        {/* Scroll to bottom button */}
+        {/* Scroll to bottom button - Adjust position for mobile */}
         {showScrollButton && (
           <button
             onClick={scrollToBottom}
-            className="fixed bottom-32 md:bottom-28 right-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 z-20 border border-white/20 backdrop-blur-sm"
+            className={`fixed right-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 z-20 border border-white/20 backdrop-blur-sm ${
+              isMobile ? 'bottom-44' : 'bottom-28' // Adjust for mobile nav + input
+            }`}
           >
             <ChevronDown size={20} />
           </button>
         )}
 
-        {/* Input Area */}
-        <MessageInput 
-          newMessage={newMessage}
-          setNewMessage={setNewMessage}
-          handleTyping={handleTyping}
-          handleSendMessage={handleSendMessage}
-          handleFileChange={handleFileChange}
-          fileInputRef={fileInputRef}
-          isMobile={isMobile}
-          isTyping={isTyping}
-          isSending={isSending}
-          imageFile={imageFile}
-          imagePreview={imagePreview}
-          uploadProgress={uploadProgress} // Now this will be properly defined
-        />
+        {/* Input Area - Fixed position for mobile */}
+        <div className={isMobile ? 'fixed bottom-16 left-0 right-0 z-30' : ''}>
+          <MessageInput 
+            newMessage={newMessage}
+            setNewMessage={setNewMessage}
+            handleTyping={handleTyping}
+            handleSendMessage={handleSendMessage}
+            handleFileChange={handleFileChange}
+            handleRemoveImage={handleRemoveImage}
+            fileInputRef={fileInputRef}
+            isMobile={isMobile}
+            isTyping={isTyping}
+            isSending={isSending}
+            imageFile={imageFile}
+            imagePreview={imagePreview}
+            uploadProgress={uploadProgress}
+          />
+        </div>
       </main>
     </div>
   );
