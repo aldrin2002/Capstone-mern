@@ -19,6 +19,8 @@ import AdminMessage from './components/AdminPage/AdminMessage';
 import CustomerOrders from './components/CustomerPage/CustomerOrders';
 import { MessageNotificationProvider } from "./context/MessageNotificationContext";
 import { CustomerMessageProvider } from "./context/CustomerMessageContext";
+import PrivacyPolicy from './pages/customer/PrivacyPolicy';
+import TermsAndConditions from './pages/customer/Terms&Conditions';
 
 // Loading spinner component
 const LoadingSpinner = () => (
@@ -88,6 +90,10 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
+
+            {/* Legal Pages - Public Access */}
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-conditions" element={<TermsAndConditions />} />
             
             {/* Auth Routes */}
             <Route

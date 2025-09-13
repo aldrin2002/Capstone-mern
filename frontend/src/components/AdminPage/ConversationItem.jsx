@@ -9,20 +9,21 @@ const ConversationItem = ({
   formatTime,
   isMobile 
 }) => {
+  // Debug log to see if online status is being passed correctly
+  console.log(`Customer ${conversation.customer?.name} online status:`, isOnline);
+  
   const handleDelete = (e) => {
     e.stopPropagation();
     onDelete(conversation._id, e);
   };
 
   return (
-    <div
-      className={`relative p-4 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] group rounded-2xl mx-2 mb-3 mt-3 overflow-hidden
-        ${isSelected 
-          ? 'bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 border-2 border-blue-500/30 shadow-xl backdrop-blur-sm' 
-          : 'bg-white/80 hover:bg-gradient-to-r hover:from-blue-50/80 hover:to-indigo-50/80 border border-white/50 hover:border-blue-200/50 shadow-lg hover:shadow-xl backdrop-blur-sm'
-        }
-        ${conversation.unreadCount > 0 && !isSelected ? 'ring-2 ring-amber-300/50 bg-gradient-to-r from-amber-50/90 to-yellow-50/90 animate-pulse' : ''}
-      `}
+    <div className={`relative p-4 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] group rounded-2xl mx-2 mb-3 mt-3 overflow-hidden
+      ${isSelected 
+        ? 'bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 border-2 border-blue-500/30 shadow-xl backdrop-blur-sm' 
+        : 'bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:border-blue-300/50 hover:shadow-lg group-hover:bg-gradient-to-r group-hover:from-blue-50/50 group-hover:to-purple-50/50'
+      }`}
+      onClick={() => onSelect(conversation)}
     >
       {/* Subtle background gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none opacity-50"></div>
@@ -47,10 +48,11 @@ const ConversationItem = ({
             {conversation.customer?.name?.charAt(0).toUpperCase() || 'C'}
           </div>
           
-          {/* Online status indicator with glow effect */}
+          {/* FIXED: Online status indicator with better visibility */}
           {isOnline && (
-            <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-3 border-white shadow-lg animate-pulse">
+            <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-white shadow-lg">
               <div className="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-75"></div>
+              <div className="absolute inset-1 bg-green-500 rounded-full"></div>
             </div>
           )}
           

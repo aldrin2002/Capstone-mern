@@ -137,25 +137,34 @@ const AdminMessage = () => {
     if (socket) {
       console.log("Using socket from context:", socket.id);
 
-      // Listen for online customers
+      // FIXED: Listen for the correct event name
+      socket.on("customer-status-update", (data) => {
+        console.log("🟢 Customer status update received:", data);
+        setOnlineCustomers(data.customers || []);
+      });
+
+      // Also listen for the alternative event name (if backend sends both)
       socket.on("online-customers", (onlineCustomerIds) => {
-        setOnlineCustomers(onlineCustomerIds);
+        console.log("🟢 Online customers update received:", onlineCustomerIds);
+        setOnlineCustomers(onlineCustomerIds || []);
       });
 
       // Listen for typing indicators
-      socket.on("customer-typing", ({ conversationId, isTyping }) => {
+      socket.on("customer-typing", ({ conversationId, customerId, isTyping }) => {
+        console.log("⌨️ Customer typing update:", { conversationId, customerId, isTyping });
         setTypingCustomers((prev) => ({
           ...prev,
-          [conversationId]: isTyping,
+          [customerId]: isTyping,
         }));
       });
 
-      // Listen for message updates and deletions - NOW THESE FUNCTIONS EXIST
+      // Listen for message updates and deletions
       socket.on("message-updated", handleMessageUpdated);
       socket.on("message-deleted", handleMessageDeleted);
 
       // Clean up listeners when component unmounts
       return () => {
+        socket.off("customer-status-update");
         socket.off("online-customers");
         socket.off("customer-typing");
         socket.off("message-updated");

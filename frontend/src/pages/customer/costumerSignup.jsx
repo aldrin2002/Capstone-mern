@@ -38,16 +38,19 @@ const CostumerSignUpPage = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center bg-gradient-to-r from-blue-500 to-blue-700"
+      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-blue-700 p-4 sm:p-6 lg:p-8"
     >
-      <div className="max-w-md w-full mx-4 bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-lg shadow-lg overflow-hidden border border-gray-200">
-        <div className="p-8">
-          <h2 className="text-3xl font-bold text-center text-white">
+      <div className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-lg shadow-lg overflow-hidden border border-gray-200">
+        <div className="p-4 sm:p-6 md:p-8 lg:p-10">
+          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-center text-white mb-2 sm:mb-4">
             Create Customer Account
           </h2>
-          <div className="h-1 w-20 bg-blue-500 mx-auto mb-8"></div>
+          <div className="h-1 w-12 sm:w-16 md:w-20 lg:w-24 bg-blue-500 mx-auto mb-4 sm:mb-6 md:mb-8"></div>
 
-          <form onSubmit={handleSignUp}>
+          <form
+            onSubmit={handleSignUp}
+            className="space-y-3 sm:space-y-4 md:space-y-5"
+          >
             <Input
               icon={User}
               type="text"
@@ -77,27 +80,52 @@ const CostumerSignUpPage = () => {
               onChange={(e) => setPhone(e.target.value)}
             />
             {error && (
-              <p className="text-red-500 font-semibold mt-2 mb-2">{error}</p>
+              <p className="text-red-500 font-semibold text-xs sm:text-sm mt-2 mb-2">
+                {error}
+              </p>
             )}
-            <PasswordStrengthMeter password={password} />
+            <div className="mt-2 sm:mt-3 md:mt-4">
+              <PasswordStrengthMeter password={password} />
+            </div>
 
             <button
-              className="mt-5 w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md 
+              className="mt-4 sm:mt-5 md:mt-6 w-full py-2 sm:py-3 md:py-3 lg:py-4 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md 
                             hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                            transition duration-200"
+                            transition duration-200 text-sm sm:text-base md:text-lg"
               type="submit"
               disabled={isLoading}
             >
               {isLoading ? (
-                <Loader className="animate-spin mx-auto" size={24} />
+                <Loader className="animate-spin mx-auto" size={20} />
               ) : (
                 "Sign Up"
               )}
             </button>
+
+            {/* Terms & Conditions and Privacy Policy Text */}
+            <div className="mt-3 sm:mt-4 md:mt-5">
+              <p className="text-xs sm:text-sm text-white text-center leading-relaxed">
+                By clicking "Sign Up", you agree to our{" "}
+                <Link
+                  to="/terms-conditions"
+                  className="text-blue-200 hover:text-blue-100 underline font-medium transition-colors duration-200"
+                >
+                  Terms & Conditions
+                </Link>{" "}
+                and{" "}
+                <Link
+                  to="/privacy-policy"
+                  className="text-blue-200 hover:text-blue-100 underline font-medium transition-colors duration-200"
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </p>
+            </div>
           </form>
         </div>
-        <div className="px-8 py-4 bg-gray-50 bg-opacity-20 flex justify-center">
-          <p className="text-sm text-white">
+        <div className="px-4 sm:px-6 md:px-8 lg:px-10 py-3 sm:py-4 md:py-4 lg:py-5 bg-gray-50 bg-opacity-20 flex justify-center">
+          <p className="text-xs sm:text-sm md:text-base text-white text-center">
             Already have an account?{" "}
             <Link
               to="/costumerLogin"
