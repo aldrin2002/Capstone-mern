@@ -579,28 +579,36 @@ const AdminMessage = () => {
     }
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
-        toast.error("File size exceeds 2MB limit.");
-        return;
-      }
-      
-      setAttachment(file);
-      
-      // Preview image if it's an image file
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setAttachmentPreview(e.target.result);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setAttachmentPreview(null);
-      }
+const handleFileChange = (e) => {
+  const file = e.target.files?.[0]; // Add optional chaining
+  
+  // **NEW: Check if files array is empty - means we're clearing the attachment**
+  if (e.target.files && e.target.files.length === 0) {
+    setAttachment(null);
+    setAttachmentPreview(null);
+    return;
+  }
+  
+  if (file) {
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      toast.error("File size exceeds 2MB limit.");
+      return;
     }
-  };
+    
+    setAttachment(file);
+    
+    // Preview image if it's an image file
+    if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAttachmentPreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setAttachmentPreview(null);
+    }
+  }
+};
 
   const handleRemoveAttachment = () => {
     setAttachment(null);
@@ -760,7 +768,7 @@ const AdminMessage = () => {
                   onSubmit={handleSubmitMessage}
                   onTyping={handleAdminTyping}
                   isSending={isSending}
-                  attachment={attachment}
+                  attachment={attachmentPreview}
                   attachmentPreview={attachmentPreview}
                   onFileChange={handleFileChange}
                   onRemoveAttachment={handleRemoveAttachment}
@@ -870,7 +878,7 @@ const AdminMessage = () => {
                     onSubmit={handleSubmitMessage}
                     onTyping={handleAdminTyping}
                     isSending={isSending}
-                    attachment={attachment}
+                    attachment={attachmentPreview}
                     attachmentPreview={attachmentPreview}
                     onFileChange={handleFileChange}
                     onRemoveAttachment={handleRemoveAttachment}
