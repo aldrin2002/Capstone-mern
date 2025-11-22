@@ -12,32 +12,72 @@ export const recordVisit = async (req, res) => {
         
         const userAgent = req.headers["user-agent"] || "unknown";
         
-        // Create session ID (IP + UserAgent + timestamp for liberal counting)
-        const timestamp = Date.now();
-        const randomStr = Math.random().toString(36).substring(7);
-        const sessionString = `${ipAddress}-${userAgent}-${timestamp}-${randomStr}`;
+        // ✅ FIX: Create session ID using IP + UserAgent + DATE ONLY
+        // This ensures same user on same day = same session
+        const today = new Date().toISOString().split('T')[0]; // "2024-12-28"
+        const sessionString = `${ipAddress}-${userAgent}-${today}`;
         const sessionId = crypto
             .createHash("sha256")
             .update(sessionString)
             .digest("hex");
 
-        // Record new visit
+        console.log("📊 Visit attempt:", {
+            ip: ipAddress.substring(0, 15),
+            date: today,
+            sessionId: sessionId.substring(0, 10)
+        });
+
+        // ✅ FIX: Check if this session already exists TODAY
+        const existingVisit = await Visit.findOne({ sessionId });
+
+        if (existingVisit) {
+            // Already counted today - just return current count
+            const totalVisits = await Visit.getTotalVisits();
+            
+            console.log("⏭️ Session already counted today. Total:", totalVisits);
+            
+            return res.status(200).json({
+                success: true,
+                message: "Visit already counted today",
+                totalVisits,
+                isNewVisit: false
+            });
+        }
+
+        // ✅ NEW VISIT - Record it
         const newVisit = new Visit({
             sessionId,
             ipAddress,
-            userAgent
+            userAgent,
+            visitedAt: new Date()
         });
 
         await newVisit.save();
 
         const totalVisits = await Visit.getTotalVisits();
 
+        console.log("🎉 New visit recorded! Total:", totalVisits);
+
         res.status(201).json({
             success: true,
-            totalVisits
+            message: "Visit recorded",
+            totalVisits,
+            isNewVisit: true
         });
     } catch (error) {
         console.error("❌ Error recording visit:", error);
+        
+        // Handle duplicate key error
+        if (error.code === 11000) {
+            const totalVisits = await Visit.getTotalVisits();
+            return res.status(200).json({
+                success: true,
+                message: "Visit already counted",
+                totalVisits,
+                isNewVisit: false
+            });
+        }
+        
         res.status(500).json({
             success: false,
             message: "Failed to record visit"
@@ -45,7 +85,7 @@ export const recordVisit = async (req, res) => {
     }
 };
 
-// Get visit count
+// Get visit count (unchanged)
 export const getVisitCount = async (req, res) => {
     try {
         const totalVisits = await Visit.getTotalVisits();
