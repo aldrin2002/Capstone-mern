@@ -6,7 +6,7 @@ import PasswordStrengthMeter from "../../components/PasswordStrengthMeter";
 import { useAuthStore } from "../../store/authStore";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
-import AddressAutocomplete from "../../components/Map/AddressAutocomplete"; // ✅ ADD
+import AddressAutocomplete from "../../components/Map/AddressAutoComplete"; // ✅ ADD
 import AddressPickerMap from "../../components/Map/AddressPickerMap"; // ✅ ADD
 
 const SignUpPage = () => {
