@@ -1,5 +1,5 @@
 // Less aggressive caching strategy to avoid stale/unstyled refreshes
-const VERSION = '2025-11-22-3';
+const VERSION = '2025-11-22-2';
 const STATIC_CACHE = `cafex-static-${VERSION}`;
 const RUNTIME_CACHE = `cafex-runtime-${VERSION}`;
 
@@ -82,8 +82,10 @@ self.addEventListener('fetch', (event) => {
     );
     return;
   }
-  // For everything else (JS/CSS) -> network only, no cache fallback to avoid serving stale bundles
-  event.respondWith(fetch(request));
+  // For everything else (JS/CSS), just use network; fallback to cache if exists
+  event.respondWith(
+    fetch(request).catch(() => caches.match(request))
+  );
 });
 
 // Handle push notifications
