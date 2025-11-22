@@ -3,7 +3,7 @@ import { X, CreditCard, Upload, Check, Truck, Loader } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import Swal from 'sweetalert2';
-import AddressAutocomplete from '../../Map/AddressAutocomplete'; // ✨ Import
+import AddressAutocomplete from '../../Map/AddressAutoComplete'; // ✨ Import
 import AddressPickerMap from '../../Map/AddressPickerMap'; // ✨ Import
 import { useAuthStore } from '../../../store/authStore';
 
