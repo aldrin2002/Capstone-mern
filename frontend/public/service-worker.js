@@ -1,88 +1,104 @@
-const CACHE_NAME = 'cafex-v1';
+// Increment this version whenever you deploy new frontend code
+const CACHE_VERSION = 'v2';
+const CACHE_NAME = `cafex-${CACHE_VERSION}`;
 
-// Assets to cache
-const urlsToCache = [
+// Core assets that should be cached on install (keep minimal)
+const CORE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/cafex-logo.png',
-  // Add other important assets like CSS, JS, and images
+  '/cafex-logo.png'
 ];
 
-// Install service worker
+// Helper: send a message to all controlled clients
+function broadcastMessage(msg) {
+  self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+    clients.forEach(client => client.postMessage(msg));
+  });
+}
+
+// Install: pre-cache only CORE assets and activate immediately
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache opened');
-        return cache.addAll(urlsToCache);
-      })
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(cache => cache.addAll(CORE_ASSETS)).then(() => self.skipWaiting())
   );
 });
 
-// Activate and clean up old caches
+// Activate: remove old caches and claim clients
 self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(
+        keys.map(key => {
+          if (key.startsWith('cafex-') && key !== CACHE_NAME) {
+            return caches.delete(key);
           }
         })
       );
-    }).then(() => self.clients.claim())
+      await self.clients.claim();
+      broadcastMessage({ type: 'SW_ACTIVATED', version: CACHE_VERSION });
+    })()
   );
 });
 
-// Serve cached content when offline
+// Strategy helpers
+async function networkFirst(request) {
+  try {
+    const fresh = await fetch(request);
+    if (fresh && fresh.status === 200) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, fresh.clone());
+    }
+    return fresh;
+  } catch (err) {
+    const cacheMatch = await caches.match(request);
+    if (cacheMatch) return cacheMatch;
+    // Fallback to core index.html for navigations
+    if (request.mode === 'navigate') {
+      return caches.match('/index.html');
+    }
+    throw err;
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+  const networkPromise = fetch(request)
+    .then(response => {
+      if (response && response.status === 200) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch(() => undefined);
+  return cached || networkPromise || fetch(request);
+}
+
+// Fetch handler
 self.addEventListener('fetch', event => {
-  // Only cache GET requests - skip for other methods
-  if (event.request.method !== 'GET') {
-    return event.respondWith(fetch(event.request));
+  // Ignore non-GET and browser extension requests
+  if (event.request.method !== 'GET' || event.request.url.startsWith('chrome-extension://')) {
+    return;
   }
 
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
+  const url = new URL(event.request.url);
 
-        // Clone the request because it's a one-time use
-        const fetchRequest = event.request.clone();
+  // Do not cache API calls; always go to network
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(event.request).catch(() => new Response(JSON.stringify({ error: 'Network unavailable' }), { headers: { 'Content-Type': 'application/json' } })));
+    return;
+  }
 
-        return fetch(fetchRequest).then(response => {
-          // Check if we received a valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
+  // Navigation requests (HTML pages) -> network-first to get latest
+  if (event.request.mode === 'navigate' || (event.request.headers.get('accept') || '').includes('text/html')) {
+    event.respondWith(networkFirst(event.request));
+    return;
+  }
 
-          // Clone the response because it's a one-time use
-          const responseToCache = response.clone();
-
-          caches.open(CACHE_NAME).then(cache => {
-            // Don't cache API requests
-            if (!event.request.url.includes('/api/')) {
-              cache.put(event.request, responseToCache);
-            }
-          });
-
-          return response;
-        });
-      })
-      .catch(() => {
-        // If both cache and network fail, serve a fallback
-        if (event.request.url.includes('/api/')) {
-          return new Response(JSON.stringify({ error: 'Network unavailable' }), {
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
-      })
-  );
+  // Static assets (.js, .css, images, etc.) -> stale-while-revalidate
+  event.respondWith(staleWhileRevalidate(event.request));
 });
 
 // Handle push notifications
