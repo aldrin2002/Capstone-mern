@@ -398,11 +398,19 @@ app.get("/test", (req, res) => {
 });
 
 if (process.env.NODE_ENV === "production") {
-  // Use the __dirname for relative paths within the backend
-  // and projectRoot for absolute paths from project root
-  app.use(express.static(path.join(projectRoot, "/frontend/dist")));
+  // Serve static assets with default caching headers
+  app.use(express.static(path.join(projectRoot, "/frontend/dist"), {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith("index.html")) {
+        // Ensure HTML is always fetched fresh so hashed asset references stay in sync
+        res.setHeader("Cache-Control", "no-store");
+      }
+    }
+  }));
 
+  // Catch-all route for SPA; send fresh index.html each time
   app.get("*", (req, res) => {
+    res.setHeader("Cache-Control", "no-store");
     res.sendFile(path.resolve(projectRoot, "frontend", "dist", "index.html"));
   });
 }
