@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, ShoppingBag, Star, DollarSign } from 'lucide-react';
+import { Package, ShoppingBag, Star, Coins } from 'lucide-react';
 
 const ProductStats = ({ stats }) => {
   const statItems = [
@@ -27,7 +27,7 @@ const ProductStats = ({ stats }) => {
     {
       label: 'Total Value',
       value: `₱${stats.totalValue.toFixed(2)}`,
-      icon: DollarSign,
+      icon: Coins,
       color: 'purple',
       hoverColor: 'purple'
     }

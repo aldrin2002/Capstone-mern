@@ -13,6 +13,7 @@ import {
   Shield,
   Phone,
   Clock,
+  MapPin,
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -545,6 +546,18 @@ const UsersManager = () => {
                     </p>
                   </div>
                 )}
+                
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <MapPin className="h-5 w-5 text-red-600" />
+                    <p className="text-sm font-medium text-gray-500">Address</p>
+                  </div>
+                  <p className="font-semibold text-gray-900 ml-8">
+                    {selectedUser.address || (
+                      <span className="text-gray-400 italic">Not provided</span>
+                    )}
+                  </p>
+                </div>
 
                 <div className="bg-gray-50 rounded-xl p-4">
                   <div className="flex items-center space-x-3 mb-2">

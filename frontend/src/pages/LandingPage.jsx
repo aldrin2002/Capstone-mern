@@ -1,6 +1,79 @@
 import { Link } from 'react-router-dom';
-import { Coffee, Star, Clock, Users, Download } from 'lucide-react';
+import { Coffee, Star, Clock, Users, Download, TrendingUp } from 'lucide-react'; // ✅ Add TrendingUp
 import { useEffect, useState } from 'react';
+
+// ✅ NEW: Simple Visit Counter Component
+const VisitCounter = () => {
+  const [visitCount, setVisitCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const recordAndFetchVisit = async () => {
+      const apiUrl = import.meta.env.MODE === "development" 
+        ? "http://localhost:5000/api/visits" 
+        : "/api/visits";
+
+      // Check sessionStorage to prevent multiple counts in same tab
+      const sessionRecorded = sessionStorage.getItem('cafex-visit-recorded');
+      
+      if (sessionRecorded) {
+        // Just fetch count
+        try {
+          const countResponse = await fetch(`${apiUrl}/count`);
+          const countData = await countResponse.json();
+          if (countData.success) {
+            setVisitCount(countData.totalVisits);
+          }
+        } catch (error) {
+          console.error('Error fetching count:', error);
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      // Record new visit
+      try {
+        const recordResponse = await fetch(`${apiUrl}/record`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        const recordData = await recordResponse.json();
+        
+        if (recordData.success) {
+          setVisitCount(recordData.totalVisits);
+          sessionStorage.setItem('cafex-visit-recorded', 'true');
+        }
+      } catch (error) {
+        console.error('Error recording visit:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    recordAndFetchVisit();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-white text-sm sm:text-base">
+        <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-pulse" />
+        <span className="font-medium">Loading...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-white text-sm sm:text-base transition-all duration-300 hover:bg-white/30"
+      title={`Total visits: ${visitCount}`}
+    >
+      <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+      <span className="font-medium">Visits:</span>
+      <span className="font-bold">{visitCount}</span>
+    </div>
+  );
+};
 
 // Install PWA Component
 const InstallPWA = () => {
@@ -224,19 +297,21 @@ const LandingPage = () => {
       <header className="relative z-10 bg-white/10 backdrop-blur-md border-b border-white/20">
         <div className="container mx-auto flex justify-between items-center py-4 px-6">
           <h1 className="text-2xl font-bold text-white">CafeX</h1>
-          <nav className="flex items-center space-x-4">
+          <nav className="flex items-center space-x-2 sm:space-x-4">
+            {/* ✅ Visit Counter - RIGHT BEFORE Install App */}
+            <VisitCounter />
             <InstallPWA />
-            <Link to="/login" className="text-white hover:text-blue-200 transition-colors">
+            <Link to="/login" className="text-white hover:text-blue-200 transition-colors text-sm sm:text-base">
               Admin
             </Link> 
-            <Link to="/costumerLogin" className="text-white hover:text-blue-200 transition-colors">
+            <Link to="/costumerLogin" className="text-white hover:text-blue-200 transition-colors text-sm sm:text-base">
               Customer
             </Link>
           </nav>
         </div>
       </header>
 
-      {/* Main Content */}
+      {/* Main Content - Keep all existing code */}
       <main className="flex-grow relative z-10">
         {/* Hero Section */}
         <section className="h-[500px] flex items-center justify-center">

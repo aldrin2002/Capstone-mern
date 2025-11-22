@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, ShoppingBag, Image, Phone, ShoppingCart, Home, LogOut, Plus, MessageSquare } from "lucide-react";
+import { Users, ShoppingBag, Image, Phone, ShoppingCart, Home, LogOut, Plus, MessageSquare, Truck } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useNavigate } from "react-router-dom";
 import { useMessageNotifications } from "../../context/MessageNotificationContext";
@@ -20,6 +20,7 @@ const SideNav = ({ active, setActive }) => {
         { id: "contact", label: "Contact", icon: Phone },
         { id: "orders", label: "Orders", icon: ShoppingCart },
         { id: "messages", label: "Messages", icon: MessageSquare, badge: unreadCount > 0 ? unreadCount : null },
+        { id: "delivery-settings", label: "Delivery Fees", icon: Truck },
     ];
 
     // ADD THIS: Mobile navigation items (only show the most important ones in bottom nav)

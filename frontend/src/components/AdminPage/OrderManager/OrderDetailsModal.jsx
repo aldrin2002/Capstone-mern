@@ -11,9 +11,14 @@ import {
   ZoomIn,
   CheckCircle, 
   XCircle, 
-  Clock
+  Clock,
+  Navigation,
+  Truck, // ✅ ADD THIS
+  MapPin // ✅ ADD THIS
 } from "lucide-react";
 import OrderActionButtons from "./OrderActionButtons";
+import RouteMap from '../../Map/RouteMap'; // ✅ Add import
+import { useAuthStore } from '../../../store/authStore'; // ✅ Add import
 
 const OrderDetailsModal = ({ 
   selectedOrder, 
@@ -27,6 +32,20 @@ const OrderDetailsModal = ({
   deleteOrder,
   isLoading
 }) => {
+  const { user } = useAuthStore(); // ✅ Get admin user data
+
+  // ✅ ADD THIS DEBUG LOGGING
+  console.log("═══════════════════════════════════════");
+  console.log("🗺️ ROUTE MAP DEBUG:");
+  console.log("═══════════════════════════════════════");
+  console.log("📦 Selected Order ID:", selectedOrder?._id);
+  console.log("👤 Customer Data:", selectedOrder?.customer);
+  console.log("📍 Customer Location:", selectedOrder?.customer?.location);
+  console.log("👨‍💼 Admin Data:", user);
+  console.log("📍 Admin Location:", user?.location);
+  console.log("✅ Should show map?", !!(selectedOrder?.customer?.location && user?.location));
+  console.log("═══════════════════════════════════════");
+
   const getStatusIcon = (status) => {
     switch(status) {
       case "Completed":
@@ -213,7 +232,39 @@ const OrderDetailsModal = ({
                     <span className="text-green-700 text-sm font-medium">Payment:</span>
                     {getPaymentBadge(selectedOrder.paymentMethod)}
                   </div>
-                  <div className="flex items-center justify-between">
+                  
+                  {/* ✅ FIXED: Delivery Fee Breakdown - Only show if data exists */}
+                  {selectedOrder.deliveryDistance !== undefined && selectedOrder.deliveryFee !== undefined && (
+                    <>
+                      <div className="border-t border-green-200 pt-2 mt-2">
+                        <p className="text-xs text-green-700 font-bold mb-2">Delivery Details:</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-4 w-4 text-green-600" />
+                          <span className="text-green-700 text-sm">Distance:</span>
+                        </div>
+                        <span className="text-green-900 font-medium">{selectedOrder.deliveryDistance.toFixed(2)} km</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Truck className="h-4 w-4 text-green-600" />
+                          <span className="text-green-700 text-sm">Delivery Fee:</span>
+                        </div>
+                        <span className={`font-bold ${selectedOrder.deliveryFee === 0 ? 'text-green-600' : 'text-green-900'}`}>
+                          {selectedOrder.deliveryFee === 0 ? 'FREE' : `₱${selectedOrder.deliveryFee.toFixed(2)}`}
+                        </span>
+                      </div>
+                      
+                      {selectedOrder.deliveryFee === 0 && (
+                        <div className="bg-green-200 border border-green-400 rounded-lg p-2 text-center">
+                          <span className="text-green-900 text-xs font-bold">🎉 Free Delivery Applied</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  
+                  <div className="flex items-center justify-between border-t border-green-200 pt-2 mt-2">
                     <span className="text-green-700 text-sm font-medium">Total:</span>
                     <span className="font-bold text-xl text-green-600">₱{selectedOrder.total.toFixed(2)}</span>
                   </div>
@@ -231,6 +282,25 @@ const OrderDetailsModal = ({
                   <h4 className="font-bold text-orange-800 text-lg">Delivery Address</h4>
                 </div>
                 <p className="text-orange-700 bg-orange-100 p-4 rounded-xl border border-orange-200">{selectedOrder.deliveryAddress}</p>
+              </div>
+            )}
+
+            {/* ✅ NEW: Route Map Section */}
+            {selectedOrder.customer?.location && user?.location && (
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 mb-6">
+                <div className="flex items-center mb-4">
+                  <div className="bg-blue-500 p-2 rounded-xl mr-3 shadow-lg">
+                    <Navigation className="h-5 w-5 text-white" />
+                  </div>
+                  <h4 className="font-bold text-blue-800 text-lg">Delivery Route</h4>
+                </div>
+                
+                <RouteMap
+                  cafeCoords={user.location}
+                  customerCoords={selectedOrder.customer.location}
+                  cafeAddress={user.address}
+                  customerAddress={selectedOrder.deliveryAddress}
+                />
               </div>
             )}
 
@@ -323,7 +393,7 @@ const OrderDetailsModal = ({
             
             {/* Order Items */}
             <div className="bg-white border-2 border-gray-200 rounded-2xl overflow-hidden shadow-lg">
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b-2 border-gray-200">
+              <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b-2 border-gray-200">
                 <h4 className="font-bold text-gray-900 text-lg flex items-center">
                   <ShoppingCart className="h-5 w-5 mr-3 text-blue-600" />
                   Order Items ({selectedOrder.items.length})
@@ -354,10 +424,57 @@ const OrderDetailsModal = ({
                     ))}
                   </tbody>
                   <tfoot className="bg-gradient-to-r from-green-50 to-green-100">
-                    <tr>
-                      <td colSpan="3" className="px-6 py-4 text-right text-lg font-bold text-gray-900">Total Amount:</td>
-                      <td className="px-6 py-4 text-right text-xl font-bold text-green-600">₱{selectedOrder.total.toFixed(2)}</td>
-                    </tr>
+                    {/* ✅ CRITICAL FIX: Show breakdown only if deliveryFee data exists */}
+                    {selectedOrder.deliveryFee !== undefined && selectedOrder.deliveryDistance !== undefined ? (
+                      <>
+                        <tr className="border-t border-green-200">
+                          <td colSpan="3" className="px-6 py-3 text-right text-sm font-medium text-gray-700">Subtotal:</td>
+                          <td className="px-6 py-3 text-right text-sm font-bold text-gray-900">
+                            ₱{(() => {
+                              const calculatedSubtotal = selectedOrder.total - selectedOrder.deliveryFee;
+                              // Check if the subtotal makes sense
+                              if (calculatedSubtotal < 0 || calculatedSubtotal < selectedOrder.deliveryFee * 0.5) {
+                                // Total probably doesn't include delivery fee yet
+                                return selectedOrder.total.toFixed(2);
+                              }
+                              return calculatedSubtotal.toFixed(2);
+                            })()}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colSpan="3" className="px-6 py-3 text-right text-sm font-medium text-gray-700">
+                            Delivery Fee {selectedOrder.deliveryDistance > 0 && `(${selectedOrder.deliveryDistance.toFixed(2)} km)`}:
+                          </td>
+                          <td className="px-6 py-3 text-right text-sm font-bold text-gray-900">
+                            {/* ✅ CRITICAL FIX: Only show FREE if deliveryFee is EXACTLY 0 */}
+                            {selectedOrder.deliveryFee === 0 ? (
+                              <span className="text-green-600">FREE</span>
+                            ) : (
+                              `₱${selectedOrder.deliveryFee.toFixed(2)}`
+                            )}
+                          </td>
+                        </tr>
+                        <tr className="border-t-2 border-green-300">
+                          <td colSpan="3" className="px-6 py-4 text-right text-lg font-bold text-gray-900">Total Amount:</td>
+                          <td className="px-6 py-4 text-right text-xl font-bold text-green-600">
+                            ₱{(() => {
+                              const calculatedSubtotal = selectedOrder.total - selectedOrder.deliveryFee;
+                              // If total doesn't include delivery fee, add it
+                              if (calculatedSubtotal < 0 || calculatedSubtotal < selectedOrder.deliveryFee * 0.5) {
+                                return (selectedOrder.total + selectedOrder.deliveryFee).toFixed(2);
+                              }
+                              return selectedOrder.total.toFixed(2);
+                            })()}
+                          </td>
+                        </tr>
+                      </>
+                    ) : (
+                      // ✅ Fallback for old orders without delivery fee data
+                      <tr>
+                        <td colSpan="3" className="px-6 py-4 text-right text-lg font-bold text-gray-900">Total Amount:</td>
+                        <td className="px-6 py-4 text-right text-xl font-bold text-green-600">₱{selectedOrder.total.toFixed(2)}</td>
+                      </tr>
+                    )}
                   </tfoot>
                 </table>
               </div>

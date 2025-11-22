@@ -111,13 +111,19 @@ const CartModal = ({
                   <span className="text-gray-600 text-sm md:text-base">Subtotal:</span>
                   <span className="font-semibold text-sm md:text-base">₱{cartTotal.toFixed(2)}</span>
                 </div>
+                
+                {/* ✅ FIXED: Show TBD instead of hardcoded ₱50.00 */}
                 <div className="flex justify-between items-center mb-3 md:mb-4">
                   <span className="text-gray-600 text-sm md:text-base">Delivery Fee:</span>
-                  <span className="font-semibold text-sm md:text-base">₱50.00</span>
+                  <span className="font-semibold text-sm md:text-base text-blue-600">
+                    To be calculated
+                  </span>
                 </div>
+                
+                {/* ✅ FIXED: Remove total calculation here */}
                 <div className="flex justify-between items-center mb-4 md:mb-6 text-base md:text-lg font-bold border-t pt-2">
-                  <span>Total:</span>
-                  <span className="text-blue-600">₱{(cartTotal + 50).toFixed(2)}</span>
+                  <span>Estimated Total:</span>
+                  <span className="text-blue-600">₱{cartTotal.toFixed(2)} + delivery</span>
                 </div>
                 
                 {/* Action Buttons */}

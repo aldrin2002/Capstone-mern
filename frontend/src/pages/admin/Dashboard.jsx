@@ -11,25 +11,23 @@ import AdminMessage from "../../components/AdminPage/AdminMessage";
 import DashboardHome from "./DashboardHome";
 import DashboardHeader from "./DashboardHeader";
 import { useOrderNotifications } from "./useOrderNotification";
+import DeliverySettingsManager from "../../components/AdminPage/DeliverySettingsManager";
 
 const DashboardPage = () => {
   const { user } = useAuthStore();
   const location = useLocation();
   const [activeComponent, setActiveComponent] = useState(() => {
-    // Check if we have a state with activeTab from navigation
     return location.state?.activeTab || "dashboard";
   });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [lastOrderCount, setLastOrderCount] = useState(0);
 
-  // Check for route state changes
   useEffect(() => {
     if (location.state?.activeTab) {
       setActiveComponent(location.state.activeTab);
     }
   }, [location.state]);
 
-  // Handle window resize
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -39,7 +37,6 @@ const DashboardPage = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Use custom hook for order notifications
   useOrderNotifications(
     lastOrderCount,
     setLastOrderCount,
@@ -61,6 +58,8 @@ const DashboardPage = () => {
         return <OrderManager refreshOrders={() => setLastOrderCount(0)} />;
       case "messages":
         return <AdminMessage />;
+      case "delivery-settings":
+        return <DeliverySettingsManager />;
       default:
         return (
           <DashboardHome

@@ -22,7 +22,7 @@ import {
   Filter
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
-import { useCustomerMessages } from "../../context/CustomerMessageContext"; // For real-time updates
+import { useCustomerMessages } from "../../context/CustomerMessageContext";
 
 const CustomerOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -33,10 +33,8 @@ const CustomerOrders = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   
-  // Get socket from customer context for real-time updates
   const { socket, isConnected } = useCustomerMessages();
 
-  // Handle window resize
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -46,14 +44,12 @@ const CustomerOrders = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Real-time order status updates
   useEffect(() => {
     if (!socket || !isConnected) return;
 
     const handleOrderStatusUpdate = (data) => {
       console.log("📦 Order status update received:", data);
       
-      // SAFETY CHECK: Only process updates for orders that belong to this customer
       const orderBelongsToUser = orders.some(order => order._id === data.orderId);
       
       if (!orderBelongsToUser) {
@@ -61,7 +57,6 @@ const CustomerOrders = () => {
         return;
       }
       
-      // Update the specific order in the list
       setOrders(prevOrders => 
         prevOrders.map(order => 
           order._id === data.orderId 
@@ -70,7 +65,6 @@ const CustomerOrders = () => {
         )
       );
 
-      // Show notification toast
       toast.success(
         <div className="flex flex-col">
           <div className="font-bold flex items-center">
@@ -94,9 +88,8 @@ const CustomerOrders = () => {
     return () => {
       socket.off('order-status-updated', handleOrderStatusUpdate);
     };
-  }, [socket, isConnected, orders]); // Add 'orders' to dependencies
+  }, [socket, isConnected, orders]);
 
-  // Fetch customer's orders
   useEffect(() => {
     if (!user) {
       toast.error("Please log in to view your orders");
@@ -123,7 +116,6 @@ const CustomerOrders = () => {
           headers
         });
         
-        // Sort orders by creation date (newest first)
         const sortedOrders = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setOrders(sortedOrders);
       } catch (error) {
@@ -144,12 +136,10 @@ const CustomerOrders = () => {
     fetchOrders();
   }, [user, navigate]);
 
-  // Toggle order details expansion
   const toggleOrderDetails = (orderId) => {
     setExpandedOrder(prevExpanded => prevExpanded === orderId ? null : orderId);
   };
 
-  // Enhanced status styling with new "Delivered" status
   const getStatusStyle = (status) => {
     switch (status) {
       case "Pending":
@@ -197,7 +187,6 @@ const CustomerOrders = () => {
     }
   };
 
-  // Format date
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
@@ -214,7 +203,6 @@ const CustomerOrders = () => {
     }
   };
 
-  // Helper function to safely get product information
   const getProductInfo = (item) => {
     if (!item || !item.product) {
       return {
@@ -230,26 +218,20 @@ const CustomerOrders = () => {
     };
   };
 
-  // Filter orders based on status only (removed search functionality)
   const filteredOrders = orders.filter(order => {
     return statusFilter === "All" || order.status === statusFilter;
   });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      {/* Sidebar */}
       <CustomerSideNav />
 
-      {/* Main Content */}
       <main className={`${isMobile ? 'pb-20' : 'ml-64'}`}>
         <div className="container mx-auto px-4 py-6 space-y-6">
-          {/* Enhanced Header */}
           <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-2xl shadow-xl">
-            {/* Background decoration */}
             <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent"></div>
             <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
             
-            {/* Floating decoration elements */}
             <div className="absolute top-8 right-8 w-20 h-20 border-2 border-white/20 rounded-full animate-spin-slow"></div>
             <div className="absolute bottom-8 left-8 w-16 h-16 border border-white/10 rounded-full animate-pulse"></div>
             
@@ -281,7 +263,6 @@ const CustomerOrders = () => {
             </div>
           </div>
 
-          {/* Status Filter Only */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <div className="max-w-md">
               <div className="relative">
@@ -304,7 +285,6 @@ const CustomerOrders = () => {
             </div>
           </div>
 
-          {/* Orders Content */}
           {isLoading ? (
             <div className="flex justify-center items-center h-96">
               <div className="text-center">
@@ -360,7 +340,6 @@ const CustomerOrders = () => {
                 
                 return (
                   <div key={order._id} className="bg-white rounded-2xl shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
-                    {/* Order Header */}
                     <div className="p-6 bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="space-y-1">
@@ -399,7 +378,6 @@ const CustomerOrders = () => {
                       </div>
                     </div>
 
-                    {/* Order Summary - Clickable */}
                     <div 
                       className="px-6 py-4 flex justify-between items-center cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300"
                       onClick={() => toggleOrderDetails(order._id)}
@@ -439,10 +417,8 @@ const CustomerOrders = () => {
                       </div>
                     </div>
 
-                    {/* Expanded Order Details */}
                     {isExpanded && (
                       <div className="px-6 py-6 bg-gradient-to-r from-gray-50 to-blue-50 border-t border-gray-100">
-                        {/* Order Items */}
                         <div className="mb-6">
                           <h3 className="font-bold text-gray-900 mb-4 text-lg flex items-center">
                             <Coffee className="h-5 w-5 mr-2 text-blue-600" />
@@ -497,9 +473,8 @@ const CustomerOrders = () => {
                           </div>
                         </div>
 
-                        {/* Order Information Grid */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                          {/* Delivery Information */}
+                          {/* ✅ FIXED: Now reading from deliveryAddress field */}
                           <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-4 text-lg flex items-center">
                               <MapPin className="h-5 w-5 mr-2 text-blue-600" />
@@ -511,12 +486,28 @@ const CustomerOrders = () => {
                               </div>
                               <div>
                                 <p className="text-sm font-medium text-gray-700 mb-1">Delivery Address:</p>
-                                <p className="text-gray-900 font-medium">{order.notes || "No delivery address provided."}</p>
+                                <p className="text-gray-900 font-medium leading-relaxed">
+                                  {order.deliveryAddress || "No delivery address provided."}
+                                </p>
                               </div>
                             </div>
+                            
+                            {/* Optional: Display GCash Reference if available */}
+                            {order.gcashReferenceNumber && (
+                              <div className="flex items-start space-x-3 mt-4 pt-4 border-t border-gray-200">
+                                <div className="bg-green-100 p-2 rounded-lg">
+                                  <CreditCard className="h-5 w-5 text-green-600" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-gray-700 mb-1">GCash Reference:</p>
+                                  <p className="text-gray-900 font-mono font-medium">
+                                    {order.gcashReferenceNumber}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
                           </div>
                           
-                          {/* Order Timeline */}
                           <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-4 text-lg flex items-center">
                               <Clock className="h-5 w-5 mr-2 text-blue-600" />
@@ -548,17 +539,63 @@ const CustomerOrders = () => {
                           </div>
                         </div>
                         
-                        {/* Order Total */}
                         <div className="mt-6 bg-white rounded-xl shadow-md p-6 border border-gray-100">
                           <div className="space-y-3">
+                            {/* ✅ CRITICAL FIX: Check if total already includes delivery fee */}
                             <div className="flex justify-between text-gray-600">
                               <span>Subtotal</span>
-                              <span className="font-medium">₱{Math.max(0, (order.total || 0) - 50).toFixed(2)}</span>
+                              <span className="font-medium">
+                                ₱{(() => {
+                                  // If deliveryFee exists in the order data
+                                  if (order.deliveryFee !== undefined) {
+                                    const calculatedSubtotal = order.total - order.deliveryFee;
+                                    // Check if the subtotal makes sense (should be positive and reasonable)
+                                    // If subtotal is negative or too small, the total might NOT include delivery fee
+                                    if (calculatedSubtotal < 0 || calculatedSubtotal < order.deliveryFee * 0.5) {
+                                      // Total probably doesn't include delivery fee yet
+                                      return order.total.toFixed(2);
+                                    }
+                                    // Total includes delivery fee
+                                    return calculatedSubtotal.toFixed(2);
+                                  }
+                                  // Old orders without deliveryFee field - assume ₱50 was added
+                                  return (order.total - 50).toFixed(2);
+                                })()}
+                              </span>
                             </div>
+                            
+                            {/* ✅ CRITICAL FIX: Display delivery fee correctly */}
                             <div className="flex justify-between text-gray-600">
-                              <span>Delivery Fee</span>
-                              <span className="font-medium">₱50.00</span>
+                              <span className="flex items-center">
+                                Delivery Fee
+                                {order.deliveryDistance && order.deliveryDistance > 0 && (
+                                  <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                                    {order.deliveryDistance.toFixed(2)} km
+                                  </span>
+                                )}
+                              </span>
+                              <span className="font-medium">
+                                {(() => {
+                                  // If deliveryFee exists and is exactly 0
+                                  if (order.deliveryFee !== undefined) {
+                                    if (order.deliveryFee === 0) {
+                                      return 'FREE';
+                                    }
+                                    return `₱${order.deliveryFee.toFixed(2)}`;
+                                  }
+                                  // Old orders - assume ₱50
+                                  return '₱50.00';
+                                })()}
+                              </span>
                             </div>
+                            
+                            {/* ✅ CRITICAL FIX: Only show free delivery badge when deliveryFee is EXACTLY 0 */}
+                            {order.deliveryFee !== undefined && order.deliveryFee === 0 && (
+                              <div className="bg-green-100 border border-green-300 rounded-lg p-2 text-center">
+                                <span className="text-green-800 text-sm font-bold">🎉 Free Delivery Applied!</span>
+                              </div>
+                            )}
+                            
                             <div className="border-t pt-3">
                               <div className="flex justify-between items-center">
                                 <span className="text-xl font-bold text-gray-900">Total Amount</span>

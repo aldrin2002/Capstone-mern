@@ -13,10 +13,13 @@
     "axios": "^1.7.3",
     "capstone-mern": "file:..",
     "framer-motion": "^11.18.2",
+    "leaflet": "^1.9.4",
+    "leaflet-routing-machine": "^3.2.12",
     "lucide-react": "^0.424.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.4.1",
+    "react-leaflet": "^5.0.0",
     "react-router-dom": "^6.26.0",
     "sweetalert2": "^11.6.13",
     "zustand": "^4.5.4"

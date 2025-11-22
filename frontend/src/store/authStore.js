@@ -13,8 +13,8 @@ export const useAuthStore = create((set) => ({
     isCheckingAuth: true,
     message: null,
 
-    // Admin signup
-    signup: async (email, password, name, phone) => {
+    // Admin signup - DO NOT auto-authenticate
+    signup: async (email, password, name, phone, address, locationCoords) => {
         set({ isLoading: true, error: null });
         try {
             const response = await axios.post(`${API_URL}/signup`, { 
@@ -22,17 +22,31 @@ export const useAuthStore = create((set) => ({
                 password, 
                 name, 
                 phone,
+                address,
+                location: locationCoords,
                 role: "admin" 
             });
-            set({ user: response.data.user, isAuthenticated: true, isLoading: false });
+            
+            // Clear the cookie/token to prevent auto-login
+            await axios.post(`${API_URL}/logout`);
+            
+            // Do NOT set isAuthenticated to true
+            set({ 
+                user: null, 
+                isAuthenticated: false, 
+                isLoading: false,
+                message: "Account created successfully" 
+            });
+            
+            return true;
         } catch (error) {
             set({ error: error.response.data.message || "Error signing up", isLoading: false });
             throw error;
         }
     },
 
-    // Customer signup
-    customerSignup: async (email, password, name, phone) => {
+    // Customer signup - with location coordinates
+    customerSignup: async (email, password, name, phone, address, locationCoords) => {
         set({ isLoading: true, error: null });
         try {
             const response = await axios.post(`${API_URL}/costumerSignup`, { 
@@ -40,11 +54,22 @@ export const useAuthStore = create((set) => ({
                 password, 
                 name, 
                 phone,
+                address,
+                location: locationCoords, // ✅ ADD THIS - Send coordinates
                 role: "customer"
             });
             
+            // Clear the cookie/token to prevent auto-login
+            await axios.post(`${API_URL}/logout`);
+            
             if (response.data.success) {
-                set({ message: "Signup successful" });
+                // Do NOT set isAuthenticated to true
+                set({ 
+                    message: "Signup successful",
+                    user: null,
+                    isAuthenticated: false,
+                    isLoading: false
+                });
                 return true;
             }
         } catch (error) {

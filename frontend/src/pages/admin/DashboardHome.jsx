@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Loader, TrendingUp, TrendingDown, Users, ShoppingBag, DollarSign, Package, ShoppingCart, Image, Phone, Eye } from "lucide-react";
+import { Loader, TrendingUp, TrendingDown, Users, ShoppingBag, Coins, Package, ShoppingCart, Image, Phone, Eye } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
@@ -85,7 +85,7 @@ const DashboardHome = ({ user, setActiveComponent, isMobile }) => {
           value: `₱${totalRevenue.toFixed(2)}`,
           change: revenueChange,
           changeType: "positive",
-          icon: DollarSign,
+          icon: Coins,
           color: "from-green-500 to-green-600",
           bgColor: "bg-green-50",
           iconColor: "text-green-600"
@@ -136,7 +136,7 @@ const DashboardHome = ({ user, setActiveComponent, isMobile }) => {
           value: "₱0.00",
           change: "0%",
           changeType: "neutral",
-          icon: DollarSign,
+          icon: Coins,
           color: "from-gray-400 to-gray-500",
           bgColor: "bg-gray-50",
           iconColor: "text-gray-500"

@@ -1,8 +1,11 @@
-import React, { useState, useRef } from 'react';
-import { X, Truck, CreditCard, Upload, Check } from 'lucide-react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { X, CreditCard, Upload, Check, Truck, Loader } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import Swal from 'sweetalert2';
+import AddressAutocomplete from '../../Map/AddressAutocomplete'; // ✨ Import
+import AddressPickerMap from '../../Map/AddressPickerMap'; // ✨ Import
+import { useAuthStore } from '../../../store/authStore';
 
 const PaymentModal = ({ 
   showPaymentModal, 
@@ -13,14 +16,132 @@ const PaymentModal = ({
   user, 
   navigate 
 }) => {
-  const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
+  const [paymentMethod] = useState("GCash");
+  
   const [deliveryAddress, setDeliveryAddress] = useState(user?.address || "");
+  const [deliveryCoordinates, setDeliveryCoordinates] = useState(
+    user?.location ? { lat: user.location.lat, lng: user.location.lng } : null
+  );
+  
   const [gcashReference, setGcashReference] = useState("");
   const [proofImage, setProofImage] = useState(null);
   const [proofImagePreview, setProofImagePreview] = useState(null);
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
 
+  // ✅ NEW: Delivery fee states
+  const [deliveryFee, setDeliveryFee] = useState(50); // Default
+  const [deliveryDistance, setDeliveryDistance] = useState(0);
+  const [isCalculatingFee, setIsCalculatingFee] = useState(false);
+  const [deliverySettings, setDeliverySettings] = useState(null);
+
   const fileInputRef = useRef(null);
+
+  // ✅ NEW: Fetch delivery settings on mount
+  useEffect(() => {
+    fetchDeliverySettings();
+  }, []);
+
+  const fetchDeliverySettings = async () => {
+    try {
+      const apiUrl = import.meta.env.MODE === "development" 
+        ? "http://localhost:5000/api/delivery-settings" 
+        : "/api/delivery-settings";
+      
+      const response = await axios.get(apiUrl);
+      setDeliverySettings(response.data);
+    } catch (error) {
+      console.error("Error fetching delivery settings:", error);
+    }
+  };
+
+  // ✅ NEW: Calculate delivery fee when coordinates change
+  useEffect(() => {
+    if (deliveryCoordinates && deliverySettings) {
+      calculateDeliveryFee();
+    }
+  }, [deliveryCoordinates, deliverySettings, cartTotal]);
+
+  const calculateDeliveryFee = async () => {
+    // Get admin/cafe location from first admin user
+    try {
+      setIsCalculatingFee(true);
+      
+      // Fetch admin location
+      const usersApiUrl = import.meta.env.MODE === "development" 
+        ? "http://localhost:5000/api/users" 
+        : "/api/users";
+      
+      const usersResponse = await axios.get(usersApiUrl, { withCredentials: true });
+      const admins = usersResponse.data.filter(u => u.role === 'admin');
+      
+      if (admins.length === 0 || !admins[0].location) {
+        console.warn("No admin location found, using default fee");
+        setDeliveryFee(50);
+        return;
+      }
+
+      const cafeLocation = admins[0].location;
+      
+      // Calculate distance using Mapbox Directions API
+      const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
+      const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${cafeLocation.lng},${cafeLocation.lat};${deliveryCoordinates.lng},${deliveryCoordinates.lat}`;
+      
+      const mapboxResponse = await axios.get(url, {
+        params: {
+          geometries: 'geojson',
+          access_token: MAPBOX_TOKEN
+        },
+        withCredentials: false
+      });
+
+      if (mapboxResponse.data.routes && mapboxResponse.data.routes.length > 0) {
+        const route = mapboxResponse.data.routes[0];
+        const distanceInKm = route.distance / 1000; // Convert meters to km
+        
+        setDeliveryDistance(distanceInKm);
+        
+        // Calculate fee using backend
+        const feeApiUrl = import.meta.env.MODE === "development" 
+          ? "http://localhost:5000/api/delivery-settings/calculate" 
+          : "/api/delivery-settings/calculate";
+        
+        const feeResponse = await axios.post(feeApiUrl, {
+          distance: distanceInKm,
+          orderTotal: cartTotal
+        });
+
+        if (feeResponse.data.success) {
+          setDeliveryFee(feeResponse.data.deliveryFee);
+          
+          // Show free delivery notification
+          if (feeResponse.data.isFreeDelivery) {
+            toast.success('🎉 Free delivery! Your order qualifies!', {
+              duration: 3000
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error calculating delivery fee:", error);
+      setDeliveryFee(50); // Fallback to default
+    } finally {
+      setIsCalculatingFee(false);
+    }
+  };
+
+  const handleAddressSelect = (addressData) => {
+    if (addressData) {
+      setDeliveryAddress(addressData.address);
+      setDeliveryCoordinates({
+        lat: addressData.lat,
+        lng: addressData.lng
+      });
+    } else {
+      setDeliveryAddress("");
+      setDeliveryCoordinates(null);
+      setDeliveryFee(50); // Reset to default
+    }
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -48,15 +169,14 @@ const PaymentModal = ({
         
       const response = await axios.post(apiUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        withCredentials: true
+        withCredentials: true // ✅ This sends the cookie with JWT token
       });
       
       console.log("Upload response:", response.data);
       
-      // Return the Cloudinary URL instead of local path
       return response.data.imagePath || "";
     } catch (error) {
-      console.error("Error uploading image to Cloudinary:", error);
+      console.error("Error uploading image:", error);
       toast.error("Failed to upload proof of payment. Please try again.");
       throw new Error("Failed to upload proof of payment image");
     }
@@ -66,49 +186,55 @@ const PaymentModal = ({
     try {
       setIsProcessingOrder(true);
       
-      console.log("🛒 Cart data:", cart);
-      console.log("👤 User data:", user);
-      console.log("💰 Cart total:", cartTotal);
-      
+      // Validate delivery address
       if (!deliveryAddress.trim()) {
         toast.error("Please enter a delivery address");
         setIsProcessingOrder(false);
         return;
       }
-      
-      if (paymentMethod === "GCash") {
-        if (!gcashReference.trim()) {
-          toast.error("Please enter GCash reference number");
-          setIsProcessingOrder(false);
-          return;
-        }
-        
-        if (!proofImage) {
-          toast.error("Please upload proof of payment");
-          setIsProcessingOrder(false);
-          return;
-        }
+
+      // Validate location coordinates
+      if (!deliveryCoordinates) {
+        toast.error("Please select a valid address from the suggestions");
+        setIsProcessingOrder(false);
+        return;
       }
       
+      // Validate GCash reference number
+      if (!gcashReference.trim()) {
+        toast.error("Please enter GCash reference number");
+        setIsProcessingOrder(false);
+        return;
+      }
+      
+      // Validate proof of payment
+      if (!proofImage) {
+        toast.error("Please upload proof of payment");
+        setIsProcessingOrder(false);
+        return;
+      }
+      
+      // Upload proof image
       let proofImagePath = "";
-      if (paymentMethod === "GCash" && proofImage) {
-        try {
-          proofImagePath = await uploadProofImage();
-          console.log("📸 Proof image uploaded:", proofImagePath);
-        } catch (uploadError) {
-          console.error("Error uploading proof:", uploadError);
-          toast.error("Failed to upload proof of payment. Please try again.");
-          setIsProcessingOrder(false);
-          return;
-        }
+      try {
+        proofImagePath = await uploadProofImage();
+        console.log("📸 Proof image uploaded:", proofImagePath);
+      } catch (uploadError) {
+        console.error("Error uploading proof:", uploadError);
+        setIsProcessingOrder(false);
+        return;
       }
       
-      // Build order data with proper structure
+      // ✅ UPDATED: Build order data with delivery fee and distance
       const orderData = {
         customer: {
           name: user?.name || "Guest",
           email: user?.email || "guest@example.com",
-          phone: user?.phone || ""
+          phone: user?.phone || "",
+          location: deliveryCoordinates ? {  // ✅ ADD THIS!
+            lat: deliveryCoordinates.lat,
+            lng: deliveryCoordinates.lng
+          } : null
         },
         items: cart.map(item => ({
           product: item._id,
@@ -116,36 +242,25 @@ const PaymentModal = ({
           quantity: Number(item.quantity),
           price: Number(item.price)
         })),
-        total: Number(cartTotal + 50),
-        status: "Pending",
-        paymentMethod: paymentMethod,
-        paymentStatus: paymentMethod === "GCash" ? "Paid" : "Pending",
-        deliveryAddress: "", // leave empty for consistency with your host project
-        notes:
-          paymentMethod === "GCash"
-            ? `Delivery Address: ${deliveryAddress.trim()}, GCash Ref: ${gcashReference.trim()}`
-            : `Delivery Address: ${deliveryAddress.trim()}`,
-        gcashReference: paymentMethod === "GCash" ? gcashReference.trim() : "",
-        proofOfPayment: proofImagePath || ""
+        
+        // ✅ Ensure both are numbers before adding
+        total: parseFloat((Number(cartTotal) + Number(deliveryFee)).toFixed(2)),
+        
+        deliveryFee: parseFloat(Number(deliveryFee).toFixed(2)),
+        deliveryDistance: parseFloat(Number(deliveryDistance).toFixed(2)),
+        notes: `GCash Ref: ${gcashReference.trim()}`,
+        gcashReferenceNumber: gcashReference.trim(),
+        gcashProofImage: proofImagePath,
+        deliveryAddress: deliveryAddress.trim()
       };
       
       console.log("📦 Sending order data:", JSON.stringify(orderData, null, 2));
-      
-      // Check if all required fields are present
-      console.log("✅ Validation checks:");
-      console.log("- Customer name:", orderData.customer.name);
-      console.log("- Customer email:", orderData.customer.email);
-      console.log("- Items count:", orderData.items.length);
-      console.log("- Total:", orderData.total);
-      
-      // Validate each item
-      orderData.items.forEach((item, index) => {
-        console.log(`- Item ${index}:`, {
-          product: item.product,
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price
-        });
+      console.log("📍 Customer location being sent:", orderData.customer.location); // ✅ ADD THIS LOG
+      console.log("🔢 Total calculation:", {
+        cartTotal: Number(cartTotal),
+        deliveryFee: Number(deliveryFee),
+        sum: Number(cartTotal) + Number(deliveryFee),
+        final: parseFloat((Number(cartTotal) + Number(deliveryFee)).toFixed(2))
       });
       
       const apiUrl = import.meta.env.MODE === "development" 
@@ -164,8 +279,10 @@ const PaymentModal = ({
       // Reset states
       setCart([]);
       setShowPaymentModal(false);
-      setPaymentMethod("Cash on Delivery");
       setDeliveryAddress("");
+      setDeliveryCoordinates(null);
+      setDeliveryFee(50);
+      setDeliveryDistance(0);
       setGcashReference("");
       setProofImage(null);
       setProofImagePreview(null);
@@ -189,7 +306,6 @@ const PaymentModal = ({
     } catch (error) {
       console.error("❌ Error placing order:", error);
       console.error("❌ Error response:", error.response?.data);
-      console.error("❌ Error status:", error.response?.status);
       
       const errorMessage = error.response?.data?.message || 
                           error.response?.data?.error || 
@@ -197,7 +313,6 @@ const PaymentModal = ({
       
       toast.error(errorMessage);
       
-      // If there are validation errors, log them
       if (error.response?.data?.errors) {
         console.error("❌ Validation errors:", error.response.data.errors);
       }
@@ -210,9 +325,10 @@ const PaymentModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-2 my-2 md:my-0 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-2 my-2 md:my-0 max-h-[95vh] overflow-y-auto">
         <div className="p-3 md:p-6">
-          <div className="flex justify-between items-center mb-3 md:mb-4 sticky top-0 bg-white pt-1 pb-2 border-b">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-3 md:mb-4 sticky top-0 bg-white pt-1 pb-2 border-b z-10">
             <h2 className="text-base md:text-xl font-bold text-gray-900">Complete Your Order</h2>
             <button 
               onClick={() => setShowPaymentModal(false)}
@@ -222,10 +338,69 @@ const PaymentModal = ({
             </button>
           </div>
 
+          {/* Address Autocomplete */}
+          <div className="mb-4">
+            <AddressAutocomplete 
+              onAddressSelect={handleAddressSelect}
+              initialAddress={user?.address}
+              placeholder="Search your delivery address..."
+            />
+          </div>
+
+          {/* Map Display */}
+          <div className="mb-4">
+            <AddressPickerMap 
+              coordinates={deliveryCoordinates}
+              selectedAddress={deliveryAddress}
+            />
+          </div>
+
+          {/* ✅ NEW: Delivery Info Card */}
+          {deliveryCoordinates && deliverySettings && (
+            <div className="mb-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4">
+              <h3 className="font-bold text-blue-900 mb-2 flex items-center">
+                <Truck className="h-5 w-5 mr-2" />
+                Delivery Information
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-blue-700">Distance:</span>
+                  <span className="font-bold text-blue-900">{deliveryDistance.toFixed(2)} km</span>
+                </div>
+                {deliveryFee === 0 ? (
+                  <div className="bg-green-100 border border-green-300 rounded-lg p-2 text-center">
+                    <span className="text-green-800 font-bold">🎉 FREE DELIVERY!</span>
+                    <p className="text-xs text-green-700 mt-1">
+                      Your order total is ₱{cartTotal.toFixed(2)} (≥ ₱{deliverySettings.freeDeliveryThreshold})
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Base Rate:</span>
+                      <span className="text-blue-900">₱{deliverySettings.baseRate.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Distance Charge:</span>
+                      <span className="text-blue-900">
+                        ₱{(deliveryDistance * deliverySettings.perKmRate).toFixed(2)}
+                      </span>
+                    </div>
+                    {cartTotal >= deliverySettings.freeDeliveryThreshold * 0.8 && (
+                      <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-2 text-center text-xs">
+                        💡 Add ₱{(deliverySettings.freeDeliveryThreshold - cartTotal).toFixed(2)} more for FREE delivery!
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Delivery Address */}
           <div className="mb-3 md:mb-4">
             <label className="block text-gray-700 text-sm font-medium mb-1">
-              Delivery Address
+              Delivery Address <span className="text-red-500">*</span>
             </label>
             <textarea
               value={deliveryAddress}
@@ -237,126 +412,77 @@ const PaymentModal = ({
             />
           </div>
 
-          {/* Payment Method Selection */}
-          <div className="mb-3 md:mb-4">
-            <label className="block text-gray-700 text-sm font-medium mb-1">
-              Payment Method
-            </label>
-            <div className="space-y-2">
-              <div 
-                className={`p-2 md:p-3 border rounded-md cursor-pointer flex items-center ${
-                  paymentMethod === "Cash on Delivery" 
-                    ? "border-blue-500 bg-blue-50" 
-                    : "border-gray-300 hover:border-blue-300"
-                }`}
-                onClick={() => setPaymentMethod("Cash on Delivery")}
-              >
-                <div className={`w-4 h-4 md:w-5 md:h-5 rounded-full border flex items-center justify-center mr-2 ${
-                  paymentMethod === "Cash on Delivery" ? "border-blue-500" : "border-gray-400"
-                }`}>
-                  {paymentMethod === "Cash on Delivery" && (
-                    <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-blue-500"></div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium text-xs md:text-base">Cash on Delivery</div>
-                  <div className="text-xs text-gray-500">Pay when your order arrives</div>
-                </div>
-                <Truck className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
-              </div>
+          {/* GCash Payment Section */}
+          <div className="border rounded-md p-3 md:p-4 mb-3 md:mb-4 bg-blue-50">
+            <div className="flex items-center mb-3">
+              <CreditCard className="w-5 h-5 text-blue-600 mr-2" />
+              <h3 className="font-medium text-blue-900 text-sm md:text-base">GCash Payment</h3>
+            </div>
+            
+            <p className="text-xs md:text-sm text-gray-600 mb-3">
+              Please send your payment to: <br />
+              <span className="font-medium text-blue-900">0912 345 6789</span> (CafeX Official)
+            </p>
 
+            <div className="mb-3">
+              <label className="block text-gray-700 text-xs md:text-sm font-medium mb-1">
+                GCash Reference Number <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={gcashReference}
+                onChange={(e) => setGcashReference(e.target.value)}
+                className="w-full px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                placeholder="Enter GCash reference number"
+                required
+              />
+            </div>
+
+            <div className="mb-2">
+              <label className="block text-gray-700 text-xs md:text-sm font-medium mb-1">
+                Proof of Payment <span className="text-red-500">*</span>
+              </label>
               <div 
-                className={`p-2 md:p-3 border rounded-md cursor-pointer flex items-center ${
-                  paymentMethod === "GCash" 
-                    ? "border-blue-500 bg-blue-50" 
-                    : "border-gray-300 hover:border-blue-300"
-                }`}
-                onClick={() => setPaymentMethod("GCash")}
+                className="border-2 border-dashed border-gray-300 rounded-md p-3 text-center cursor-pointer hover:bg-gray-50"
+                onClick={() => fileInputRef.current.click()}
               >
-                <div className={`w-4 h-4 md:w-5 md:h-5 rounded-full border flex items-center justify-center mr-2 ${
-                  paymentMethod === "GCash" ? "border-blue-500" : "border-gray-400"
-                }`}>
-                  {paymentMethod === "GCash" && (
-                    <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-blue-500"></div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium text-xs md:text-base">GCash</div>
-                  <div className="text-xs text-gray-500">Pay via GCash mobile payment</div>
-                </div>
-                <CreditCard className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
+                {proofImagePreview ? (
+                  <div className="relative">
+                    <img 
+                      src={proofImagePreview} 
+                      alt="Payment proof" 
+                      className="max-h-36 md:max-h-48 mx-auto rounded-md"
+                    />
+                    <button 
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setProofImage(null);
+                        setProofImagePreview(null);
+                      }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-gray-500">
+                    <Upload className="mx-auto h-6 w-6 md:h-8 md:w-8 text-gray-400 mb-1 md:mb-2" />
+                    <p className="text-xs md:text-sm">Click to upload screenshot/photo</p>
+                    <p className="text-xs text-gray-400 mt-1">JPG, PNG or WEBP</p>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/jpeg,image/png,image/webp"
+                />
               </div>
             </div>
           </div>
 
-          {/* GCash Details (Conditional) */}
-          {paymentMethod === "GCash" && (
-            <div className="border rounded-md p-3 md:p-4 mb-3 md:mb-4 bg-blue-50">
-              <h3 className="font-medium text-blue-900 mb-2 text-sm md:text-base">GCash Payment Details</h3>
-              <p className="text-xs md:text-sm text-gray-600 mb-3">
-                Please send your payment to: <br />
-                <span className="font-medium">0912 345 6789</span> (CafeX Official)
-              </p>
-
-              <div className="mb-3">
-                <label className="block text-gray-700 text-xs md:text-sm font-medium mb-1">
-                  Reference Number
-                </label>
-                <input
-                  type="text"
-                  value={gcashReference}
-                  onChange={(e) => setGcashReference(e.target.value)}
-                  className="w-full px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                  placeholder="Enter GCash reference number"
-                />
-              </div>
-
-              <div className="mb-2">
-                <label className="block text-gray-700 text-xs md:text-sm font-medium mb-1">
-                  Proof of Payment
-                </label>
-                <div 
-                  className="border-2 border-dashed border-gray-300 rounded-md p-3 text-center cursor-pointer hover:bg-gray-50"
-                  onClick={() => fileInputRef.current.click()}
-                >
-                  {proofImagePreview ? (
-                    <div className="relative">
-                      <img 
-                        src={proofImagePreview} 
-                        alt="Payment proof" 
-                        className="max-h-36 md:max-h-48 mx-auto rounded-md"
-                      />
-                      <button 
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setProofImage(null);
-                          setProofImagePreview(null);
-                        }}
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="text-gray-500">
-                      <Upload className="mx-auto h-6 w-6 md:h-8 md:w-8 text-gray-400 mb-1 md:mb-2" />
-                      <p className="text-xs md:text-sm">Click to upload screenshot/photo</p>
-                      <p className="text-xs text-gray-400 mt-1 hidden md:block">JPG, PNG or WEBP</p>
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept="image/jpeg,image/png,image/webp"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Order Total */}
+          {/* ✅ UPDATED: Order Total with dynamic delivery fee */}
           <div className="mb-3 md:mb-4 pt-2 border-t">
             <div className="flex justify-between text-gray-700 text-sm md:text-base">
               <span>Subtotal:</span>
@@ -364,18 +490,27 @@ const PaymentModal = ({
             </div>
             <div className="flex justify-between text-gray-700 text-sm md:text-base pt-1">
               <span>Delivery Fee:</span>
-              <span>₱50.00</span>
+              {isCalculatingFee ? (
+                <span className="flex items-center">
+                  <Loader className="animate-spin h-4 w-4 mr-1" />
+                  Calculating...
+                </span>
+              ) : (
+                <span className={deliveryFee === 0 ? "text-green-600 font-bold" : ""}>
+                  {deliveryFee === 0 ? "FREE" : `₱${deliveryFee.toFixed(2)}`}
+                </span>
+              )}
             </div>
             <div className="flex justify-between font-bold text-base md:text-lg pt-2">
               <span>Total:</span>
-              <span>₱{(cartTotal + 50).toFixed(2)}</span>
+              <span>₱{(cartTotal + deliveryFee).toFixed(2)}</span>
             </div>
           </div>
 
           {/* Submit Button */}
           <button
             onClick={submitOrder}
-            disabled={isProcessingOrder}
+            disabled={isProcessingOrder || isCalculatingFee || !deliveryCoordinates}
             className="w-full bg-blue-600 text-white py-2 md:py-3 rounded-md font-semibold hover:bg-blue-700 flex items-center justify-center text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isProcessingOrder ? (
@@ -386,7 +521,7 @@ const PaymentModal = ({
             ) : (
               <>
                 <Check className="w-4 h-4 mr-2" />
-                Place Order
+                Place Order (₱{(cartTotal + deliveryFee).toFixed(2)})
               </>
             )}
           </button>

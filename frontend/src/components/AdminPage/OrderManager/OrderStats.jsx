@@ -5,7 +5,7 @@ import {
   Package, 
   CheckCircle, 
   XCircle, 
-  DollarSign 
+  Coins 
 } from "lucide-react";
 
 const OrderStats = ({ stats }) => {
@@ -48,7 +48,7 @@ const OrderStats = ({ stats }) => {
     {
       title: "Revenue",
       value: `₱${stats.totalRevenue.toFixed(2)}`,
-      icon: DollarSign,
+      icon: Coins,
       color: "purple",
       hoverColor: "purple",
       isRevenue: true

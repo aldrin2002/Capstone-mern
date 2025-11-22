@@ -1,5 +1,14 @@
 import mongoose from "mongoose";
 
+// Location sub-schema
+const locationSchema = new mongoose.Schema(
+    {
+        lat: { type: Number, required: true },
+        lng: { type: Number, required: true }
+    },
+    { _id: false }
+);
+
 const userSchema = new mongoose.Schema(
     {
         email: {
@@ -10,7 +19,6 @@ const userSchema = new mongoose.Schema(
         password: {
             type: String,
             required: function() {
-                // Only require password if there's no googleId
                 return !this.googleId;
             },
         },
@@ -21,9 +29,21 @@ const userSchema = new mongoose.Schema(
         phone: {
             type: String,
             required: function() {
-                // Only require phone if there's no googleId
                 return !this.googleId;
             },
+        },
+        address: {
+            type: String,
+            required: function() {
+                return !this.googleId;
+            },
+        },
+        // ✅ Location field for BOTH admin and customer
+        location: {
+            type: locationSchema,
+            required: function() {
+                return !this.googleId; // Required for both roles (except Google OAuth)
+            }
         },
         role: {
             type: String,

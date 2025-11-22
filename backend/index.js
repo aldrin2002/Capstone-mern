@@ -21,6 +21,8 @@ import orderRoutes from "./routes/order.routes.js";
 import contactRoutes from "./routes/contact.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import messageRoutes from "./routes/message.routes.js";
+import deliverySettingsRoutes from "./routes/deliverySettings.routes.js"; // ✅ ADD THIS
+import visitRoutes from "./routes/visit.routes.js";
 
 dotenv.config();
 
@@ -78,6 +80,8 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/delivery-settings", deliverySettingsRoutes); // ✅ ADD THIS
+app.use("/api/visits", visitRoutes); 
 
 // Socket.IO connection handling
 const connectedUsers = new Map();

@@ -1,5 +1,6 @@
 import { Order } from "../models/order.model.js";
 import { Product } from "../models/product.model.js";
+import { User } from "../models/user.model.js"; // ✅ ADD THIS IMPORT
 
 // Get all orders
 export const getAllOrders = async (req, res) => {
@@ -43,101 +44,88 @@ export const getOrderById = async (req, res) => {
 
 // Create new order
 export const createOrder = async (req, res) => {
-    try {
-        const { customer, items, notes, paymentMethod, proofOfPayment, total } = req.body;
-        
-        // Validate required fields
-        if (!customer || !customer.name || !customer.email || !items || items.length === 0) {
-            return res.status(400).json({ message: "Customer details and at least one item are required" });
-        }
-        
-        // Calculate total and validate items
-        let calculatedTotal = 0;
-        const orderItems = [];
-        const stockUpdates = []; // Track stock updates for products
-        
-        for (const item of items) {
-            if (!item.product || !item.quantity) {
-                return res.status(400).json({ message: "Each item must have a product ID and quantity" });
-            }
-            
-            // Get product details to ensure it exists and get the current price
-            const product = await Product.findById(item.product);
-            if (!product) {
-                return res.status(400).json({ message: `Product with ID ${item.product} not found` });
-            }
-            
-            // Check if enough stock is available
-            if (product.stock < item.quantity) {
-                return res.status(400).json({ 
-                    message: `Not enough stock for ${product.name}. Only ${product.stock} available.` 
-                });
-            }
-            
-            // Calculate item subtotal
-            const itemTotal = product.price * item.quantity;
-            calculatedTotal += itemTotal;
-            
-            // Add to order items
-            orderItems.push({
-                product: item.product,
-                name: product.name,
-                quantity: item.quantity,
-                price: product.price
-            });
-            
-            // Track stock update
-            stockUpdates.push({
-                productId: product._id,
-                newStock: product.stock - item.quantity
-            });
-        }
-        
-        // Use provided total if available, otherwise use calculated total
-        const finalTotal = total !== undefined ? total : calculatedTotal;
-        
-        // Set payment status based on payment method
-        const paymentStatus = paymentMethod === "Online Payment" && proofOfPayment ? "Paid" : "Pending";
-        
-        // Create and save the order first
-        const newOrder = new Order({
-            customer,
-            items: orderItems,
-            total: finalTotal,
-            notes: notes || "",
-            paymentMethod: paymentMethod || "Cash",
-            paymentStatus,
-            proofOfPayment: proofOfPayment || ""
-        });
-        
-        const savedOrder = await newOrder.save();
-        
-        // After successful order creation, update all product stocks
-        for (const update of stockUpdates) {
-            await Product.findByIdAndUpdate(
-                update.productId, 
-                { stock: update.newStock },
-                { new: true }
-            );
-        }
-        
-        // Emit socket event for real-time notification
-        const io = req.app.get('io');
-        if (io) {
-            console.log('📱 Emitting new-order event');
-            io.to('admin-room').emit('new-order', {
-                orderId: savedOrder._id,
-                customerName: savedOrder.customer.name,
-                total: savedOrder.total,
-                createdAt: savedOrder.createdAt
-            });
-        }
-        
-        res.status(201).json(savedOrder);
-    } catch (error) {
-        console.error("Error in createOrder:", error);
-        res.status(500).json({ message: "Server error while creating order" });
+  try {
+    const { 
+      customer, 
+      items, 
+      total, 
+      deliveryFee = 0,      // ✅ Get deliveryFee from request
+      deliveryDistance = 0,  // ✅ Get deliveryDistance from request
+      notes, 
+      paymentMethod, 
+      paymentStatus, 
+      gcashReferenceNumber, 
+      gcashProofImage, 
+      deliveryAddress 
+    } = req.body;
+
+    console.log("📦 Creating order with data:", {
+      customer,
+      items,
+      total,
+      deliveryFee,
+      deliveryDistance,
+      calculatedTotal: total // Should already include delivery fee from frontend
+    });
+
+    // ✅ CRITICAL: Verify the total includes delivery fee
+    const itemsTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const expectedTotal = itemsTotal + deliveryFee;
+    
+    console.log("💰 Total verification:", {
+      itemsTotal,
+      deliveryFee,
+      expectedTotal,
+      receivedTotal: total,
+      difference: Math.abs(expectedTotal - total)
+    });
+
+    // ✅ If the received total doesn't match expected, use the expected total
+    const finalTotal = Math.abs(expectedTotal - total) < 0.01 ? total : expectedTotal;
+
+    const newOrder = new Order({
+      customer,
+      items,
+      total: finalTotal,              // ✅ Use verified total
+      deliveryFee: deliveryFee,       // ✅ Store delivery fee
+      deliveryDistance: deliveryDistance, // ✅ Store distance
+      notes,
+      paymentMethod,
+      paymentStatus,
+      gcashReferenceNumber,
+      gcashProofImage,
+      deliveryAddress,
+      status: "Pending"
+    });
+
+    const savedOrder = await newOrder.save();
+    
+    console.log("✅ Order saved successfully:", {
+      orderId: savedOrder._id,
+      total: savedOrder.total,
+      deliveryFee: savedOrder.deliveryFee,
+      deliveryDistance: savedOrder.deliveryDistance
+    });
+
+    // Emit socket event for real-time updates
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("new-order", {
+        orderId: savedOrder._id,
+        customerName: savedOrder.customer.name,
+        total: savedOrder.total,
+        items: savedOrder.items.length
+      });
     }
+
+    res.status(201).json(savedOrder);
+  } catch (error) {
+    console.error("❌ Error creating order:", error);
+    res.status(500).json({ 
+      message: "Server error while creating order",
+      error: error.message 
+    });
+  }
 };
 
 // Update order
