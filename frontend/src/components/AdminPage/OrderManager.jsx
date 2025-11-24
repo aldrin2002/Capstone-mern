@@ -6,7 +6,6 @@ import { ShoppingCart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Import split components
-import OrderStats from "./OrderManager/OrderStats";
 import OrderSearchFilter from "./OrderManager/OrderSearchFilter";
 import OrderTable from "./OrderManager/OrderTable";
 import OrderDetailsModal from "./OrderManager/OrderDetailsModal";
@@ -32,16 +31,7 @@ const OrderManager = () => {
     // UPDATE: Include "Delivered" status
     const statuses = ["All", "Pending", "Processing", "Delivered", "Completed", "Cancelled"];
     
-    // UPDATE: Include delivered in stats calculation
-    const stats = {
-        total: orders.length,
-        pending: orders.filter(order => order.status === "Pending").length,
-        processing: orders.filter(order => order.status === "Processing").length,
-        delivered: orders.filter(order => order.status === "Delivered").length,
-        completed: orders.filter(order => order.status === "Completed").length,
-        cancelled: orders.filter(order => order.status === "Cancelled").length,
-        totalRevenue: orders.filter(order => order.status === "Completed").reduce((sum, order) => sum + order.total, 0)
-    };
+    // Removed stats summary cards per request (previously computed here)
     
     // NEW: Real-time order status updates
     useEffect(() => {
@@ -332,8 +322,7 @@ const OrderManager = () => {
                 </div>
             </div>
 
-            {/* Stats Cards */}
-            <OrderStats stats={stats} />
+            {/* Stats Cards removed */}
 
             {/* Search and Filter */}
             <OrderSearchFilter 

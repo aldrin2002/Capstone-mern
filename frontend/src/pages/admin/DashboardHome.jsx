@@ -1,223 +1,386 @@
-import React, { useState, useEffect } from "react";
-import { Loader, TrendingUp, TrendingDown, Users, ShoppingBag, Coins, Package, ShoppingCart, Image, Phone, Eye } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { 
+  Loader, Users, Package, ShoppingCart, Download, TrendingUp, Award, PieChart, Clock, Calendar, X
+} from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 
-const DashboardHome = ({ user, setActiveComponent, isMobile }) => {
-  const [stats, setStats] = useState(null);
+// Chart.js imports (ensure dependencies installed)
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  BarElement,
+  LineElement,
+  ArcElement,
+  Tooltip,
+  Legend
+} from "chart.js";
+import { Line, Bar, Pie } from "react-chartjs-2";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  BarElement,
+  LineElement,
+  ArcElement,
+  Tooltip,
+  Legend
+);
+
+const DashboardHome = ({ user, setActiveComponent }) => {
+  // Raw orders
+  const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchDashboardStats();
-  }, []);
+  // Timeframe selector (quick presets)
+  const [timeframe, setTimeframe] = useState("week"); // week | month | year
 
-  const fetchDashboardStats = async () => {
+  // Custom date range (overrides timeframe if both selected)
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  // Aggregated report object
+  const [report, setReport] = useState(null);
+
+  // --- Fetch Orders --------------------------------------------------
+  useEffect(() => { fetchOrders(); }, []);
+  const fetchOrders = async () => {
     setIsLoading(true);
     try {
-      // Fetch products count
-      const productsResponse = await axios.get(
-        import.meta.env.MODE === "development"
-          ? "http://localhost:5000/api/products"
-          : "/api/products",
-        { withCredentials: true }
-      );
-
-      // Fetch orders
-      const ordersResponse = await axios.get(
-        import.meta.env.MODE === "development"
-          ? "http://localhost:5000/api/orders"
-          : "/api/orders",
-        { withCredentials: true }
-      );
-
-      // Fetch users
-      const usersResponse = await axios.get(
-        import.meta.env.MODE === "development"
-          ? "http://localhost:5000/api/users"
-          : "/api/users",
-        { withCredentials: true }
-      );
-
-      // Calculate total revenue
-      const totalRevenue = ordersResponse.data
-        .filter((order) => order.status !== "Cancelled")
-        .reduce((sum, order) => sum + order.total, 0);
-
-      // Get orders from last month
-      const lastMonthOrders = ordersResponse.data.filter((order) => {
-        const orderDate = new Date(order.createdAt);
-        const lastMonth = new Date();
-        lastMonth.setMonth(lastMonth.getMonth() - 1);
-        return orderDate >= lastMonth;
-      });
-
-      // Calculate changes
-      const lastMonthRevenue = lastMonthOrders
-        .filter((order) => order.status !== "Cancelled")
-        .reduce((sum, order) => sum + order.total, 0);
-
-      const revenueChange =
-        totalRevenue > 0
-          ? `+${((lastMonthRevenue / totalRevenue) * 100).toFixed(0)}%`
-          : "+0%";
-
-      const orderChange =
-        ordersResponse.data.length > 0
-          ? `+${(
-              (lastMonthOrders.length / ordersResponse.data.length) *
-              100
-            ).toFixed(0)}%`
-          : "+0%";
-
-      setStats([
-        {
-          label: "Total Orders",
-          value: ordersResponse.data.length.toString(),
-          change: orderChange,
-          changeType: "positive",
-          icon: ShoppingCart,
-          color: "from-blue-500 to-blue-600",
-          bgColor: "bg-blue-50",
-          iconColor: "text-blue-600"
-        },
-        {
-          label: "Revenue",
-          value: `₱${totalRevenue.toFixed(2)}`,
-          change: revenueChange,
-          changeType: "positive",
-          icon: Coins,
-          color: "from-green-500 to-green-600",
-          bgColor: "bg-green-50",
-          iconColor: "text-green-600"
-        },
-        {
-          label: "Products",
-          value: productsResponse.data.length.toString(),
-          change: `+${
-            productsResponse.data.length > 0 ? productsResponse.data.length : 0
-          }`,
-          changeType: "positive",
-          icon: Package,
-          color: "from-purple-500 to-purple-600",
-          bgColor: "bg-purple-50",
-          iconColor: "text-purple-600"
-        },
-        {
-          label: "Users",
-          value: usersResponse.data.length.toString(),
-          change: `+${
-            usersResponse.data.length > 0 ? usersResponse.data.length : 0
-          }`,
-          changeType: "positive",
-          icon: Users,
-          color: "from-orange-500 to-orange-600",
-          bgColor: "bg-orange-50",
-          iconColor: "text-orange-600"
-        },
-      ]);
-    } catch (error) {
-      console.error("Error fetching dashboard statistics:", error);
-      toast.error("Failed to load dashboard statistics");
-
-      // Set fallback stats
-      setStats([
-        {
-          label: "Total Orders",
-          value: "0",
-          change: "0%",
-          changeType: "neutral",
-          icon: ShoppingCart,
-          color: "from-gray-400 to-gray-500",
-          bgColor: "bg-gray-50",
-          iconColor: "text-gray-500"
-        },
-        {
-          label: "Revenue",
-          value: "₱0.00",
-          change: "0%",
-          changeType: "neutral",
-          icon: Coins,
-          color: "from-gray-400 to-gray-500",
-          bgColor: "bg-gray-50",
-          iconColor: "text-gray-500"
-        },
-        { 
-          label: "Products", 
-          value: "0", 
-          change: "0", 
-          changeType: "neutral",
-          icon: Package,
-          color: "from-gray-400 to-gray-500",
-          bgColor: "bg-gray-50",
-          iconColor: "text-gray-500"
-        },
-        { 
-          label: "Users", 
-          value: "0", 
-          change: "0", 
-          changeType: "neutral",
-          icon: Users,
-          color: "from-gray-400 to-gray-500",
-          bgColor: "bg-gray-50",
-          iconColor: "text-gray-500"
-        },
-      ]);
+      const url = import.meta.env.MODE === "development"
+        ? "http://localhost:5000/api/orders"
+        : "/api/orders";
+      const res = await axios.get(url, { withCredentials: true });
+      setOrders(res.data || []);
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed loading orders");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "long", day: "numeric" };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+  // --- Helper: preset date range from timeframe ----------------------
+  const getPresetRange = () => {
+    const now = new Date();
+    let start, end;
+    if (timeframe === "week") {
+      const day = now.getDay();
+      const diffToMon = (day === 0 ? -6 : 1) - day;
+      start = new Date(now);
+      start.setDate(now.getDate() + diffToMon);
+      start.setHours(0,0,0,0);
+      end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      end.setHours(23,59,59,999);
+    } else if (timeframe === "month") {
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      end.setHours(23,59,59,999);
+    } else {
+      start = new Date(now.getFullYear(), 0, 1);
+      end = new Date(now.getFullYear(), 11, 31);
+      end.setHours(23,59,59,999);
+    }
+    return { start, end };
   };
 
-  const quickActions = [
-    {
-      title: "Manage Orders",
-      description: "View and process customer orders",
-      action: "orders",
-      icon: ShoppingCart,
-      gradient: "from-blue-500 to-blue-600",
-      hoverGradient: "from-blue-600 to-blue-700"
-    },
-    {
-      title: "Add Products",
-      description: "Create and manage menu items",
-      action: "products",
-      icon: Package,
-      gradient: "from-green-500 to-green-600",
-      hoverGradient: "from-green-600 to-green-700"
-    },
-    {
-      title: "Update Gallery",
-      description: "Manage cafe photos and images",
-      action: "gallery",
-      icon: Image,
-      gradient: "from-purple-500 to-purple-600",
-      hoverGradient: "from-purple-600 to-purple-700"
-    },
-    {
-      title: "Contact Info",
-      description: "Update business contact details",
-      action: "contact",
-      icon: Phone,
-      gradient: "from-orange-500 to-orange-600",
-      hoverGradient: "from-orange-600 to-orange-700"
+  // --- Date range (either custom or preset) --------------------------
+  const activeRange = useMemo(() => {
+    if (startDate && endDate) {
+      const s = new Date(startDate);
+      s.setHours(0,0,0,0);
+      const e = new Date(endDate);
+      e.setHours(23,59,59,999);
+      if (s <= e) return { start: s, end: e };
     }
+    return getPresetRange();
+  }, [timeframe, startDate, endDate]);
+
+  // --- Report generation whenever inputs change ---------------------
+  useEffect(() => {
+    generateReport(); // run even if orders empty to reset report
+  }, [orders, activeRange]);
+
+  // --- Core aggregation logic ---------------------------------------
+  const generateReport = () => {
+    const { start, end } = activeRange;
+
+    if (!orders || orders.length === 0) {
+      setReport({
+        range: { start, end },
+        products: [],
+        mostPopular: null,
+        totalRevenue: 0,
+        totalItems: 0,
+        totalOrders: 0,
+        // Status counts kept for analytics (still shows cancelled)
+        statusCounts: { Pending:0, Processing:0, Delivered:0, Completed:0, Cancelled:0 },
+        bucket: { labels: [], revenueSeries: [], ordersSeries: [], itemsSeries: [] }
+      });
+      return;
+    }
+
+    // All orders inside date range (including cancelled for status distribution)
+    const inRangeAll = orders.filter(o => {
+      const d = new Date(o.createdAt);
+      return d >= start && d <= end;
+    });
+
+    // Sales-effective orders (EXCLUDES Cancelled) per requirement
+    const salesOrders = inRangeAll.filter(o => o.status !== "Cancelled");
+
+    // Status counts (based on all orders in range so we still show cancelled number)
+    const statusCounts = { Pending:0, Processing:0, Delivered:0, Completed:0, Cancelled:0 };
+    inRangeAll.forEach(o => {
+      statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
+    });
+
+    const productMap = new Map();
+    let totalRevenue = 0;
+    let totalItems = 0;
+
+    // Bucket resolution (daily for <=31 days, else monthly)
+    const diffDays = Math.ceil((end - start)/(1000*60*60*24));
+    const useMonthly = diffDays > 31;
+    const bucketMap = new Map();
+
+    // Build buckets & product stats ONLY from non-cancelled salesOrders
+    salesOrders.forEach(order => {
+      const orderTotal = order.total || 0;
+      totalRevenue += orderTotal;
+
+      const od = new Date(order.createdAt);
+      const bucketKey = useMonthly
+        ? `${od.getFullYear()}-${String(od.getMonth()+1).padStart(2,"0")}`
+        : od.toISOString().slice(0,10);
+
+      if (!bucketMap.has(bucketKey)) {
+        bucketMap.set(bucketKey, { revenue:0, orders:0, items:0 });
+      }
+      const bucket = bucketMap.get(bucketKey);
+      bucket.revenue += orderTotal;
+      bucket.orders += 1;
+
+      (order.items || []).forEach(item => {
+        const qty = item.quantity || 0;
+        const price = item.price || 0;
+        totalItems += qty;
+        bucket.items += qty;
+
+        const name = item.product?.name || item.name || "Unknown Product";
+        const id = item.product?._id || item.productId || name;
+        if (!productMap.has(id)) {
+          productMap.set(id, { productId:id, name, quantity:0, revenue:0 });
+        }
+        const pAcc = productMap.get(id);
+        pAcc.quantity += qty;
+        pAcc.revenue += price * qty;
+      });
+    });
+
+    const products = Array.from(productMap.values()).sort((a,b) => b.quantity - a.quantity);
+    const mostPopular = products[0] || null;
+
+    const bucketKeysSorted = Array.from(bucketMap.keys()).sort();
+    const labels = bucketKeysSorted.map(k => {
+      if (useMonthly) {
+        const [y,m] = k.split("-");
+        return new Date(Number(y), Number(m)-1, 1).toLocaleDateString("en-US",{ month:"short", year:"numeric"});
+      }
+      return new Date(k).toLocaleDateString("en-US",{ month:"short", day:"numeric"});
+    });
+
+    const revenueSeries = bucketKeysSorted.map(k => bucketMap.get(k).revenue);
+    const ordersSeries  = bucketKeysSorted.map(k => bucketMap.get(k).orders);
+    const itemsSeries   = bucketKeysSorted.map(k => bucketMap.get(k).items);
+
+    setReport({
+      range: { start, end },
+      products,
+      mostPopular,
+      totalRevenue,
+      totalItems,
+      // totalOrders now counts ONLY non-cancelled orders
+      totalOrders: salesOrders.length,
+      statusCounts,
+      bucket: { labels, revenueSeries, ordersSeries, itemsSeries }
+    });
+  };
+
+  const formatDate = (d) =>
+    new Date(d).toLocaleDateString("en-US", { year:"numeric", month:"short", day:"numeric" });
+
+  // --- CSV Export (note: CSV cannot truly carry styling; we simulate structure) ----
+  const downloadCSV = () => {
+    if (!report) return;
+    const {
+      products,
+      mostPopular,
+      range,
+      totalRevenue,
+      totalItems,
+      totalOrders,
+      statusCounts
+    } = report;
+
+    const rows = [];
+    rows.push(["Sales Report For Cafe Delicity"]);
+    rows.push([`Generated At:`, new Date().toLocaleString()]);
+    rows.push([`Date Range:`, `${formatDate(range.start)} - ${formatDate(range.end)}`]);
+    if (mostPopular) {
+      rows.push(["Most Popular Product:", mostPopular.name, "Qty", mostPopular.quantity, "Revenue", mostPopular.revenue.toFixed(2)]);
+    }
+    rows.push([]);
+    rows.push(["ORDER STATISTICS (All orders)"]);
+    rows.push(["Successful (Completed+Delivered)", (statusCounts.Completed||0)+(statusCounts.Delivered||0)]);
+    rows.push(["Cancelled (Excluded from sales)", statusCounts.Cancelled || 0]);
+    rows.push(["Pending", statusCounts.Pending || 0]);
+    rows.push(["Processing", statusCounts.Processing || 0]);
+    rows.push(["Total Sales Orders", totalOrders]);
+    rows.push(["Total Items Sold", totalItems]);
+    rows.push(["Total Revenue (PHP)", totalRevenue.toFixed(2)]);
+    rows.push([]);
+    rows.push(["PRODUCT SALES"]);
+    rows.push(["Product","Quantity","Revenue"]);
+    products.forEach(p => {
+      rows.push([p.name, p.quantity, p.revenue.toFixed(2)]);
+    });
+    rows.push([]);
+    rows.push(["TIME SERIES (Revenue / Orders / Items)"]);
+    rows.push(["Label","Revenue","Orders","Items"]);
+    report.bucket.labels.forEach((label, i) => {
+      rows.push([
+        label,
+        report.bucket.revenueSeries[i],
+        report.bucket.ordersSeries[i],
+        report.bucket.itemsSeries[i]
+      ]);
+    });
+
+    // Convert to CSV escaping
+    const csv = rows.map(r => r.map(field => {
+      const v = (field ?? "").toString();
+      return /[",\n]/.test(v) ? `"${v.replace(/"/g,'""')}"` : v;
+    }).join(",")).join("\n");
+
+    const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `sales_report_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // --- Chart Config Builders ----------------------------------------
+  const chartOptionsLine = {
+    responsive:true,
+    maintainAspectRatio:false,
+    interaction:{ mode:"index", intersect:false },
+    plugins:{ legend:{ display:true }, tooltip:{ enabled:true } },
+    scales:{
+      x:{ ticks:{ color:"#475569" }, grid:{ display:false } },
+      y:{ ticks:{ color:"#475569" }, grid:{ color:"#e2e8f0" } }
+    }
+  };
+
+  const chartOptionsBar = {
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{ legend:{ display:false } },
+    scales:{
+      x:{ ticks:{ color:"#475569" }, grid:{ display:false } },
+      y:{ ticks:{ color:"#475569" }, grid:{ color:"#e2e8f0" } }
+    }
+  };
+
+  const chartOptionsPie = {
+    responsive:true,
+    maintainAspectRatio:false,
+    plugins:{ legend:{ position:"bottom" } }
+  };
+
+  // Memo data sets
+  const lineData = useMemo(() => report ? ({
+    labels: report.bucket.labels,
+    datasets:[
+      {
+        label:"Revenue (₱)",
+        data: report.bucket.revenueSeries,
+        borderColor:"#16a34a",
+        backgroundColor:"rgba(22,163,74,0.15)",
+        tension:0.35,
+        fill:true
+      },
+      {
+        label:"Orders",
+        data: report.bucket.ordersSeries,
+        borderColor:"#2563eb",
+        backgroundColor:"rgba(37,99,235,0.15)",
+        tension:0.35,
+        fill:true
+      },
+      {
+        label:"Items",
+        data: report.bucket.itemsSeries,
+        borderColor:"#7c3aed",
+        backgroundColor:"rgba(124,58,237,0.15)",
+        tension:0.35,
+        fill:true
+      }
+    ]
+  }) : null, [report]);
+
+  const topProductsBarData = useMemo(() => report ? ({
+    labels: report.products.slice(0,8).map(p => p.name),
+    datasets:[{
+      label:"Quantity Sold",
+      data: report.products.slice(0,8).map(p => p.quantity),
+      backgroundColor:"rgba(37,99,235,0.6)"
+    }]
+  }) : null, [report]);
+
+  const statusPieData = useMemo(() => report ? ({
+    labels:["Pending","Processing","Delivered","Completed","Cancelled"],
+    datasets:[{
+      data:[
+        report.statusCounts.Pending || 0,
+        report.statusCounts.Processing || 0,
+        report.statusCounts.Delivered || 0,
+        report.statusCounts.Completed || 0,
+        report.statusCounts.Cancelled || 0
+      ],
+      backgroundColor:[
+        "#fbbf24","#3b82f6","#8b5cf6","#10b981","#ef4444"
+      ],
+      borderColor:"#ffffff",
+      borderWidth:2
+    }]
+  }) : null, [report]);
+
+  // Quick timeframe buttons
+  const timeframeOptions = [
+    { key:"week", label:"This Week" },
+    { key:"month", label:"This Month" },
+    { key:"year", label:"This Year" }
   ];
 
-  if (isLoading) {
+  // Loading state
+  if (isLoading && !report) {
     return (
       <div className="flex items-center justify-center h-full min-h-[400px]">
         <div className="text-center">
           <div className="relative">
             <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
               <div className="w-8 h-8 bg-blue-600 rounded-full animate-pulse"></div>
             </div>
           </div>
-          <p className="mt-4 text-gray-600 font-medium">Loading dashboard...</p>
+          <p className="mt-4 text-gray-600 font-medium">Preparing sales report...</p>
         </div>
       </div>
     );
@@ -225,157 +388,256 @@ const DashboardHome = ({ user, setActiveComponent, isMobile }) => {
 
   return (
     <div className="p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-full">
-      {/* Enhanced Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        {stats &&
-          stats.map((stat, index) => {
-            const IconComponent = stat.icon;
-            return (
-              <div 
-                key={index} 
-                className="group relative bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden"
-              >
-                {/* Gradient Background */}
-                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${stat.color} opacity-10 rounded-full -mr-16 -mt-16`}></div>
-                
-                <div className="relative p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`p-3 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
-                      <IconComponent className={`w-6 h-6 ${stat.iconColor}`} />
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      {stat.changeType === "positive" ? (
-                        <TrendingUp className="w-4 h-4 text-green-500" />
-                      ) : stat.changeType === "negative" ? (
-                        <TrendingDown className="w-4 h-4 text-red-500" />
-                      ) : null}
-                      <span className={`text-sm font-medium ${
-                        stat.changeType === "positive" ? "text-green-500" : 
-                        stat.changeType === "negative" ? "text-red-500" : "text-gray-500"
-                      }`}>
-                        {stat.change}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    {stat.label}
-                  </h3>
-                  <p className="text-2xl md:text-3xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
-                    {stat.value}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-2">Since last month</p>
-                </div>
-              </div>
-            );
-          })}
-      </div>
-
-      {/* Enhanced Welcome Section */}
+      {/* Header */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-              <Users className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold">Welcome Back!</h2>
-              <p className="text-blue-100 text-lg">{user.name}</p>
-            </div>
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white flex items-center space-x-4">
+          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+            <Users className="w-8 h-8" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold">Sales & Analytics Report</h2>
+            <p className="text-blue-100 text-lg">{user.name}</p>
           </div>
         </div>
-        
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="group">
-              <div className="flex items-center space-x-3 p-4 rounded-xl bg-gray-50 group-hover:bg-blue-50 transition-colors duration-300">
-                <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors duration-300">
-                  <Eye className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Email</p>
-                  <p className="font-semibold text-gray-900">{user.email}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="group">
-              <div className="flex items-center space-x-3 p-4 rounded-xl bg-gray-50 group-hover:bg-green-50 transition-colors duration-300">
-                <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors duration-300">
-                  <Users className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Joined</p>
-                  <p className="font-semibold text-gray-900">{formatDate(user.createdAt)}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="group">
-              <div className="flex items-center space-x-3 p-4 rounded-xl bg-gray-50 group-hover:bg-purple-50 transition-colors duration-300">
-                <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors duration-300">
-                  <TrendingUp className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Last Login</p>
-                  <p className="font-semibold text-gray-900">{formatDate(user.lastLogin)}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        <div className="p-6 space-y-6">
 
-      {/* Enhanced Quick Actions */}
-      <div className={`bg-white rounded-2xl shadow-lg overflow-hidden ${isMobile ? "mb-20" : ""}`}>
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-800 flex items-center">
-            <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full mr-3"></div>
-            Quick Actions
-          </h2>
-          <p className="text-gray-500 mt-1">Manage your cafe efficiently</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {quickActions.map((action, index) => {
-              const IconComponent = action.icon;
-              return (
+          {/* Controls */}
+          <div className="flex flex-wrap gap-3 items-center">
+            {timeframeOptions.map(t => (
+              <button
+                key={t.key}
+                onClick={() => { setTimeframe(t.key); setStartDate(""); setEndDate(""); }}
+                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+                  timeframe === t.key && !startDate && !endDate
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+
+            {/* Modern minimalist date range picker */}
+            <div className="group flex items-center gap-3 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl px-3 py-2 shadow-sm hover:shadow transition">
+              <Calendar className="w-4 h-4 text-blue-600" />
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                    className="peer appearance-none bg-transparent px-2 py-1 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white border border-gray-200 hover:border-gray-300 transition"
+                  />
+                  <label className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 rounded opacity-0 peer-focus:opacity-100 peer-valid:opacity-100 transition">Start</label>
+                </div>
+                <span className="text-gray-400 text-xs">→</span>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                    className="peer appearance-none bg-transparent px-2 py-1 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white border border-gray-200 hover:border-gray-300 transition"
+                  />
+                  <label className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 rounded opacity-0 peer-focus:opacity-100 peer-valid:opacity-100 transition">End</label>
+                </div>
+              </div>
+              {startDate && endDate && (
                 <button
-                  key={index}
-                  onClick={() => setActiveComponent(action.action)}
-                  className="group relative p-6 bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-100 hover:border-transparent hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-left overflow-hidden"
+                  type="button"
+                  onClick={() => { setStartDate(""); setEndDate(""); }}
+                  className="ml-1 inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 hover:bg-red-500 hover:text-white text-gray-500 transition"
+                  title="Clear range"
                 >
-                  {/* Animated background gradient */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
-                  
-                  {/* Content */}
-                  <div className="relative z-10">
-                    <div className="flex items-center space-x-4 mb-3">
-                      <div className={`p-3 bg-gradient-to-br ${action.gradient} rounded-xl group-hover:bg-white group-hover:bg-opacity-20 transition-all duration-300 transform group-hover:scale-110`}>
-                        <IconComponent className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-gray-800 group-hover:text-white transition-colors duration-300">
-                          {action.title}
-                        </h3>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600 group-hover:text-white group-hover:text-opacity-90 transition-colors duration-300">
-                      {action.description}
-                    </p>
-                  </div>
-                  
-                  {/* Hover effect indicator */}
-                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <X className="w-3 h-3" />
                 </button>
-              );
-            })}
+              )}
+              <button
+                onClick={() => generateReport()}
+                disabled={!startDate || !endDate}
+                className="ml-1 px-3 py-1.5 rounded-md text-xs font-medium bg-blue-600 text-white disabled:opacity-40 hover:bg-blue-700 transition"
+              >
+                Apply
+              </button>
+            </div>
+
+            <button
+              onClick={downloadCSV}
+              disabled={!report}
+              className="flex items-center space-x-2 px-5 py-2.5 rounded-full text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-all disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export CSV</span>
+            </button>
+          </div>
+
+          {/* KPI Cards */}
+            {report && (
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <KpiCard label="Total Orders" value={report.totalOrders} color="blue" icon={<ShoppingCart className="w-5 h-5" />} />
+                <KpiCard label="Successful" value={(report.statusCounts.Completed||0)+(report.statusCounts.Delivered||0)} color="green" icon={<CheckIcon />} />
+                <KpiCard label="Cancelled" value={report.statusCounts.Cancelled||0} color="red" icon={<CancelIcon />} />
+                <KpiCard label="Pending" value={report.statusCounts.Pending||0} color="yellow" icon={<Clock className="w-5 h-5" />} />
+                <KpiCard label="Revenue (₱)" value={report.totalRevenue.toFixed(2)} color="purple" icon={<TrendingUp className="w-5 h-5" />} />
+              </div>
+            )}
+
+          {/* Most Popular Product */}
+          {report?.mostPopular && (
+            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border rounded-2xl p-5 flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-14 h-14 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow">
+                  <Award className="w-7 h-7" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-500">Most Ordered Product</p>
+                  <p className="text-lg font-bold text-gray-800">{report.mostPopular.name}</p>
+                  <p className="text-sm text-gray-600">
+                    Qty: {report.mostPopular.quantity} • Revenue: ₱{report.mostPopular.revenue.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Date Range</p>
+                <p className="text-sm font-medium text-gray-800">
+                  {report?.range?.start ? formatDate(report.range.start) : "--"} – {report?.range?.end ? formatDate(report.range.end) : "--"}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Charts */}
+          {report && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Top Products Bar (moved to top, full width) */}
+              <div className="bg-white rounded-2xl shadow-md border p-5 lg:col-span-3 h-80">
+                <h3 className="font-bold text-gray-800 mb-3 flex items-center">
+                  <Package className="w-5 h-5 mr-2 text-blue-600" />Top Products (Quantity)
+                </h3>
+                {topProductsBarData && <Bar data={topProductsBarData} options={chartOptionsBar} />}
+              </div>
+
+              {/* Sales Trend (moved below) */}
+              <div className="bg-white rounded-2xl shadow-md border p-5 lg:col-span-2 h-80">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-gray-800 flex items-center">
+                    <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
+                    Sales Trend
+                  </h3>
+                  <span className="text-xs text-gray-500">
+                    {timeframe === "year" ? "Monthly" : startDate && endDate ? "Selected Range" : "Daily"}
+                  </span>
+                </div>
+                {lineData && <Line data={lineData} options={chartOptionsLine} />}
+              </div>
+
+              {/* Order Status Pie (moved below) */}
+              <div className="bg-white rounded-2xl shadow-md border p-5 h-80">
+                <h3 className="font-bold text-gray-800 mb-3 flex items-center">
+                  <PieChart className="w-5 h-5 mr-2 text-purple-600" />Order Status
+                </h3>
+                {statusPieData && <Pie data={statusPieData} options={chartOptionsPie} />}
+              </div>
+            </div>
+          )}
+
+          {/* Product Sales Table */}
+          <div className="bg-white rounded-2xl shadow-md overflow-hidden border">
+            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-blue-50 border-b">
+              <h3 className="font-bold text-gray-700 text-sm">
+                Product Sales ({report?.products.length || 0})
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="text-left px-6 py-3 font-semibold text-gray-600">Product</th>
+                    <th className="text-right px-6 py-3 font-semibold text-gray-600">Quantity</th>
+                    <th className="text-right px-6 py-3 font-semibold text-gray-600">Revenue (₱)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {report?.products.length ? (
+                    report.products.map(p => (
+                      <tr key={p.productId} className="border-t hover:bg-blue-50/50">
+                        <td className="px-6 py-3 font-medium text-gray-800">{p.name}</td>
+                        <td className="px-6 py-3 text-right text-gray-700">{p.quantity}</td>
+                        <td className="px-6 py-3 text-right text-gray-700">{p.revenue.toFixed(2)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-10 text-center text-gray-500">
+                        No sales data for selected range
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+                {report && report.products.length > 0 && (
+                  <tfoot>
+                    <tr className="bg-gray-50 border-t">
+                      <td className="px-6 py-3 font-bold text-gray-800">TOTAL</td>
+                      <td className="px-6 py-3 text-right font-bold text-gray-800">{report.totalItems}</td>
+                      <td className="px-6 py-3 text-right font-bold text-gray-800">
+                        {report.totalRevenue.toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="mt-8">
+            <h4 className="text-sm font-semibold text-gray-600 mb-3">Quick Actions</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <QuickButton icon={<ShoppingCart className="w-5 h-5 text-blue-600" />} label="Orders" onClick={() => setActiveComponent("orders")} />
+              <QuickButton icon={<Package className="w-5 h-5 text-purple-600" />} label="Products" onClick={() => setActiveComponent("products")} />
+              <QuickButton icon={<Users className="w-5 h-5 text-orange-600" />} label="Users" onClick={() => setActiveComponent("users")} />
+              <QuickButton icon={<Package className="w-5 h-5 text-green-600" />} label="Gallery" onClick={() => setActiveComponent("gallery")} />
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 };
+
+// --- Reusable UI pieces ----------------------------------------------
+const KpiCard = ({ label, value, color, icon }) => {
+  const colorMap = {
+    blue:"from-blue-500 to-blue-600",
+    green:"from-green-500 to-green-600",
+    red:"from-red-500 to-red-600",
+    yellow:"from-yellow-500 to-yellow-600",
+    purple:"from-purple-500 to-purple-600"
+  };
+  return (
+    <div className="bg-white rounded-2xl shadow p-4 border flex items-center justify-between group hover:shadow-md transition">
+      <div>
+        <p className="text-xs font-medium text-gray-500">{label}</p>
+        <p className="text-xl font-bold text-gray-800 mt-1">{value}</p>
+      </div>
+      <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${colorMap[color] || colorMap.blue} flex items-center justify-center text-white shadow`}>
+        {icon}
+      </div>
+    </div>
+  );
+};
+
+const QuickButton = ({ icon, label, onClick }) => (
+  <button
+    onClick={onClick}
+    className="p-4 bg-white border rounded-xl hover:shadow group transition flex items-center space-x-2"
+  >
+    {icon}
+    <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600">{label}</span>
+  </button>
+);
+
+// Simple icons for statuses
+const CheckIcon = () => <svg className="w-5 h-5" fill="none" stroke="white" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>;
+const CancelIcon = () => <svg className="w-5 h-5" fill="none" stroke="white" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>;
 
 export default DashboardHome;

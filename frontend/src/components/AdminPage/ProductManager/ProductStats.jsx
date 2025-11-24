@@ -24,17 +24,10 @@ const ProductStats = ({ stats }) => {
       color: 'red',
       hoverColor: 'red'
     },
-    {
-      label: 'Total Value',
-      value: `₱${stats.totalValue.toFixed(2)}`,
-      icon: Coins,
-      color: 'purple',
-      hoverColor: 'purple'
-    }
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
       {statItems.map((item, index) => {
         const Icon = item.icon;
         return (
