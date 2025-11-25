@@ -1,6 +1,8 @@
 import { Order } from "../models/order.model.js";
 import { Product } from "../models/product.model.js";
-import { User } from "../models/user.model.js"; // ✅ ADD THIS IMPORT
+import { User } from "../models/user.model.js";
+import { Conversation } from "../models/conversation.model.js";
+import { Message } from "../models/message.model.js";
 
 // Get all orders
 export const getAllOrders = async (req, res) => {
@@ -99,6 +101,42 @@ export const createOrder = async (req, res) => {
     });
 
     const savedOrder = await newOrder.save();
+
+    // Attempt to link order with a dedicated conversation for inquiries
+    try {
+      // Find the user by email to link the conversation to a real user document
+      const userDoc = await User.findOne({ email: customer.email });
+      if (userDoc) {
+        // Reuse existing general conversation (order:null) if present; otherwise create one
+        let conv = await Conversation.findOne({ customer: userDoc._id, order: null });
+        if (conv) {
+          // Attach this new order to the existing conversation
+          conv.order = savedOrder._id;
+          conv.lastMessageContent = "Order created";
+          conv.lastMessageSender = "customer";
+          await conv.save();
+        } else {
+          conv = new Conversation({
+            customer: userDoc._id,
+            order: savedOrder._id,
+            lastMessageContent: "Order created",
+            lastMessageSender: "customer",
+            unreadCount: 0
+          });
+          await conv.save();
+        }
+        // System message noting order thread opened (optimistic, helps history)
+        await Message.create({
+          sender: { id: userDoc._id, name: customer.name, role: "customer" },
+          content: `Inquiry thread opened for order #${savedOrder._id.toString().slice(-6)}`,
+          conversation: conv._id,
+          order: savedOrder._id,
+          isRead: true
+        });
+      }
+    } catch (convErr) {
+      console.error("⚠️ Failed to create order conversation:", convErr.message);
+    }
     
     console.log("✅ Order saved successfully:", {
       orderId: savedOrder._id,
@@ -134,16 +172,21 @@ export const updateOrder = async (req, res) => {
         const { id } = req.params;
         const updates = req.body;
         
-        const updatedOrder = await Order.findByIdAndUpdate(
-            id, 
-            updates, 
-            { new: true, runValidators: true }
-        );
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      updates,
+      { new: true, runValidators: true }
+    ).populate('customer', 'name email');
         
         if (!updatedOrder) {
             return res.status(404).json({ message: "Order not found" });
         }
-        
+    // Broadcast full order update so client can refresh header details
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('order-updated', { order: updatedOrder });
+      console.log(`📡 Broadcasting order update (non-status): ${updatedOrder._id}`);
+    }
         res.status(200).json(updatedOrder);
     } catch (error) {
         console.error("Error in updateOrder:", error);
@@ -186,6 +229,28 @@ export const updateOrderStatus = async (req, res) => {
     if (!updatedOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
+    // If order is completed or cancelled, just detach it from the existing conversation (do NOT delete conversation/messages)
+    if (["Completed", "Cancelled"].includes(updatedOrder.status)) {
+      try {
+        const conv = await Conversation.findOne({ order: updatedOrder._id });
+        if (conv) {
+          conv.order = null; // detach order details
+          conv.lastMessageContent = `Order ${updatedOrder.status}`;
+          conv.lastMessageSender = "admin"; // assuming admin triggers status change
+          await conv.save();
+          // Log system message preserving historical context
+          await Message.create({
+            sender: { id: conv.customer, name: updatedOrder.customer.name, role: "admin" },
+            content: `Order #${updatedOrder._id.toString().slice(-6)} marked ${updatedOrder.status}`,
+            conversation: conv._id,
+            order: updatedOrder._id, // keep reference for audit
+            isRead: true
+          });
+        }
+      } catch (cleanupErr) {
+        console.error("⚠️ Failed detaching order from conversation:", cleanupErr.message);
+      }
+    }
 
     // Broadcast the order update to all connected clients
     const io = req.app.get('io');
@@ -195,7 +260,8 @@ export const updateOrderStatus = async (req, res) => {
         status: updatedOrder.status,
         customerId: updatedOrder.customer._id,
         customerName: updatedOrder.customer.name,
-        updatedAt: updatedOrder.updatedAt
+        updatedAt: updatedOrder.updatedAt,
+        order: updatedOrder // include full order for client-side refresh
       });
       console.log(`📡 Broadcasting order status update: ${updatedOrder._id} -> ${status}`);
     }

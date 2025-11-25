@@ -19,6 +19,10 @@ const CostumerSignUpPage = () => {
   
   const navigate = useNavigate();
   const { customerSignup, error, isLoading } = useAuthStore();
+  const [showVerify, setShowVerify] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [code, setCode] = useState("");
+  const API_URL = import.meta.env.MODE === "development" ? "http://localhost:5000/api/auth" : "/api/auth";
 
   const handleNameChange = (e) => {
     const value = e.target.value;
@@ -79,14 +83,53 @@ const CostumerSignUpPage = () => {
 
     try {
       await customerSignup(email, password, name, phone, address, locationCoords);
-      toast.success("Account created successfully!");
-      navigate("/costumerLogin");
+      setPendingEmail(email);
+      setShowVerify(true);
+      toast.success("Verification code sent. Check your email.");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to create account");
     }
   };
 
+  const handleVerify = async () => {
+    if (!code.trim()) {
+      toast.error("Enter the 6-digit code");
+      return;
+    }
+    try {
+      await fetch(`${API_URL}/verify-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingEmail, code })
+      }).then(r => r.json()).then(data => {
+        if (!data.success) throw new Error(data.message);
+      });
+      toast.success("Email verified! You may now login.");
+      setShowVerify(false);
+      setCode("");
+      navigate("/costumerLogin");
+    } catch (err) {
+      toast.error(err.message || "Verification failed");
+    }
+  };
+
+  const handleResend = async () => {
+    try {
+      await fetch(`${API_URL}/resend-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingEmail })
+      }).then(r => r.json()).then(data => {
+        if (!data.success) throw new Error(data.message);
+      });
+      toast.success("New code sent");
+    } catch (err) {
+      toast.error(err.message || "Failed to resend code");
+    }
+  };
+
   return (
+    <>
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -221,6 +264,31 @@ const CostumerSignUpPage = () => {
         </div>
       </div>
     </motion.div>
+    {showVerify && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="bg-white w-full max-w-sm rounded-2xl shadow-xl p-6 space-y-4">
+          <h3 className="text-lg font-bold text-gray-900">Verify Email</h3>
+          <p className="text-sm text-gray-600">Enter the 6-digit code sent to <span className="font-medium">{pendingEmail}</span></p>
+          <input
+            value={code}
+            onChange={(e)=>setCode(e.target.value.replace(/\D/g,'').slice(0,6))}
+            maxLength={6}
+            placeholder="123456"
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 tracking-widest text-center font-mono"
+          />
+          <div className="flex items-center justify-between text-sm">
+            <button type="button" onClick={handleResend} className="text-blue-600 hover:underline">Resend code</button>
+            <button type="button" onClick={()=>{setShowVerify(false); setCode("");}} className="text-gray-500 hover:underline">Cancel</button>
+          </div>
+          <button
+            onClick={handleVerify}
+            disabled={code.length !== 6}
+            className="w-full py-2 rounded-lg bg-blue-600 text-white font-semibold disabled:opacity-40"
+          >Verify</button>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 

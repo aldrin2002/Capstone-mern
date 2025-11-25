@@ -5,7 +5,7 @@ import { useAuthStore } from "../../../store/authStore";
 import { audioService } from "../../../utils/audioService"; // Add this import
 
 // Update these functions to fix the issues
-export const useMessageState = (API_URL, API_BASE_URL, socket) => {
+export const useMessageState = (API_URL, API_BASE_URL, socket, { autoCreate = true } = {}) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -77,48 +77,25 @@ export const useMessageState = (API_URL, API_BASE_URL, socket) => {
     };
   }, [socket, conversation, messages, user?.name]);
   
-  // Load conversation and messages
+  // Load messages only when a conversation is already provided (order thread selected)
   useEffect(() => {
-    if (!user || !socket) return;
-    
-    const fetchConversation = async () => {
+    const loadMessages = async () => {
+      if (!user || !socket || !conversation) return;
       try {
         setIsLoading(true);
-        // First, get or create conversation for this customer
-        const convResponse = await axios.get(`${API_URL}/conversation`, {
-          withCredentials: true
-        });
-        
-        const conversationData = convResponse.data;
-        setConversation(conversationData);
-        
-        // Then load messages for this conversation
-        const msgResponse = await axios.get(
-          `${API_URL}/${conversationData._id}`,
-          { withCredentials: true }
-        );
-        
+        const msgResponse = await axios.get(`${API_URL}/${conversation._id}`, { withCredentials: true });
         setMessages(msgResponse.data);
-        
-        // Mark all admin messages as read
-        if (socket && conversationData._id) {
-          socket.emit("mark-read", { conversationId: conversationData._id });
-        }
-        
-        // Join the conversation room
-        socket.emit('join-conversation', conversationData._id);
-        console.log(`Customer joined room: conversation-${conversationData._id}`);
-        
+        socket.emit("mark-read", { conversationId: conversation._id });
+        socket.emit('join-conversation', conversation._id);
+        console.log(`Joined room: conversation-${conversation._id}`);
       } catch (error) {
-        console.error("Error loading conversation:", error);
-        toast.error("Failed to load chat. Please try again.");
+        console.error("Failed to load messages", error);
       } finally {
         setIsLoading(false);
       }
     };
-    
-    fetchConversation();
-  }, [user, socket, API_URL]);
+    loadMessages();
+  }, [conversation, user, socket, API_URL]);
   
   // Handle typing status
   const handleTyping = () => {
@@ -297,6 +274,7 @@ export const useMessageState = (API_URL, API_BASE_URL, socket) => {
     isLoading,
     isSending,
     conversation,
+    setConversation,
     isTyping,
     imageFile,
     imagePreview,

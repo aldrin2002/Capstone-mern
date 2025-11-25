@@ -60,7 +60,11 @@ const userSchema = new mongoose.Schema(
         },
         profilePicture: {
             type: String
-        }
+        },
+        // ✅ Email verification fields
+        emailVerified: { type: Boolean, default: false },
+        verificationCode: { type: String, default: null },
+        verificationExpires: { type: Date, default: null }
     },
     { timestamps: true }
 );

@@ -33,7 +33,15 @@ const messageSchema = new mongoose.Schema(
     conversation: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Conversation",
-      required: true
+      required: true,
+      index: true
+    },
+    // Optional reference to an order if this message is within an order thread
+    order: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Order",
+      default: null,
+      index: true
     }
   },
   { timestamps: true }

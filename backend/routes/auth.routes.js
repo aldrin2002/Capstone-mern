@@ -6,7 +6,8 @@ import {
     checkAuth,
     costumerlogin,
     costumerSignup,
-    // Remove googleLogin from imports
+    verifyEmail,
+    resendVerificationCode
 } from "../controllers/auth.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 
@@ -19,6 +20,9 @@ router.post("/login", login);
 router.post("/logout", logout);
 router.post("/costumerSignup", costumerSignup);
 router.post("/costumerLogin", costumerlogin);
+// Email verification endpoints
+router.post("/verify-email", verifyEmail);
+router.post("/resend-code", resendVerificationCode);
 // Remove this line
 // router.post("/google-login", googleLogin);
 

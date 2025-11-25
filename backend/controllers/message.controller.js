@@ -1,5 +1,6 @@
 import { Message } from "../models/message.model.js";
 import { Conversation } from "../models/conversation.model.js";
+import { Order } from "../models/order.model.js";
 import { User } from "../models/user.model.js";
 
 // Get messages for a specific conversation
@@ -21,20 +22,95 @@ export const getMessages = async (req, res) => {
 export const getOrCreateConversation = async (req, res) => {
   try {
     const customerId = req.userId;
-    
-    // Find existing conversation or create new one
-    let conversation = await Conversation.findOne({ customer: customerId });
-    
+    // General (non-order) conversation
+    let conversation = await Conversation.findOne({ customer: customerId, order: null });
     if (!conversation) {
-      conversation = new Conversation({
-        customer: customerId
-      });
-      await conversation.save();
+      conversation = await Conversation.create({ customer: customerId });
     }
-    
     res.status(200).json(conversation);
   } catch (error) {
     console.error("Error in getOrCreateConversation:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Create or get a conversation tied to a specific order
+export const getOrCreateOrderConversation = async (req, res) => {
+  try {
+    const customerId = req.userId;
+    const { orderId } = req.params;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    // Try to find conversation already tied to this order
+    let conversation = await Conversation.findOne({ customer: customerId, order: orderId });
+    if (!conversation) {
+      // Reuse general conversation if available
+      let general = await Conversation.findOne({ customer: customerId, order: null });
+      if (general) {
+        general.order = orderId;
+        general.lastMessageContent = "Order inquiry thread created";
+        general.lastMessageSender = "customer";
+        await general.save();
+        conversation = general;
+      } else {
+        // As a fallback create a new conversation (first for this user)
+        conversation = await Conversation.create({
+          customer: customerId,
+          order: orderId,
+          lastMessageContent: "Order inquiry thread created",
+          lastMessageSender: "customer"
+        });
+      }
+      // Add system message marking thread creation
+      await Message.create({
+        sender: { id: customerId, name: order.customer.name, role: "customer" },
+        content: `Inquiry thread opened for order #${orderId.toString().slice(-6)}`,
+        conversation: conversation._id,
+        order: orderId,
+        isRead: true
+      });
+    }
+
+    await conversation.populate('order');
+    res.status(200).json(conversation);
+  } catch (error) {
+    console.error("Error in getOrCreateOrderConversation:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get active order-linked conversations for current customer
+export const getActiveOrderConversations = async (req, res) => {
+  try {
+    const customerId = req.userId;
+    // Find conversations with orders not Completed/Cancelled
+    const conversations = await Conversation.find({ customer: customerId, order: { $ne: null } })
+      .populate({ path: 'order', match: { status: { $nin: ["Completed", "Cancelled"] } } })
+      .sort({ updatedAt: -1 });
+
+    // Filter out those where order populate failed (status completed/cancelled)
+    const active = conversations.filter(c => c.order);
+    res.status(200).json(active);
+  } catch (error) {
+    console.error("Error in getActiveOrderConversations:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Detailed conversation: order + messages
+export const getOrderConversationDetails = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const customerId = req.userId;
+    const conversation = await Conversation.findOne({ customer: customerId, order: orderId }).populate('order');
+    if (!conversation) return res.status(404).json({ message: "Order conversation not found" });
+    const messages = await Message.find({ conversation: conversation._id }).sort({ createdAt: 1 });
+    res.status(200).json({ conversation, messages });
+  } catch (error) {
+    console.error("Error in getOrderConversationDetails:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

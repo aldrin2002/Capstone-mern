@@ -11,7 +11,10 @@ import {
   deleteMessage,
   deleteConversation,
   getUnreadCount,
-  markAllMessagesAsRead
+  markAllMessagesAsRead,
+  getOrCreateOrderConversation,
+  getActiveOrderConversations,
+  getOrderConversationDetails
 } from "../controllers/message.controller.js";
 import fs from 'fs';
 
@@ -67,8 +70,17 @@ const handleMulterError = (err, req, res, next) => {
 // Get unread message count
 router.get("/unread-count", verifyToken, getUnreadCount);
 
-// Get customer conversation
+// Get general (non-order) customer conversation
 router.get("/conversation", verifyToken, getOrCreateConversation);
+
+// Get or create order-specific conversation
+router.get("/conversation/order/:orderId", verifyToken, getOrCreateOrderConversation);
+
+// Get active order conversations for current customer
+router.get("/conversations/active-orders", verifyToken, getActiveOrderConversations);
+
+// Get detailed order conversation (conversation + messages + order)
+router.get("/conversation/order/:orderId/details", verifyToken, getOrderConversationDetails);
 
 // Get all conversations (admin only)
 router.get("/conversations", verifyToken, getAllConversations);

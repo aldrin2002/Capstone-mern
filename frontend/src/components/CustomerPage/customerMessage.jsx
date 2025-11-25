@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import CustomerSideNav from "../../pages/customer/customerSideNav";
 import { useAuthStore } from "../../store/authStore";
 import { ChevronDown } from "lucide-react";
@@ -18,6 +20,7 @@ const API_URL = `${API_BASE_URL}/api/messages`;
 
 const CustomerMessage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   
   // Use the global context
@@ -39,6 +42,7 @@ const CustomerMessage = () => {
     isLoading,
     isSending,
     conversation,
+    setConversation,
     isTyping,
     imageFile,
     imagePreview,
@@ -46,9 +50,68 @@ const CustomerMessage = () => {
     handleTyping,
     handleSendMessage,
     handleFileChange,
-    handleRemoveImage, // Add this line to extract the function
+    handleRemoveImage,
     uploadProgress
   } = useMessageState(API_URL, API_BASE_URL, socket);
+
+  // Order-linked conversation (single latest active)
+  const [loadingOrderConversation, setLoadingOrderConversation] = useState(false);
+  const [activeOrderConversation, setActiveOrderConversation] = useState(null); // conversation object with order populated
+  const [summaryProduct, setSummaryProduct] = useState(null);
+
+  // Fetch latest active order conversation (first in list)
+  useEffect(() => {
+    const fetchLatestOrderConversation = async () => {
+      if (!socket) return;
+      setLoadingOrderConversation(true);
+      try {
+        const res = await axios.get(`${API_URL}/conversations/active-orders`, { withCredentials: true });
+        const list = res.data || [];
+        if (list.length > 0) {
+          const latest = list[0];
+          setActiveOrderConversation(latest);
+          setConversation(latest); // drive message loading in hook
+        } else {
+          setActiveOrderConversation(null);
+          // Fallback to general conversation so messaging still works
+          try {
+            const generalRes = await axios.get(`${API_URL}/conversation`, { withCredentials: true });
+            if (generalRes.data) {
+              setConversation(generalRes.data);
+            }
+          } catch (genErr) {
+            console.error("Failed to load general conversation fallback", genErr.message);
+            setConversation(null);
+          }
+        }
+      } catch (err) {
+        console.error("Failed loading latest order conversation", err.message);
+      } finally {
+        setLoadingOrderConversation(false);
+      }
+    };
+    fetchLatestOrderConversation();
+  }, [socket, API_URL, setConversation]);
+
+  // (Removed synthetic summary message injection per request to restore header summary)
+
+  // Fetch first product details (for image/name) for summary
+  useEffect(() => {
+    const loadFirstProduct = async () => {
+      try {
+        setSummaryProduct(null);
+        const order = activeOrderConversation?.order;
+        const firstItem = order?.items?.[0];
+        if (firstItem?.product) {
+          const res = await axios.get(`${API_BASE_URL}/api/products/${firstItem.product}`);
+          setSummaryProduct(res.data);
+        }
+      } catch (e) {
+        console.log("Failed to load product for summary", e.message);
+      }
+    };
+    loadFirstProduct();
+  }, [activeOrderConversation]);
   
   const {
     messagesEndRef,
@@ -136,6 +199,40 @@ const CustomerMessage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Listen for real-time order updates (status or details)
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleStatusUpdate = (payload) => {
+      if (!activeOrderConversation?.order) return; 
+      if (payload.orderId?.toString() !== activeOrderConversation.order._id?.toString()) return;
+      // Update status and other fields
+      setActiveOrderConversation(prev => prev ? { ...prev, order: payload.order || { ...prev.order, status: payload.status } } : prev);
+      // If order completed or cancelled, fallback to general conversation
+      if (["Completed", "Cancelled"].includes(payload.status)) {
+        setActiveOrderConversation(null);
+        // Load / create general conversation
+        axios.get(`${API_URL}/conversation`, { withCredentials: true })
+          .then(r => setConversation(r.data))
+          .catch(e => console.error("Failed to load general conversation after completion", e.message));
+      }
+    };
+
+    const handleOrderUpdated = ({ order }) => {
+      if (!order || !activeOrderConversation?.order) return;
+      if (order._id?.toString() !== activeOrderConversation.order._id?.toString()) return;
+      setActiveOrderConversation(prev => prev ? { ...prev, order } : prev);
+    };
+
+    socket.on('order-status-updated', handleStatusUpdate);
+    socket.on('order-updated', handleOrderUpdated);
+
+    return () => {
+      socket.off('order-status-updated', handleStatusUpdate);
+      socket.off('order-updated', handleOrderUpdated);
+    };
+  }, [socket, activeOrderConversation, API_URL]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
       {/* Invisible button to help initialize audio immediately */}
@@ -153,20 +250,84 @@ const CustomerMessage = () => {
       <CustomerSideNav />
 
       {/* Main Content - Adjusted for fixed sidebar and mobile nav */}
-      <main className={`h-screen flex flex-col overflow-hidden relative ${
+      <main className={`h-screen flex flex-col relative ${
         isMobile ? 'pb-16' : 'ml-64' // Add bottom padding for mobile nav
       }`}>
-        {/* Glassmorphism overlay */}
-        <div className="absolute inset-0 bg-white/20 backdrop-blur-sm"></div>
+        {/* Removed full-screen overlay to prevent gradient cut/flicker during scroll */}
         
+        {/* Status / info line integrated into summary block below - gap removed */}
+
         {/* Header */}
-        <MessageHeader 
+        <MessageHeader
           adminOnlineCount={adminOnlineCount}
           isConnected={isConnected}
         />
+        {/* Order Summary Header (restored) */}
+        {activeOrderConversation?.order && (
+          <div className="sticky top-0 z-20 px-4 py-3 bg-white/95 backdrop-blur-md shadow border-b border-gray-200">
+            {(() => {
+              const order = activeOrderConversation.order;
+              const itemsCount = order.items?.reduce((s, i) => s + i.quantity, 0) || 0;
+              const firstName = order.items?.[0]?.name || "Item";
+              const extraCount = Math.max(0, (order.items?.length || 0) - 1);
+              const productLabel = extraCount > 0 ? `${firstName} +${extraCount} more` : firstName;
+              const imageSrc = summaryProduct?.image ||
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect width="80" height="80" fill="%23eef2ff"/><path d="M10 60 L30 40 L45 55 L60 35 L70 60 Z" fill="%2393c5fd"/><circle cx="28" cy="28" r="8" fill="%2373a6f5"/></svg>';
+              const statusColorMap = {
+                Pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+                Processing: 'bg-blue-100 text-blue-800 border-blue-300',
+                Delivered: 'bg-purple-100 text-purple-800 border-purple-300',
+                Completed: 'bg-green-100 text-green-800 border-green-300',
+                Cancelled: 'bg-red-100 text-red-800 border-red-300'
+              };
+              const statusClasses = statusColorMap[order.status] || 'bg-gray-100 text-gray-800 border-gray-300';
+              return (
+                <div className="flex items-start gap-4">
+                  <div className="relative shrink-0">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shadow-sm">
+                      <img src={imageSrc} alt={firstName} className="w-full h-full object-cover" />
+                    </div>
+                    <span className="absolute -bottom-2 left-1 text-[10px] px-2 py-0.5 rounded-full bg-blue-600 text-white shadow select-none">{itemsCount} item{itemsCount!==1?'s':''}</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between">
+                      <div className="text-[11px] font-semibold tracking-wide text-gray-600 uppercase">Order Details</div>
+                      <button
+                        onClick={() => navigate('/customer-orders')}
+                        className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 transition"
+                        aria-label="View all orders"
+                      >
+                        <span>View Orders</span>
+                      </button>
+                    </div>
+                    <div className="mt-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-1 text-[12px] leading-tight">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-semibold text-gray-800 truncate">#{order._id.toString().slice(-8)}</span>
+                        <span className={`px-2 py-0.5 rounded-full border text-[10px] font-semibold ${statusClasses}`}>{order.status}</span>
+                      </div>
+                      <div className="text-gray-700 truncate" title={productLabel}>Product: {productLabel}</div>
+                      <div className="text-gray-700">Total: ₱{order.total?.toFixed(2)}</div>
+                      <div className="text-gray-700">Delivery: ₱{order.deliveryFee?.toFixed(2)}</div>
+                      <div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4 flex items-center gap-2 mt-1">
+                        <span className="text-gray-600">To:</span>
+                        <span className="truncate text-gray-800" title={order.deliveryAddress}>{order.deliveryAddress}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+            {loadingOrderConversation && <div className="text-[11px] text-gray-500 mt-2">Loading...</div>}
+          </div>
+        )}
+        {!loadingOrderConversation && !activeOrderConversation && (
+          <div className="px-4 py-3 bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200 text-[11px] text-gray-600">
+            General chat active. Place an order to open an order-specific thread.
+          </div>
+        )}
 
-        {/* Messages Container - Adjust height for mobile */}
-        <div className={`flex-1 ${isMobile ? 'pb-32' : 'pb-0'}`}>
+        {/* Messages Container - solid white background to prevent color cut issues */}
+        <div className="flex-1 bg-white">
           <MessageList 
             messages={messages}
             isLoading={isLoading}
@@ -179,19 +340,10 @@ const CustomerMessage = () => {
         </div>
         
         {/* Scroll to bottom button - Adjust position for mobile */}
-        {showScrollButton && (
-          <button
-            onClick={scrollToBottom}
-            className={`fixed right-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 z-20 border border-white/20 backdrop-blur-sm ${
-              isMobile ? 'bottom-44' : 'bottom-28' // Adjust for mobile nav + input
-            }`}
-          >
-            <ChevronDown size={20} />
-          </button>
-        )}
+        {/* Scroll button removed per user request */}
 
-        {/* Input Area - Fixed position for mobile */}
-        <div className={isMobile ? 'fixed bottom-16 left-0 right-0 z-30' : ''}>
+        {/* Input Area - Fixed for both desktop and mobile */}
+        <div className={isMobile ? 'fixed bottom-16 left-0 right-0 z-30' : 'fixed bottom-0 left-64 right-0 z-30'}>
           <MessageInput 
             newMessage={newMessage}
             setNewMessage={setNewMessage}

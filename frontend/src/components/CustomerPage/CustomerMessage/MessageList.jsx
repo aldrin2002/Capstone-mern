@@ -22,12 +22,12 @@ const MessageList = ({
   return (
     <div 
       ref={messagesContainerRef}
-      className="flex-1 overflow-y-auto p-6 relative"
+      className="flex-1 overflow-y-auto px-6 pt-3 relative"
       style={{ 
         scrollbarWidth: "thin",
         scrollbarColor: "rgba(59, 130, 246, 0.3) transparent",
-        paddingBottom: isMobile ? "160px" : "0px",
-        maxHeight: "calc(100vh - 64px - 76px)" // Adjust the height to account for header and input
+        // Reserve space for fixed input (desktop ~100px, mobile already bigger)
+        paddingBottom: isMobile ? "180px" : "115px"
       }}  
     >
       {isLoading ? (

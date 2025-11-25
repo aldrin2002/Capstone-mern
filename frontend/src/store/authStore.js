@@ -27,15 +27,12 @@ export const useAuthStore = create((set) => ({
                 role: "admin" 
             });
             
-            // Clear the cookie/token to prevent auto-login
-            await axios.post(`${API_URL}/logout`);
-            
-            // Do NOT set isAuthenticated to true
+            // No auto login: backend sends verification code, keep user unauthenticated
             set({ 
                 user: null, 
                 isAuthenticated: false, 
                 isLoading: false,
-                message: "Account created successfully" 
+                message: "Verification code sent to email" 
             });
             
             return true;
@@ -59,13 +56,9 @@ export const useAuthStore = create((set) => ({
                 role: "customer"
             });
             
-            // Clear the cookie/token to prevent auto-login
-            await axios.post(`${API_URL}/logout`);
-            
             if (response.data.success) {
-                // Do NOT set isAuthenticated to true
                 set({ 
-                    message: "Signup successful",
+                    message: "Verification code sent to email",
                     user: null,
                     isAuthenticated: false,
                     isLoading: false
@@ -225,6 +218,33 @@ export const useAuthStore = create((set) => ({
             localStorage.clear();
             delete axios.defaults.headers.common['Authorization'];
             set({ error: null, isCheckingAuth: false, isAuthenticated: false });
+        }
+    },
+    // Verify email with code
+    verifyEmail: async (email, code) => {
+        set({ isLoading: true, error: null });
+        try {
+            const response = await axios.post(`${API_URL}/verify-email`, { email, code });
+            if (!response.data.success) throw new Error(response.data.message);
+            set({ isLoading: false, message: "Email verified. You can log in now." });
+            return true;
+        } catch (err) {
+            set({ isLoading: false, error: err.response?.data?.message || err.message || "Verification failed" });
+            throw err;
+        }
+    },
+
+    // Resend verification code
+    resendCode: async (email) => {
+        set({ error: null });
+        try {
+            const response = await axios.post(`${API_URL}/resend-code`, { email });
+            if (!response.data.success) throw new Error(response.data.message);
+            set({ message: "New verification code sent" });
+            return true;
+        } catch (err) {
+            set({ error: err.response?.data?.message || err.message || "Resend failed" });
+            throw err;
         }
     }
 }));

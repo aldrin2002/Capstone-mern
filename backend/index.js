@@ -203,17 +203,16 @@ io.on("connection", async (socket) => {
       onlineCustomers.add(socket.userId);
       console.log(`✅ Customer ${user.name} (${socket.userId}) is now online`);
 
-      // Customer joins their specific conversation room
-      const conversation = await Conversation.findOne({
-        customer: socket.userId,
+      // Join ALL conversations (general + any active order threads)
+      const conversations = await Conversation.find({ customer: socket.userId });
+      conversations.forEach(conv => {
+        socket.join(`conversation-${conv._id}`);
+        console.log(`Customer joined room: conversation-${conv._id}`);
       });
-      if (conversation) {
-        socket.join(`conversation-${conversation._id}`);
-        console.log(`Customer joined room: conversation-${conversation._id}`);
-      }
 
-      // IMPORTANT: Broadcast updated customer list to all admins
       broadcastOnlineCustomers();
+      // Also inform this customer how many admins are online right now
+      socket.emit("admin-online-count", adminSockets.size);
     }
 
     // Even simpler - just use room broadcasting
@@ -238,6 +237,7 @@ io.on("connection", async (socket) => {
           attachment,
           conversation: conversationId,
           isRead: user.role === "admin",
+          order: conversation.order || null
         });
 
         await newMessage.save();
