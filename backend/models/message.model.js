@@ -15,7 +15,7 @@ const messageSchema = new mongoose.Schema(
       role: {
         type: String,
         required: true,
-        enum: ["admin", "customer"]
+        enum: ["admin", "customer", "driver"]
       }
     },
     content: {

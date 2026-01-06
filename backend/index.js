@@ -236,7 +236,8 @@ io.on("connection", async (socket) => {
           content,
           attachment,
           conversation: conversationId,
-          isRead: user.role === "admin",
+          // Mark as read immediately for non-customer senders (admin/driver)
+          isRead: user.role !== "customer",
           order: conversation.order || null
         });
 

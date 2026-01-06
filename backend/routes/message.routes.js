@@ -13,6 +13,7 @@ import {
   getUnreadCount,
   markAllMessagesAsRead,
   getOrCreateOrderConversation,
+  getOrCreateOrderConversationForStaff,
   getActiveOrderConversations,
   getOrderConversationDetails
 } from "../controllers/message.controller.js";
@@ -75,6 +76,9 @@ router.get("/conversation", verifyToken, getOrCreateConversation);
 
 // Get or create order-specific conversation
 router.get("/conversation/order/:orderId", verifyToken, getOrCreateOrderConversation);
+
+// Staff (admin/driver): get or create order-specific conversation for a particular customer
+router.get("/conversation/order/:orderId/customer/:customerId", verifyToken, getOrCreateOrderConversationForStaff);
 
 // Get active order conversations for current customer
 router.get("/conversations/active-orders", verifyToken, getActiveOrderConversations);

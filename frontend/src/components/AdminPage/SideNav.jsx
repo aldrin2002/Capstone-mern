@@ -178,7 +178,7 @@ const SideNav = ({ active, setActive }) => {
     return (
         <div className="h-screen w-64 bg-blue-800 bg-opacity-90 backdrop-filter backdrop-blur-lg text-white flex flex-col shadow-xl">
             <div className="p-6 border-b border-blue-700">
-                <h2 className="text-2xl font-bold text-white">Cafe<span className="text-blue-300">X</span></h2>
+                <h2 className="text-2xl font-bold text-white">Cafe<span className="text-blue-300"> Delicity</span></h2>
                 <p className="text-sm text-blue-300 mt-1">Admin Dashboard</p>
             </div>
             

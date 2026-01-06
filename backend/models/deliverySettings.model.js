@@ -12,11 +12,6 @@ const deliverySettingsSchema = new mongoose.Schema(
       default: 10,
       required: true
     },
-    freeDeliveryThreshold: {
-      type: Number,
-      default: 500, // Free delivery for orders above ₱500
-      required: true
-    },
     maxDeliveryDistance: {
       type: Number,
       default: 20, // Maximum delivery distance in km

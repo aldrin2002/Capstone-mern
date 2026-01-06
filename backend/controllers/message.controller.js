@@ -82,6 +82,46 @@ export const getOrCreateOrderConversation = async (req, res) => {
   }
 };
 
+// Create or get a conversation for staff tied to a specific order
+export const getOrCreateOrderConversationForStaff = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Find existing conversation for this order (regardless of requester)
+    let conversation = await Conversation.findOne({ order: orderId });
+
+    // If none exists, create one using the order's customer
+    if (!conversation) {
+      conversation = await Conversation.create({
+        customer: order.customer?.id || undefined, // fallback if schema differs
+        order: orderId,
+        lastMessageContent: "Order inquiry thread created by staff",
+        lastMessageSender: "admin",
+      });
+
+      // Seed a system message to mark thread creation
+      await Message.create({
+        sender: { id: req.userId, name: "Admin", role: "admin" },
+        content: `Staff opened inquiry thread for order #${orderId.toString().slice(-6)}`,
+        conversation: conversation._id,
+        order: orderId,
+        isRead: true,
+      });
+    }
+
+    await conversation.populate("order");
+    res.status(200).json(conversation);
+  } catch (error) {
+    console.error("Error in getOrCreateOrderConversationForStaff:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // Get active order-linked conversations for current customer
 export const getActiveOrderConversations = async (req, res) => {
   try {

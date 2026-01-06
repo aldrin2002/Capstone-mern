@@ -10,7 +10,6 @@ export const getDeliverySettings = async (req, res) => {
       settings = new DeliverySettings({
         baseRate: 30,
         perKmRate: 10,
-        freeDeliveryThreshold: 500,
         maxDeliveryDistance: 20
       });
       await settings.save();
@@ -26,7 +25,7 @@ export const getDeliverySettings = async (req, res) => {
 // Update delivery settings (Admin only)
 export const updateDeliverySettings = async (req, res) => {
   try {
-    const { baseRate, perKmRate, freeDeliveryThreshold, maxDeliveryDistance } = req.body;
+    const { baseRate, perKmRate, maxDeliveryDistance } = req.body;
     
     let settings = await DeliverySettings.findOne();
     
@@ -36,7 +35,6 @@ export const updateDeliverySettings = async (req, res) => {
     
     settings.baseRate = baseRate;
     settings.perKmRate = perKmRate;
-    settings.freeDeliveryThreshold = freeDeliveryThreshold;
     settings.maxDeliveryDistance = maxDeliveryDistance;
     
     await settings.save();
@@ -72,18 +70,12 @@ export const calculateDeliveryFee = async (req, res) => {
     }
     
     // Calculate fee
-    let deliveryFee = settings.baseRate + (distance * settings.perKmRate);
-    
-    // Check for free delivery
-    if (orderTotal >= settings.freeDeliveryThreshold) {
-      deliveryFee = 0;
-    }
+    const deliveryFee = settings.baseRate + (distance * settings.perKmRate);
     
     res.status(200).json({
       success: true,
       deliveryFee: parseFloat(deliveryFee.toFixed(2)),
       distance: parseFloat(distance.toFixed(2)),
-      isFreeDelivery: deliveryFee === 0,
       breakdown: {
         baseRate: settings.baseRate,
         distanceCharge: parseFloat((distance * settings.perKmRate).toFixed(2)),

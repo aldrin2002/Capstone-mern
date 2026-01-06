@@ -8,7 +8,12 @@ import {
     updateOrderStatus,
     deleteOrder,
     getCustomerOrders,
-    getOrderStatuses
+    getOrderStatuses,
+    assignDriver,
+    getDriverOrders,
+    addOrderRating,
+    getAllRatings,
+    restoreInventoryForOrder // ✅ ADD THIS
 } from "../controllers/order.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 import { upload } from "../config/cloudinary.js";
@@ -57,6 +62,13 @@ router.get("/statuses", verifyToken, getOrderStatuses);
 router.get("/:id", verifyToken, getOrderById);
 router.put("/:id", verifyToken, updateOrder);
 router.patch("/:id/status", verifyToken, updateOrderStatus);
+router.patch("/:id/assign-driver", verifyToken, assignDriver);
+router.get("/driver/my-orders", verifyToken, getDriverOrders);
 router.delete("/:id", verifyToken, deleteOrder);
+router.post("/:id/rating", verifyToken, addOrderRating);
+router.get("/ratings/all", verifyToken, getAllRatings);
+
+// ✅ NEW: Manual inventory restoration endpoint (for emergency use)
+router.post("/:orderId/restore-inventory", verifyToken, restoreInventoryForOrder);
 
 export default router;

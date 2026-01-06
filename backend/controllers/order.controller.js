@@ -7,7 +7,9 @@ import { Message } from "../models/message.model.js";
 // Get all orders
 export const getAllOrders = async (req, res) => {
     try {
-        const orders = await Order.find().sort({ createdAt: -1 });
+        const orders = await Order.find()
+            .populate('items.product', 'name price image category stock')
+            .sort({ createdAt: -1 });
         res.status(200).json(orders);
     } catch (error) {
         console.error("Error in getAllOrders:", error);
@@ -44,126 +46,143 @@ export const getOrderById = async (req, res) => {
     }
 };
 
-// Create new order
+// ✅ FIXED: Create order with proper inventory management
 export const createOrder = async (req, res) => {
-  try {
-    const { 
-      customer, 
-      items, 
-      total, 
-      deliveryFee = 0,      // ✅ Get deliveryFee from request
-      deliveryDistance = 0,  // ✅ Get deliveryDistance from request
-      notes, 
-      paymentMethod, 
-      paymentStatus, 
-      gcashReferenceNumber, 
-      gcashProofImage, 
-      deliveryAddress 
-    } = req.body;
-
-    console.log("📦 Creating order with data:", {
-      customer,
-      items,
-      total,
-      deliveryFee,
-      deliveryDistance,
-      calculatedTotal: total // Should already include delivery fee from frontend
-    });
-
-    // ✅ CRITICAL: Verify the total includes delivery fee
-    const itemsTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const expectedTotal = itemsTotal + deliveryFee;
-    
-    console.log("💰 Total verification:", {
-      itemsTotal,
-      deliveryFee,
-      expectedTotal,
-      receivedTotal: total,
-      difference: Math.abs(expectedTotal - total)
-    });
-
-    // ✅ If the received total doesn't match expected, use the expected total
-    const finalTotal = Math.abs(expectedTotal - total) < 0.01 ? total : expectedTotal;
-
-    const newOrder = new Order({
-      customer,
-      items,
-      total: finalTotal,              // ✅ Use verified total
-      deliveryFee: deliveryFee,       // ✅ Store delivery fee
-      deliveryDistance: deliveryDistance, // ✅ Store distance
-      notes,
-      paymentMethod,
-      paymentStatus,
-      gcashReferenceNumber,
-      gcashProofImage,
-      deliveryAddress,
-      status: "Pending"
-    });
-
-    const savedOrder = await newOrder.save();
-
-    // Attempt to link order with a dedicated conversation for inquiries
     try {
-      // Find the user by email to link the conversation to a real user document
-      const userDoc = await User.findOne({ email: customer.email });
-      if (userDoc) {
-        // Reuse existing general conversation (order:null) if present; otherwise create one
-        let conv = await Conversation.findOne({ customer: userDoc._id, order: null });
-        if (conv) {
-          // Attach this new order to the existing conversation
-          conv.order = savedOrder._id;
-          conv.lastMessageContent = "Order created";
-          conv.lastMessageSender = "customer";
-          await conv.save();
-        } else {
-          conv = new Conversation({
-            customer: userDoc._id,
-            order: savedOrder._id,
-            lastMessageContent: "Order created",
-            lastMessageSender: "customer",
-            unreadCount: 0
-          });
-          await conv.save();
-        }
-        // System message noting order thread opened (optimistic, helps history)
-        await Message.create({
-          sender: { id: userDoc._id, name: customer.name, role: "customer" },
-          content: `Inquiry thread opened for order #${savedOrder._id.toString().slice(-6)}`,
-          conversation: conv._id,
-          order: savedOrder._id,
-          isRead: true
+        const { 
+            customer, 
+            items, 
+            total, 
+            paymentMethod, 
+            deliveryAddress, 
+            notes, 
+            gcashReferenceNumber,  // ✅ FIXED: Changed from gcashReference
+            gcashProofImage,       // ✅ FIXED: Changed from proofOfPayment
+            deliveryFee,
+            deliveryDistance 
+        } = req.body;
+
+        console.log("📦 Creating new order with data:", {
+            customer,
+            itemsCount: items?.length,
+            total,
+            paymentMethod,
+            gcashReferenceNumber,
+            gcashProofImage,
+            deliveryFee,
+            deliveryDistance
         });
-      }
-    } catch (convErr) {
-      console.error("⚠️ Failed to create order conversation:", convErr.message);
-    }
-    
-    console.log("✅ Order saved successfully:", {
-      orderId: savedOrder._id,
-      total: savedOrder.total,
-      deliveryFee: savedOrder.deliveryFee,
-      deliveryDistance: savedOrder.deliveryDistance
-    });
 
-    // Emit socket event for real-time updates
-    const io = req.app.get("io");
-    if (io) {
-      io.emit("new-order", {
-        orderId: savedOrder._id,
-        customerName: savedOrder.customer.name,
-        total: savedOrder.total,
-        items: savedOrder.items.length
-      });
-    }
+        // ✅ Validation
+        if (!customer || !customer.email || !customer.name) {
+            return res.status(400).json({ 
+                success: false,
+                message: "Customer information is required" 
+            });
+        }
 
-    res.status(201).json(savedOrder);
-  } catch (error) {
-    console.error("❌ Error creating order:", error);
-    res.status(500).json({ 
-      message: "Server error while creating order",
-      error: error.message 
-    });
-  }
+        if (!items || items.length === 0) {
+            return res.status(400).json({ 
+                success: false,
+                message: "Order must contain at least one item" 
+            });
+        }
+
+        if (!deliveryAddress || deliveryAddress.trim() === "") {
+            return res.status(400).json({ 
+                success: false,
+                message: "Delivery address is required" 
+            });
+        }
+
+        // ✅ STEP 1: Validate and check stock availability for all items FIRST
+        const productUpdates = [];
+        
+        for (const item of items) {
+            const product = await Product.findById(item.product);
+            
+            if (!product) {
+                return res.status(404).json({ 
+                    success: false,
+                    message: `Product not found: ${item.name}` 
+                });
+            }
+
+            // ✅ Check if product has enough stock (using 'stock' field, not 'quantity')
+            if (product.stock < item.quantity) {
+                return res.status(400).json({ 
+                    success: false,
+                    message: `Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${item.quantity}` 
+                });
+            }
+
+            // Store product and quantity for later update
+            productUpdates.push({
+                product,
+                orderedQuantity: item.quantity
+            });
+
+            console.log(`✅ Stock check passed for ${product.name}: Available: ${product.stock}, Ordering: ${item.quantity}`);
+        }
+
+        // ✅ STEP 2: All items are available, now decrement stock and save
+        for (const update of productUpdates) {
+            const { product, orderedQuantity } = update;
+            
+            // Decrement stock
+            product.stock -= orderedQuantity;
+            
+            // Save the updated product
+            await product.save();
+            
+            console.log(`📉 Decremented stock for ${product.name}: New stock: ${product.stock} (was ${product.stock + orderedQuantity})`);
+        }
+
+        // ✅ STEP 3: Create the order
+        const newOrder = new Order({
+            customer: {
+                name: customer.name,
+                email: customer.email,
+                phone: customer.phone || "",
+                location: customer.location || null
+            },
+            items,
+            total,
+            paymentMethod: paymentMethod || "GCash",
+            deliveryAddress: deliveryAddress.trim(),
+            notes: notes || "",
+            gcashReferenceNumber: gcashReferenceNumber || "",  // ✅ FIXED
+            gcashProofImage: gcashProofImage || "",            // ✅ FIXED
+            deliveryFee: deliveryFee || 0,
+            deliveryDistance: deliveryDistance || 0,
+            status: "Pending"
+        });
+
+        const savedOrder = await newOrder.save();
+        
+        console.log(`✅ Order created successfully: ${savedOrder._id}`);
+        console.log(`📊 Inventory decremented for ${productUpdates.length} products`);
+
+        // Emit socket event for real-time notifications
+        if (req.io) {
+            req.io.emit('new-order', savedOrder);
+            console.log("🔔 New order notification sent via socket");
+        }
+
+        res.status(201).json({ 
+            success: true,
+            message: "Order created successfully",
+            order: savedOrder 
+        });
+        
+    } catch (error) {
+        console.error("❌ Error in createOrder:", error);
+        res.status(500).json({ 
+            success: false,
+            message: "Server error while creating order",
+            error: error.message 
+        });
+    }
 };
 
 // Update order
@@ -194,82 +213,148 @@ export const updateOrder = async (req, res) => {
     }
 };
 
-// Get all possible order statuses
-export const getOrderStatuses = async (req, res) => {
-  try {
-    const statuses = ["Pending", "Processing", "Delivered", "Completed", "Cancelled"];
-    res.status(200).json(statuses);
-  } catch (error) {
-    console.error("Error getting order statuses:", error);
-    res.status(500).json({ message: "Server error while getting order statuses" });
-  }
-};
-
-// Update order status with real-time socket broadcast
+// Update order status
 export const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    
+
     const validStatuses = ["Pending", "Processing", "Delivered", "Completed", "Cancelled"];
-    
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ message: "Invalid status" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid status" 
+      });
     }
 
-    const updatedOrder = await Order.findByIdAndUpdate(
-      id,
-      { 
-        status,
-        updatedAt: new Date()
-      },
-      { new: true }
-    ).populate('customer', 'name email');
-
-    if (!updatedOrder) {
-      return res.status(404).json({ message: "Order not found" });
+    const order = await Order.findById(id).populate("customer", "email name");
+    
+    if (!order) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Order not found" 
+      });
     }
-    // If order is completed or cancelled, just detach it from the existing conversation (do NOT delete conversation/messages)
-    if (["Completed", "Cancelled"].includes(updatedOrder.status)) {
-      try {
-        const conv = await Conversation.findOne({ order: updatedOrder._id });
-        if (conv) {
-          conv.order = null; // detach order details
-          conv.lastMessageContent = `Order ${updatedOrder.status}`;
-          conv.lastMessageSender = "admin"; // assuming admin triggers status change
-          await conv.save();
-          // Log system message preserving historical context
-          await Message.create({
-            sender: { id: conv.customer, name: updatedOrder.customer.name, role: "admin" },
-            content: `Order #${updatedOrder._id.toString().slice(-6)} marked ${updatedOrder.status}`,
-            conversation: conv._id,
-            order: updatedOrder._id, // keep reference for audit
-            isRead: true
-          });
+
+    const previousStatus = order.status;
+
+    // ✅ If order is being cancelled, restore product stock
+    if (status === "Cancelled" && previousStatus !== "Cancelled") {
+      console.log(`📦 Restoring inventory for cancelled order ${id}`);
+      
+      // Restore stock for each item in the order
+      for (const item of order.items) {
+        if (item.product) {
+          try {
+            const product = await Product.findById(item.product);
+            
+            if (product) {
+              // Add back the quantity that was ordered (using 'stock' field)
+              product.stock += item.quantity;
+              await product.save();
+              
+              console.log(`✅ Restored ${item.quantity} units to product: ${product.name} (New stock: ${product.stock})`);
+            } else {
+              console.warn(`⚠️ Product ${item.product} not found for restoration`);
+            }
+          } catch (error) {
+            console.error(`❌ Error restoring product ${item.product}:`, error);
+            // Continue with other products even if one fails
+          }
         }
-      } catch (cleanupErr) {
-        console.error("⚠️ Failed detaching order from conversation:", cleanupErr.message);
       }
     }
 
-    // Broadcast the order update to all connected clients
-    const io = req.app.get('io');
-    if (io) {
-      io.emit('order-status-updated', {
-        orderId: updatedOrder._id,
-        status: updatedOrder.status,
-        customerId: updatedOrder.customer._id,
-        customerName: updatedOrder.customer.name,
-        updatedAt: updatedOrder.updatedAt,
-        order: updatedOrder // include full order for client-side refresh
+    // Update order status
+    order.status = status;
+    order.updatedAt = new Date();
+    await order.save();
+
+    // Emit socket event for real-time updates
+    if (req.io && order.customer && order.customer.email) {
+      req.io.to(order.customer.email).emit('order-status-updated', {
+        orderId: order._id,
+        status: order.status,
+        updatedAt: order.updatedAt,
+        previousStatus: previousStatus
       });
-      console.log(`📡 Broadcasting order status update: ${updatedOrder._id} -> ${status}`);
+
+      console.log(`🔔 Status update notification sent to customer: ${order.customer.email}`);
     }
 
-    res.status(200).json(updatedOrder);
+    res.status(200).json({ 
+      success: true, 
+      message: `Order status updated to ${status}${status === "Cancelled" ? " and inventory restored" : ""}`,
+      order 
+    });
   } catch (error) {
-    console.error("Error updating order status:", error);
-    res.status(500).json({ message: "Server error while updating order status" });
+    console.error("Error in updateOrderStatus:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error" 
+    });
+  }
+};
+
+// ✅ Manual inventory restoration endpoint (for emergency use)
+export const restoreInventoryForOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await Order.findById(orderId);
+    
+    if (!order) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Order not found" 
+      });
+    }
+
+    if (order.status !== "Cancelled") {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Can only restore inventory for cancelled orders" 
+      });
+    }
+
+    const restoredProducts = [];
+
+    // Restore stock for each item
+    for (const item of order.items) {
+      if (item.product) {
+        try {
+          const product = await Product.findById(item.product);
+          
+          if (product) {
+            product.stock += item.quantity; // ✅ Using 'stock' field
+            await product.save();
+            
+            restoredProducts.push({
+              productId: product._id,
+              name: product.name,
+              quantityRestored: item.quantity,
+              newQuantity: product.stock
+            });
+            
+            console.log(`✅ Restored ${item.quantity} units to product: ${product.name}`);
+          }
+        } catch (error) {
+          console.error(`❌ Error restoring product ${item.product}:`, error);
+        }
+      }
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Inventory restored successfully",
+      restoredProducts 
+    });
+  } catch (error) {
+    console.error("Error in restoreInventoryForOrder:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error" 
+    });
   }
 };
 
@@ -294,26 +379,199 @@ export const deleteOrder = async (req, res) => {
 // Get orders for the current customer
 export const getCustomerOrders = async (req, res) => {
     try {
-        // Try to get email from token first
         let customerEmail = req.user?.email;
         
-        // If not available in token, try query parameter
         if (!customerEmail && req.query.email) {
             customerEmail = req.query.email;
         }
         
         if (!customerEmail) {
-            return res.status(400).json({ message: "Customer email not found" });
+            return res.status(400).json({ message: "Customer email is required" });
         }
         
-        // Find orders by customer email
         const orders = await Order.find({ "customer.email": customerEmail })
-            .sort({ createdAt: -1 })
-            .populate("items.product");
+            .populate('items.product', 'name price image category stock')
+            .sort({ createdAt: -1 });
         
         res.status(200).json(orders);
     } catch (error) {
         console.error("Error in getCustomerOrders:", error);
         res.status(500).json({ message: "Server error while fetching customer orders" });
+    }
+};
+
+// Get all possible order statuses
+export const getOrderStatuses = async (req, res) => {
+    try {
+        const statuses = ["Pending", "Processing", "Delivered", "Completed", "Cancelled"];
+        res.status(200).json(statuses);
+    } catch (error) {
+        console.error("Error in getOrderStatuses:", error);
+        res.status(500).json({ message: "Server error while fetching order statuses" });
+    }
+};
+
+// Assign driver to order
+export const assignDriver = async (req, res) => {
+    try {
+        const { orderId, driverId } = req.body;
+        
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ message: "Order not found" });
+        }
+        
+        const driver = await User.findById(driverId);
+        if (!driver || driver.role !== "driver") {
+            return res.status(404).json({ message: "Driver not found" });
+        }
+        
+        order.driver = driverId;
+        await order.save();
+        
+        res.status(200).json({ message: "Driver assigned successfully", order });
+    } catch (error) {
+        console.error("Error in assignDriver:", error);
+        res.status(500).json({ message: "Server error while assigning driver" });
+    }
+};
+
+// Get driver's assigned orders
+export const getDriverOrders = async (req, res) => {
+    try {
+        const driverId = req.userId;
+        
+        const orders = await Order.find({ driver: driverId })
+            .sort({ createdAt: -1 });
+        
+        res.status(200).json(orders);
+    } catch (error) {
+        console.error("Error in getDriverOrders:", error);
+        res.status(500).json({ message: "Server error while fetching driver orders" });
+    }
+};
+
+// ✅ Add rating to order
+export const addOrderRating = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { rating, feedback } = req.body;
+
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ 
+                success: false,
+                message: "Rating must be between 1 and 5" 
+            });
+        }
+
+        if (!feedback || feedback.trim().length === 0) {
+            return res.status(400).json({ 
+                success: false,
+                message: "Feedback is required" 
+            });
+        }
+
+        if (feedback.length > 500) {
+            return res.status(400).json({ 
+                success: false,
+                message: "Feedback must be 500 characters or less" 
+            });
+        }
+
+        const order = await Order.findById(id).populate("customer", "email name");
+        
+        if (!order) {
+            return res.status(404).json({ 
+                success: false,
+                message: "Order not found" 
+            });
+        }
+
+        if (req.user && order.customer.email !== req.user.email) {
+            return res.status(403).json({ 
+                success: false,
+                message: "You can only rate your own orders" 
+            });
+        }
+
+        if (order.status !== "Completed" && order.status !== "Delivered") {
+            return res.status(400).json({ 
+                success: false,
+                message: "You can only rate completed or delivered orders" 
+            });
+        }
+
+        if (order.hasRated) {
+            return res.status(400).json({ 
+                success: false,
+                message: "You have already rated this order" 
+            });
+        }
+
+        order.rating = rating;
+        order.feedback = feedback.trim();
+        order.hasRated = true;
+        order.ratedAt = new Date();
+
+        await order.save();
+
+        console.log(`⭐ Order ${order._id} rated ${rating} stars by ${order.customer.name}`);
+
+        res.status(200).json({ 
+            success: true,
+            message: "Thank you for your feedback!",
+            order: {
+                _id: order._id,
+                rating: order.rating,
+                feedback: order.feedback,
+                hasRated: order.hasRated,
+                ratedAt: order.ratedAt
+            }
+        });
+    } catch (error) {
+        console.error("Error in addOrderRating:", error);
+        res.status(500).json({ 
+            success: false,
+            message: "Server error while submitting rating" 
+        });
+    }
+};
+
+// Get all ratings for analytics
+export const getAllRatings = async (req, res) => {
+    try {
+        const ratings = await Order.find({ 
+            hasRated: true,
+            rating: { $exists: true, $ne: null }
+        })
+        .select('_id rating feedback ratedAt customer status')
+        .populate('customer', 'name email')
+        .sort({ ratedAt: -1 });
+
+        const averageRating = ratings.length > 0
+            ? ratings.reduce((sum, order) => sum + order.rating, 0) / ratings.length
+            : 0;
+
+        const distribution = {
+            1: ratings.filter(r => r.rating === 1).length,
+            2: ratings.filter(r => r.rating === 2).length,
+            3: ratings.filter(r => r.rating === 3).length,
+            4: ratings.filter(r => r.rating === 4).length,
+            5: ratings.filter(r => r.rating === 5).length
+        };
+
+        res.status(200).json({
+            success: true,
+            totalRatings: ratings.length,
+            averageRating: parseFloat(averageRating.toFixed(2)),
+            distribution,
+            ratings
+        });
+    } catch (error) {
+        console.error("Error in getAllRatings:", error);
+        res.status(500).json({ 
+            success: false,
+            message: "Server error while fetching ratings" 
+        });
     }
 };

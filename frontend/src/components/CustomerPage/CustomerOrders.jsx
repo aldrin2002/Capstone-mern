@@ -19,7 +19,9 @@ import {
   CreditCard,
   MapPin,
   Calendar,
-  Filter
+  Filter,
+  X, // ✅ Added for modal close button
+  MessageSquare // ✅ Added for feedback icon
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useCustomerMessages } from "../../context/CustomerMessageContext";
@@ -30,6 +32,15 @@ const CustomerOrders = () => {
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [statusFilter, setStatusFilter] = useState("All");
+  
+  // ✅ NEW: Rating Modal States
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedOrderForRating, setSelectedOrderForRating] = useState(null);
+  const [rating, setRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState(0);
+  const [feedback, setFeedback] = useState("");
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  
   const navigate = useNavigate();
   const { user } = useAuthStore();
   
@@ -138,6 +149,80 @@ const CustomerOrders = () => {
 
   const toggleOrderDetails = (orderId) => {
     setExpandedOrder(prevExpanded => prevExpanded === orderId ? null : orderId);
+  };
+
+  // ✅ NEW: Open Rating Modal
+  const openRatingModal = (order) => {
+    setSelectedOrderForRating(order);
+    setRating(order.rating || 0);
+    setFeedback(order.feedback || "");
+    setShowRatingModal(true);
+  };
+
+  // ✅ NEW: Close Rating Modal
+  const closeRatingModal = () => {
+    setShowRatingModal(false);
+    setSelectedOrderForRating(null);
+    setRating(0);
+    setHoveredRating(0);
+    setFeedback("");
+  };
+
+  // ✅ NEW: Submit Rating
+  const handleSubmitRating = async () => {
+    if (rating === 0) {
+      toast.error("Please select a rating");
+      return;
+    }
+
+    if (!feedback.trim()) {
+      toast.error("Please provide your feedback");
+      return;
+    }
+
+    setIsSubmittingRating(true);
+    
+    try {
+      const apiUrl = import.meta.env.MODE === "development" 
+        ? `http://localhost:5000/api/orders/${selectedOrderForRating._id}/rating` 
+        : `/api/orders/${selectedOrderForRating._id}/rating`;
+      
+      const token = localStorage.getItem('token');
+      const headers = {};
+      
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      await axios.post(
+        apiUrl,
+        {
+          rating,
+          feedback
+        },
+        {
+          withCredentials: true,
+          headers
+        }
+      );
+
+      // Update local state
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order._id === selectedOrderForRating._id
+            ? { ...order, rating, feedback, hasRated: true }
+            : order
+        )
+      );
+
+      toast.success("Thank you for your feedback! 🌟");
+      closeRatingModal();
+    } catch (error) {
+      console.error("Error submitting rating:", error);
+      toast.error(error.response?.data?.message || "Failed to submit rating");
+    } finally {
+      setIsSubmittingRating(false);
+    }
   };
 
   const getStatusStyle = (status) => {
@@ -368,11 +453,29 @@ const CustomerOrders = () => {
                           </p>
                         </div>
                         
+                        {/* ✅ MODIFIED: Status with Rate It button */}
                         <div className="space-y-1">
                           <p className="text-sm font-medium text-gray-500">Status</p>
-                          <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-bold ${statusStyle.bg} ${statusStyle.text} border-2 ${statusStyle.border} shadow-md`}>
-                            {statusStyle.icon}
-                            <span className="ml-2">{order.status}</span>
+                          <div className="flex items-center gap-2">
+                            <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-bold ${statusStyle.bg} ${statusStyle.text} border-2 ${statusStyle.border} shadow-md`}>
+                              {statusStyle.icon}
+                              <span className="ml-2">{order.status}</span>
+                            </div>
+                            
+                            {/* ✅ NEW: Rate It button - only show for Completed orders */}
+                            {(order.status === "Completed" || order.status === "Delivered") && (
+                              <button
+                                onClick={() => openRatingModal(order)}
+                                className={`inline-flex items-center px-3 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
+                                  order.hasRated || order.rating
+                                    ? 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-2 border-green-300'
+                                    : 'bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-800 border-2 border-orange-300 hover:from-yellow-200 hover:to-orange-200 animate-pulse'
+                                }`}
+                              >
+                                <Star className={`h-4 w-4 mr-1 ${order.hasRated || order.rating ? 'fill-current' : ''}`} />
+                                {order.hasRated || order.rating ? 'Rated' : 'Rate It'}
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -474,7 +577,6 @@ const CustomerOrders = () => {
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                          {/* ✅ FIXED: Now reading from deliveryAddress field */}
                           <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-4 text-lg flex items-center">
                               <MapPin className="h-5 w-5 mr-2 text-blue-600" />
@@ -589,13 +691,6 @@ const CustomerOrders = () => {
                               </span>
                             </div>
                             
-                            {/* ✅ CRITICAL FIX: Only show free delivery badge when deliveryFee is EXACTLY 0 */}
-                            {order.deliveryFee !== undefined && order.deliveryFee === 0 && (
-                              <div className="bg-green-100 border border-green-300 rounded-lg p-2 text-center">
-                                <span className="text-green-800 text-sm font-bold">🎉 Free Delivery Applied!</span>
-                              </div>
-                            )}
-                            
                             <div className="border-t pt-3">
                               <div className="flex justify-between items-center">
                                 <span className="text-xl font-bold text-gray-900">Total Amount</span>
@@ -615,6 +710,123 @@ const CustomerOrders = () => {
           )}
         </div>
       </main>
+
+      {/* ✅ NEW: Rating Modal */}
+      {showRatingModal && selectedOrderForRating && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white rounded-t-2xl">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-2xl font-bold flex items-center">
+                    <Star className="h-6 w-6 mr-2" fill="currentColor" />
+                    Rate Your Experience
+                  </h3>
+                  <p className="text-blue-100 text-sm mt-1">
+                    Order #{selectedOrderForRating._id.slice(-8)}
+                  </p>
+                </div>
+                <button
+                  onClick={closeRatingModal}
+                  className="text-white hover:text-gray-200 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full p-2 transition-all duration-200"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              {/* Star Rating */}
+              <div className="mb-6">
+                <label className="block text-gray-700 font-bold mb-3 text-center text-lg">
+                  How would you rate your overall experience?
+                </label>
+                <div className="flex justify-center space-x-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      onMouseEnter={() => setHoveredRating(star)}
+                      onMouseLeave={() => setHoveredRating(0)}
+                      className="transition-all duration-200 transform hover:scale-125"
+                    >
+                      <Star
+                        className={`h-12 w-12 ${
+                          star <= (hoveredRating || rating)
+                            ? 'text-yellow-400 fill-current'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                {rating > 0 && (
+                  <p className="text-center mt-3 text-gray-600 font-medium">
+                    {rating === 1 && "😞 Poor"}
+                    {rating === 2 && "😐 Fair"}
+                    {rating === 3 && "🙂 Good"}
+                    {rating === 4 && "😊 Very Good"}
+                    {rating === 5 && "🤩 Excellent"}
+                  </p>
+                )}
+              </div>
+
+              {/* Feedback Text Area */}
+              <div className="mb-6">
+                <label className="block text-gray-700 font-bold mb-2 flex items-center">
+                  <MessageSquare className="h-5 w-5 mr-2 text-blue-600" />
+                  Share Your Feedback
+                </label>
+                <textarea
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  placeholder="Tell us about your experience... What did you love? What could we improve?"
+                  rows="5"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 resize-none"
+                  maxLength={500}
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <p className="text-sm text-gray-500">
+                    {feedback.length}/500 characters
+                  </p>
+                  {feedback.trim() && (
+                    <p className="text-sm text-green-600 font-medium">
+                      ✓ Looking good!
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                onClick={handleSubmitRating}
+                disabled={isSubmittingRating || rating === 0 || !feedback.trim()}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
+              >
+                {isSubmittingRating ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white mr-2"></div>
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Star className="h-5 w-5 mr-2" fill="currentColor" />
+                    Submit Rating
+                  </>
+                )}
+              </button>
+
+              {/* Info Text */}
+              <p className="text-center text-sm text-gray-500 mt-4">
+                Your feedback helps us improve our service and menu offerings.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

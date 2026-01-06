@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { 
-  Loader, Users, Package, ShoppingCart, Download, TrendingUp, Award, PieChart, Clock, Calendar, X
+  Loader, Users, Package, ShoppingCart, Download, TrendingUp, Award, PieChart, Clock, Calendar, X, Star, MessageSquare, ThumbsUp // ✅ Added Star, MessageSquare, ThumbsUp
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -45,6 +45,15 @@ const DashboardHome = ({ user, setActiveComponent }) => {
   // Aggregated report object
   const [report, setReport] = useState(null);
 
+  // ✅ NEW: Ratings state
+  const [ratings, setRatings] = useState([]);
+  const [isLoadingRatings, setIsLoadingRatings] = useState(true);
+  const [ratingsStats, setRatingsStats] = useState({
+    total: 0,
+    average: 0,
+    distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+  });
+
   // --- Fetch Orders --------------------------------------------------
   useEffect(() => { fetchOrders(); }, []);
   const fetchOrders = async () => {
@@ -60,6 +69,35 @@ const DashboardHome = ({ user, setActiveComponent }) => {
       toast.error("Failed loading orders");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // ✅ NEW: Fetch ratings
+  useEffect(() => {
+    fetchRatings();
+  }, []);
+
+  const fetchRatings = async () => {
+    setIsLoadingRatings(true);
+    try {
+      const url = import.meta.env.MODE === "development"
+        ? "http://localhost:5000/api/orders/ratings/all"
+        : "/api/orders/ratings/all";
+      const res = await axios.get(url, { withCredentials: true });
+      
+      if (res.data.success) {
+        setRatings(res.data.ratings || []);
+        setRatingsStats({
+          total: res.data.totalRatings || 0,
+          average: res.data.averageRating || 0,
+          distribution: res.data.distribution || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        });
+      }
+    } catch (e) {
+      console.error("Error fetching ratings:", e);
+      toast.error("Failed to load ratings");
+    } finally {
+      setIsLoadingRatings(false);
     }
   };
 
@@ -586,6 +624,199 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                 )}
               </table>
             </div>
+          </div>
+
+          {/* ✅ NEW: Ratings & Feedback Section */}
+          <div className="bg-white rounded-2xl shadow-md overflow-hidden border">
+            {/* Header */}
+            <div className="px-6 py-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-b">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <Star className="w-5 h-5 text-white" fill="white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-800 text-lg">Customer Ratings & Feedback</h3>
+                    <p className="text-sm text-gray-600">
+                      {ratingsStats.total} {ratingsStats.total === 1 ? 'review' : 'reviews'}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Average Rating Badge */}
+                {ratingsStats.total > 0 && (
+                  <div className="flex items-center space-x-2 bg-gradient-to-r from-yellow-100 to-orange-100 px-4 py-2 rounded-xl border-2 border-yellow-300">
+                    <Star className="w-6 h-6 text-yellow-600" fill="currentColor" />
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-800">
+                        {ratingsStats.average.toFixed(1)}
+                      </div>
+                      <div className="text-xs text-gray-600">Average</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Rating Distribution */}
+            {ratingsStats.total > 0 && (
+              <div className="px-6 py-4 bg-gray-50 border-b">
+                <div className="grid grid-cols-5 gap-3">
+                  {[5, 4, 3, 2, 1].map((star) => {
+                    const count = ratingsStats.distribution[star] || 0;
+                    const percentage = ratingsStats.total > 0 
+                      ? ((count / ratingsStats.total) * 100).toFixed(0) 
+                      : 0;
+                    
+                    return (
+                      <div key={star} className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1 min-w-[60px]">
+                          <span className="text-sm font-bold text-gray-700">{star}</span>
+                          <Star className="w-4 h-4 text-yellow-500" fill="currentColor" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-gradient-to-r from-yellow-400 to-orange-500 h-2 rounded-full transition-all duration-500"
+                              style={{ width: `${percentage}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-600 min-w-[50px] text-right">
+                          {count} ({percentage}%)
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Ratings List */}
+            <div className="max-h-[600px] overflow-y-auto">
+              {isLoadingRatings ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-yellow-200 border-t-yellow-600 rounded-full animate-spin mx-auto mb-3"></div>
+                    <p className="text-gray-600">Loading ratings...</p>
+                  </div>
+                </div>
+              ) : ratings.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <MessageSquare className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">No Ratings Yet</h3>
+                  <p className="text-gray-600">Customer ratings and feedback will appear here</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {ratings.map((rating, index) => (
+                    <div 
+                      key={rating._id} 
+                      className="p-6 hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 transition-all duration-300 group"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          {/* Customer Avatar */}
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
+                            {rating.customer?.name?.charAt(0).toUpperCase() || 'C'}
+                          </div>
+                          
+                          {/* Customer Info */}
+                          <div>
+                            <h4 className="font-bold text-gray-800 text-lg">
+                              {rating.customer?.name || 'Anonymous'}
+                            </h4>
+                            <p className="text-sm text-gray-500">
+                              Order #{rating._id.slice(-8)} • {new Date(rating.ratedAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Star Rating */}
+                        <div className="flex items-center space-x-1 bg-gradient-to-r from-yellow-100 to-orange-100 px-3 py-2 rounded-full border-2 border-yellow-300 group-hover:scale-110 transition-transform duration-300">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`w-5 h-5 ${
+                                star <= rating.rating
+                                  ? 'text-yellow-500 fill-current'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Feedback Text */}
+                      <div className="ml-15 pl-3 border-l-4 border-blue-200 group-hover:border-blue-400 transition-colors duration-300">
+                        <div className="flex items-start space-x-2">
+                          <MessageSquare className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
+                          <p className="text-gray-700 leading-relaxed">
+                            "{rating.feedback}"
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Rating Emotion Badge */}
+                      <div className="ml-15 mt-3 inline-flex items-center px-3 py-1 bg-gray-100 rounded-full text-sm">
+                        <span className="mr-2">
+                          {rating.rating === 5 && "🤩"}
+                          {rating.rating === 4 && "😊"}
+                          {rating.rating === 3 && "🙂"}
+                          {rating.rating === 2 && "😐"}
+                          {rating.rating === 1 && "😞"}
+                        </span>
+                        <span className="font-medium text-gray-700">
+                          {rating.rating === 5 && "Excellent"}
+                          {rating.rating === 4 && "Very Good"}
+                          {rating.rating === 3 && "Good"}
+                          {rating.rating === 2 && "Fair"}
+                          {rating.rating === 1 && "Poor"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer Stats */}
+            {ratings.length > 0 && (
+              <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-blue-50 border-t">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center space-x-6">
+                    <div className="flex items-center space-x-2">
+                      <ThumbsUp className="w-5 h-5 text-green-600" />
+                      <span className="text-gray-700">
+                        <span className="font-bold text-gray-800">
+                          {ratingsStats.distribution[5] + ratingsStats.distribution[4]}
+                        </span> positive reviews
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Star className="w-5 h-5 text-yellow-500" fill="currentColor" />
+                      <span className="text-gray-700">
+                        <span className="font-bold text-gray-800">{ratingsStats.average.toFixed(2)}</span> average rating
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={fetchRatings}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg font-medium text-sm"
+                  >
+                    Refresh Ratings
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Quick Actions */}

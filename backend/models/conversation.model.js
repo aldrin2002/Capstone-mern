@@ -29,7 +29,7 @@ const conversationSchema = new mongoose.Schema(
     // Who sent last message
     lastMessageSender: {
       type: String,
-      enum: ["admin", "customer"],
+      enum: ["admin", "customer", "driver"],
       default: null
     },
     // Unread count for admin dashboard notifications

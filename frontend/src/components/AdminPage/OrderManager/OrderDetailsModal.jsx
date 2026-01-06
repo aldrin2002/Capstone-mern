@@ -13,12 +13,15 @@ import {
   XCircle, 
   Clock,
   Navigation,
-  Truck, // ✅ ADD THIS
-  MapPin // ✅ ADD THIS
+  Truck,
+  MapPin
 } from "lucide-react";
 import OrderActionButtons from "./OrderActionButtons";
-import RouteMap from '../../Map/RouteMap'; // ✅ Add import
-import { useAuthStore } from '../../../store/authStore'; // ✅ Add import
+import RouteMap from '../../Map/RouteMap';
+import { useAuthStore } from '../../../store/authStore';
+import axios from "axios";
+import Swal from "sweetalert2";
+import { toast } from "react-hot-toast";
 
 const OrderDetailsModal = ({ 
   selectedOrder, 
@@ -32,19 +35,12 @@ const OrderDetailsModal = ({
   deleteOrder,
   isLoading
 }) => {
-  const { user } = useAuthStore(); // ✅ Get admin user data
+  const { user } = useAuthStore();
 
-  // ✅ ADD THIS DEBUG LOGGING
-  console.log("═══════════════════════════════════════");
-  console.log("🗺️ ROUTE MAP DEBUG:");
-  console.log("═══════════════════════════════════════");
-  console.log("📦 Selected Order ID:", selectedOrder?._id);
-  console.log("👤 Customer Data:", selectedOrder?.customer);
-  console.log("📍 Customer Location:", selectedOrder?.customer?.location);
-  console.log("👨‍💼 Admin Data:", user);
-  console.log("📍 Admin Location:", user?.location);
-  console.log("✅ Should show map?", !!(selectedOrder?.customer?.location && user?.location));
-  console.log("═══════════════════════════════════════");
+  // ✅ FIXED: Early return with proper validation
+  if (!selectedOrder || !selectedOrder._id || !selectedOrder.customer) {
+    return null;
+  }
 
   const getStatusIcon = (status) => {
     switch(status) {
@@ -100,7 +96,6 @@ const OrderDetailsModal = ({
     }
   };
 
-  // Updated function to properly handle Cloudinary URLs
   const getProofImageUrl = (proofPath) => {
     if (!proofPath) {
       console.log('❌ No proof path provided');
@@ -109,48 +104,90 @@ const OrderDetailsModal = ({
     
     console.log('🔍 Processing proof image path:', proofPath);
     
-    // If it's already a full Cloudinary URL (starts with https://res.cloudinary.com)
     if (proofPath.startsWith('https://res.cloudinary.com')) {
       console.log('✅ Full Cloudinary URL detected:', proofPath);
       return proofPath;
     }
     
-    // If it's already a full HTTPS URL (could be other cloud storage)
     if (proofPath.startsWith('https://')) {
       console.log('✅ Full HTTPS URL detected:', proofPath);
       return proofPath;
     }
     
-    // If it's a relative path starting with /uploads (local storage)
     if (proofPath.startsWith('/uploads')) {
       console.log('📁 Local uploads path detected, using API_BASE_URL:', `${API_BASE_URL}${proofPath}`);
       return `${API_BASE_URL}${proofPath}`;
     }
     
-    // If it's just a filename or relative path without /uploads (assume local)
     if (!proofPath.startsWith('http') && !proofPath.startsWith('/')) {
       console.log('📁 Relative path detected, constructing local URL:', `${API_BASE_URL}/uploads/${proofPath}`);
       return `${API_BASE_URL}/uploads/${proofPath}`;
     }
     
-    // If it's a relative path starting with / but not /uploads
     if (proofPath.startsWith('/') && !proofPath.startsWith('/uploads')) {
       console.log('📁 Root relative path detected, using API_BASE_URL:', `${API_BASE_URL}${proofPath}`);
       return `${API_BASE_URL}${proofPath}`;
     }
     
-    // Default case - return as is
     console.log('⚠️ Using proof path as is:', proofPath);
     return proofPath;
   };
 
-  if (!selectedOrder) return null;
-
   const proofImageUrl = getProofImageUrl(selectedOrder.proofOfPayment);
   
-  // Add console log to debug the final URL
   console.log('🖼️ Final proof image URL:', proofImageUrl);
   console.log('📋 Selected order proof of payment:', selectedOrder.proofOfPayment);
+
+  const handleRestoreInventory = async () => {
+    try {
+      const result = await Swal.fire({
+        title: "Restore Inventory?",
+        html: `
+          <p class="text-gray-600 mb-2">This will add the order quantities back to product inventory.</p>
+          <p class="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+            ⚠️ Only use this if inventory was not properly restored when order was cancelled
+          </p>
+        `,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3B82F6",
+        cancelButtonColor: "#6B7280",
+        confirmButtonText: "Yes, restore inventory",
+        cancelButtonText: "Cancel"
+      });
+
+      if (!result.isConfirmed) return;
+
+      const apiUrl = import.meta.env.MODE === "development"
+        ? `http://localhost:5000/api/orders/${selectedOrder._id}/restore-inventory`
+        : `/api/orders/${selectedOrder._id}/restore-inventory`;
+
+      const response = await axios.post(apiUrl, {}, { withCredentials: true });
+
+      if (response.data.success) {
+        Swal.fire({
+          title: "Inventory Restored!",
+          html: `
+            <div class="text-left">
+              <p class="text-gray-600 mb-4">Successfully restored inventory for:</p>
+              <ul class="space-y-2">
+                ${response.data.restoredProducts.map(p => `
+                  <li class="text-sm bg-green-50 p-2 rounded">
+                    <strong>${p.name}</strong>: +${p.quantityRestored} units (New: ${p.newQuantity})
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+          `,
+          icon: "success",
+          confirmButtonColor: "#3B82F6"
+        });
+      }
+    } catch (error) {
+      console.error("Error restoring inventory:", error);
+      toast.error(error.response?.data?.message || "Failed to restore inventory");
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
@@ -188,12 +225,12 @@ const OrderDetailsModal = ({
                   <div className="flex items-center space-x-3">
                     <Users className="h-4 w-4 text-blue-600" />
                     <span className="text-blue-700 text-sm font-medium">Name:</span>
-                    <span className="font-bold text-blue-900">{selectedOrder.customer.name}</span>
+                    <span className="font-bold text-blue-900">{selectedOrder.customer.name || 'N/A'}</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Mail className="h-4 w-4 text-blue-600" />
                     <span className="text-blue-700 text-sm font-medium">Email:</span>
-                    <span className="text-blue-800">{selectedOrder.customer.email}</span>
+                    <span className="text-blue-800">{selectedOrder.customer.email || 'N/A'}</span>
                   </div>
                   {selectedOrder.customer.phone && (
                     <div className="flex items-center space-x-3">
@@ -285,7 +322,7 @@ const OrderDetailsModal = ({
               </div>
             )}
 
-            {/* ✅ NEW: Route Map Section */}
+            {/* Route Map Section */}
             {selectedOrder.customer?.location && user?.location && (
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 mb-6">
                 <div className="flex items-center mb-4">
@@ -348,13 +385,6 @@ const OrderDetailsModal = ({
                   </button>
                 </div>
                 
-                {/* Debug information (remove in production)
-                <div className="mb-2 text-xs text-gray-500 bg-gray-100 p-2 rounded">
-                  <strong>Debug Info:</strong><br/>
-                  Raw proof path: {selectedOrder.proofOfPayment}<br/>
-                  Final URL: {proofImageUrl}
-                </div> */}
-                
                 {showProofImage && (
                   <div className="mt-4">
                     <div className="flex justify-center">
@@ -396,7 +426,7 @@ const OrderDetailsModal = ({
               <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b-2 border-gray-200">
                 <h4 className="font-bold text-gray-900 text-lg flex items-center">
                   <ShoppingCart className="h-5 w-5 mr-3 text-blue-600" />
-                  Order Items ({selectedOrder.items.length})
+                  Order Items ({selectedOrder.items?.length || 0})
                 </h4>
               </div>
               <div className="overflow-x-auto">
@@ -410,7 +440,7 @@ const OrderDetailsModal = ({
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-100">
-                    {selectedOrder.items.map((item, index) => (
+                    {(selectedOrder.items || []).map((item, index) => (
                       <tr key={index} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
                         <td className="px-6 py-4 text-sm font-bold text-gray-900">{item.name}</td>
                         <td className="px-6 py-4 text-center">
@@ -424,7 +454,6 @@ const OrderDetailsModal = ({
                     ))}
                   </tbody>
                   <tfoot className="bg-gradient-to-r from-green-50 to-green-100">
-                    {/* ✅ CRITICAL FIX: Show breakdown only if deliveryFee data exists */}
                     {selectedOrder.deliveryFee !== undefined && selectedOrder.deliveryDistance !== undefined ? (
                       <>
                         <tr className="border-t border-green-200">
@@ -432,9 +461,7 @@ const OrderDetailsModal = ({
                           <td className="px-6 py-3 text-right text-sm font-bold text-gray-900">
                             ₱{(() => {
                               const calculatedSubtotal = selectedOrder.total - selectedOrder.deliveryFee;
-                              // Check if the subtotal makes sense
                               if (calculatedSubtotal < 0 || calculatedSubtotal < selectedOrder.deliveryFee * 0.5) {
-                                // Total probably doesn't include delivery fee yet
                                 return selectedOrder.total.toFixed(2);
                               }
                               return calculatedSubtotal.toFixed(2);
@@ -446,7 +473,6 @@ const OrderDetailsModal = ({
                             Delivery Fee {selectedOrder.deliveryDistance > 0 && `(${selectedOrder.deliveryDistance.toFixed(2)} km)`}:
                           </td>
                           <td className="px-6 py-3 text-right text-sm font-bold text-gray-900">
-                            {/* ✅ CRITICAL FIX: Only show FREE if deliveryFee is EXACTLY 0 */}
                             {selectedOrder.deliveryFee === 0 ? (
                               <span className="text-green-600">FREE</span>
                             ) : (
@@ -459,7 +485,6 @@ const OrderDetailsModal = ({
                           <td className="px-6 py-4 text-right text-xl font-bold text-green-600">
                             ₱{(() => {
                               const calculatedSubtotal = selectedOrder.total - selectedOrder.deliveryFee;
-                              // If total doesn't include delivery fee, add it
                               if (calculatedSubtotal < 0 || calculatedSubtotal < selectedOrder.deliveryFee * 0.5) {
                                 return (selectedOrder.total + selectedOrder.deliveryFee).toFixed(2);
                               }
@@ -469,7 +494,6 @@ const OrderDetailsModal = ({
                         </tr>
                       </>
                     ) : (
-                      // ✅ Fallback for old orders without delivery fee data
                       <tr>
                         <td colSpan="3" className="px-6 py-4 text-right text-lg font-bold text-gray-900">Total Amount:</td>
                         <td className="px-6 py-4 text-right text-xl font-bold text-green-600">₱{selectedOrder.total.toFixed(2)}</td>
@@ -482,7 +506,7 @@ const OrderDetailsModal = ({
           </div>
         </div>
 
-        {/* Action Buttons at the bottom - Using OrderActionButtons component */}
+        {/* Action Buttons at the bottom */}
         <OrderActionButtons 
           selectedOrder={selectedOrder}
           updateOrderStatus={updateOrderStatus}

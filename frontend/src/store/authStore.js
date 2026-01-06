@@ -142,6 +142,46 @@ export const useAuthStore = create((set) => ({
         }
     },
 
+    // Driver signup
+    driverSignup: async (email, password, name, phone, address, locationCoords) => {
+        set({ isLoading: true, error: null });
+        try {
+            const res = await axios.post(`${API_URL}/driverSignup`, { 
+                email, password, name, phone, address, location: locationCoords, role: "driver" 
+            });
+            if (res.data.success) {
+                set({ 
+                    message: "Verification code sent to email",
+                    isLoading: false,
+                    isAuthenticated: false,
+                    user: null
+                });
+                return true;
+            }
+        } catch (e) {
+            set({ error: e.response?.data?.message || "Error signing up", isLoading: false });
+            throw e;
+        }
+    },
+    driverLogin: async (email, password) => {
+        set({ isLoading: true, error: null });
+        try {
+            // clear previous session
+            localStorage.clear();
+            sessionStorage.clear();
+
+            const res = await axios.post(`${API_URL}/driverLogin`, { email, password });
+            if (res.data.token) {
+                localStorage.setItem('token', res.data.token);
+                localStorage.setItem('userRole', 'driver');
+            }
+            set({ isAuthenticated: true, user: res.data.user, isLoading: false });
+        } catch (e) {
+            set({ error: e.response?.data?.message || "Error logging in", isLoading: false });
+            throw e;
+        }
+    },
+
     // Common logout for both admin and customer
     logout: async () => {
         set({ isLoading: true, error: null });

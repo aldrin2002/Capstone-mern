@@ -136,6 +136,74 @@ export const costumerSignup = async (req, res) => {
     }
 };
 
+export const driverSignup = async (req, res) => {
+  try {
+    const { email, password, name, phone, address, location } = req.body;
+
+    if (!email || !password || !name || !phone || !address) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    }
+    if (!location || !location.lat || !location.lng) {
+      return res.status(400).json({ success: false, message: "Location coordinates are required. Please select your address from the suggestions." });
+    }
+    if (!/^09\d{9}$/.test(phone)) {
+      return res.status(400).json({ success: false, message: "Phone number must be 11 digits starting with 09" });
+    }
+
+    const exists = await User.findOne({ email });
+    if (exists) return res.status(400).json({ success: false, message: "User already exists" });
+
+    const hashed = await bcryptjs.hash(password, 10);
+    const { code, expires } = createVerification();
+
+    const user = new User({
+      email,
+      password: hashed,
+      name,
+      phone,
+      address,
+      location: { lat: parseFloat(location.lat), lng: parseFloat(location.lng) },
+      role: "driver",
+      emailVerified: false,
+      verificationCode: code,
+      verificationExpires: expires
+    });
+
+    await user.save();
+    await sendVerificationEmail(email, code);
+
+    return res.status(201).json({ success: true, message: "Verification code sent", email });
+  } catch (e) {
+    console.error("Driver signup error:", e);
+    return res.status(500).json({ success: false, message: "Error creating driver account" });
+  }
+};
+
+export const driverLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email, role: "driver" });
+    if (!user) return res.status(400).json({ success: false, message: "Invalid credentials" });
+    if (!user.emailVerified) return res.status(403).json({ success: false, message: "Please verify your email first." });
+
+    const ok = await bcryptjs.compare(password, user.password);
+    if (!ok) return res.status(400).json({ success: false, message: "Invalid credentials" });
+
+    const token = await generateTokenAndSetCookie(res, user._id);
+    await User.updateOne({ _id: user._id }, { $set: { lastLogin: new Date() } });
+
+    return res.status(200).json({
+      success: true,
+      message: "Logged in successfully",
+      token,
+      user: { ...user._doc, password: undefined }
+    });
+  } catch (e) {
+    console.error("Driver login error:", e);
+    return res.status(400).json({ success: false, message: e.message });
+  }
+};
+
 export const logout = async (req, res) => {
     try {
         res.clearCookie("token", {

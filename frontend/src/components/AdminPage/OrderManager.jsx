@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { useMessageNotifications } from "../../context/MessageNotificationContext"; // Import socket context
 import { ShoppingCart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-hot-toast"; // ✅ FIXED
 
 // Import split components
 import OrderSearchFilter from "./OrderManager/OrderSearchFilter";
@@ -168,6 +169,29 @@ const OrderManager = () => {
     
     // Update order status
     const updateOrderStatus = async (id, status) => {
+        // Show confirmation for cancellation
+        if (status === "Cancelled") {
+            const result = await Swal.fire({
+                title: "Cancel Order?",
+                html: `
+                  <p class="text-gray-600 mb-2">Are you sure you want to cancel this order?</p>
+                  <p class="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
+                    ℹ️ Product quantities will be automatically restored to inventory
+                  </p>
+                `,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#EF4444",
+                cancelButtonColor: "#6B7280",
+                confirmButtonText: "Yes, cancel order",
+                cancelButtonText: "No, keep order"
+            });
+
+            if (!result.isConfirmed) {
+                return;
+            }
+        }
+
         Swal.fire({
             title: 'Updating...',
             html: 'Please wait while we update the order status',
@@ -179,27 +203,45 @@ const OrderManager = () => {
         
         setIsLoading(true);
         try {
-            await axios.patch(`${API_URL}/${id}/status`, { status }, {
-                withCredentials: true
-            });
+            // ✅ FIXED: Use correct route format - backend expects /:id/status
+            const response = await axios.patch(
+                `${API_URL}/${id}/status`, 
+                { status }, 
+                { withCredentials: true }
+            );
             
+            // Show success message
+            const message = status === "Cancelled" 
+                ? "Order cancelled and inventory restored successfully! 📦"
+                : `Order status updated to ${status} successfully!`;
+
             Swal.fire({
                 icon: 'success',
                 title: 'Updated!',
-                text: `Order status updated to ${status}`,
-                timer: 1500,
+                text: message,
+                timer: 2000,
                 showConfirmButton: false
             });
             
-            // Update local state
+            // Update orders list
+            setOrders(prevOrders =>
+                prevOrders.map(order =>
+                    order._id === id
+                        ? { ...order, status, updatedAt: new Date() }
+                        : order
+                )
+            );
+            
+            // Update selected order if it's the one being updated
             if (selectedOrder && selectedOrder._id === id) {
                 setSelectedOrder({
                     ...selectedOrder,
-                    status
+                    status,
+                    updatedAt: new Date()
                 });
             }
             
-            // Refresh orders
+            // Refresh orders based on filter
             if (statusFilter !== "All") {
                 fetchOrdersByStatus(statusFilter);
             } else {

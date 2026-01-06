@@ -14,6 +14,7 @@ import {
   Phone,
   Clock,
   MapPin,
+  Truck,              // ✅ ADD
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
@@ -35,6 +36,7 @@ const UsersManager = () => {
     total: 0,
     admins: 0,
     customers: 0,
+    drivers: 0,        // ✅ ADD
     newThisMonth: 0,
   });
 
@@ -51,8 +53,9 @@ const UsersManager = () => {
   // Calculate user statistics
   const calculateStats = (usersData) => {
     const total = usersData.length;
-    const admins = usersData.filter((user) => user.role === "admin").length;
-    const customers = usersData.filter((user) => user.role !== "admin").length;
+    const admins = usersData.filter((u) => u.role === "admin").length;
+    const customers = usersData.filter((u) => u.role === "customer").length; // ✅ FIX
+    const drivers = usersData.filter((u) => u.role === "driver").length;     // ✅ ADD
 
     // Calculate new users this month
     const currentMonth = new Date().getMonth();
@@ -65,7 +68,7 @@ const UsersManager = () => {
       );
     }).length;
 
-    setStats({ total, admins, customers, newThisMonth });
+    setStats({ total, admins, customers, drivers, newThisMonth });
   };
 
   // Fetch all users
@@ -235,7 +238,7 @@ const UsersManager = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4"> {/* ✅ expanded to 5 */}
         <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
@@ -274,6 +277,21 @@ const UsersManager = () => {
             </div>
             <div className="p-3 bg-green-50 rounded-xl group-hover:bg-green-100 transition-colors">
               <User className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Drivers - ✅ NEW */}
+        <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Drivers</p>
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                {stats.drivers}
+              </p>
+            </div>
+            <div className="p-3 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition-colors">
+              <Truck className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
@@ -404,10 +422,16 @@ const UsersManager = () => {
                           className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full transition-all duration-300 ${
                             user.role === "admin"
                               ? "bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 group-hover:from-purple-200 group-hover:to-purple-300"
+                              : user.role === "driver"
+                              ? "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 group-hover:from-blue-200 group-hover:to-blue-300"
                               : "bg-gradient-to-r from-green-100 to-green-200 text-green-800 group-hover:from-green-200 group-hover:to-green-300"
                           }`}
                         >
-                          {user.role === "admin" ? "Admin" : "Customer"}
+                          {user.role === "admin"
+                            ? "Admin"
+                            : user.role === "driver"
+                            ? "Driver"
+                            : "Customer"}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
@@ -449,10 +473,16 @@ const UsersManager = () => {
                     className={`px-2 py-1 text-xs font-bold rounded-full ${
                       user.role === "admin"
                         ? "bg-purple-100 text-purple-800"
+                        : user.role === "driver"
+                        ? "bg-blue-100 text-blue-800"
                         : "bg-green-100 text-green-800"
                     }`}
                   >
-                    {user.role === "admin" ? "Admin" : "Customer"}
+                    {user.role === "admin"
+                      ? "Admin"
+                      : user.role === "driver"
+                      ? "Driver"
+                      : "Customer"}
                   </span>
                 </div>
 
@@ -516,10 +546,16 @@ const UsersManager = () => {
                     className={`px-3 py-1 inline-flex text-sm leading-5 font-bold rounded-full ${
                       selectedUser.role === "admin"
                         ? "bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800"
+                        : selectedUser.role === "driver"
+                        ? "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800"
                         : "bg-gradient-to-r from-green-100 to-green-200 text-green-800"
                     }`}
                   >
-                    {selectedUser.role === "admin" ? "Admin" : "Customer"}
+                    {selectedUser.role === "admin"
+                      ? "Admin"
+                      : selectedUser.role === "driver"
+                      ? "Driver"
+                      : "Customer"}
                   </span>
                 </div>
               </div>

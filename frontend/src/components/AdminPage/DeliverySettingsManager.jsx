@@ -12,7 +12,6 @@ const DeliverySettingsManager = () => {
   const [settings, setSettings] = useState({
     baseRate: 30,
     perKmRate: 10,
-    freeDeliveryThreshold: 500,
     maxDeliveryDistance: 20
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -150,23 +149,6 @@ const DeliverySettingsManager = () => {
               <p className="text-xs text-gray-500 mt-1">Additional charge per kilometer traveled</p>
             </div>
 
-            {/* Free Delivery Threshold */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                Free Delivery Threshold (₱)
-              </label>
-              <input
-                type="number"
-                name="freeDeliveryThreshold"
-                value={settings.freeDeliveryThreshold}
-                onChange={handleChange}
-                min="0"
-                step="50"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">Orders above this amount get free delivery</p>
-            </div>
-
             {/* Max Delivery Distance */}
             <div>
               <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -220,9 +202,6 @@ const DeliverySettingsManager = () => {
                   Fee = ₱{settings.baseRate} + (Distance × ₱{settings.perKmRate})
                 </p>
               </div>
-              <p className="text-xs text-gray-600 mt-3">
-                💡 <strong>Free delivery</strong> when order total ≥ ₱{settings.freeDeliveryThreshold}
-              </p>
             </div>
           </div>
 
@@ -251,7 +230,6 @@ const DeliverySettingsManager = () => {
             <ul className="space-y-2 text-sm text-green-800">
               <li>✅ Customers see calculated delivery fee at checkout</li>
               <li>✅ Fee is based on distance between cafe and delivery address</li>
-              <li>✅ Orders above ₱{settings.freeDeliveryThreshold} get FREE delivery</li>
               <li>✅ Maximum delivery range: {settings.maxDeliveryDistance} km</li>
             </ul>
           </div>

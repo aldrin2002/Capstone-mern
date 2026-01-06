@@ -296,7 +296,7 @@ const LandingPage = () => {
       {/* Header */}
       <header className="relative z-10 bg-white/10 backdrop-blur-md border-b border-white/20">
         <div className="container mx-auto flex justify-between items-center py-4 px-6">
-          <h1 className="text-2xl font-bold text-white">CafeX</h1>
+          <h1 className="text-2xl font-bold text-white">Cafe Delicity</h1>
           <nav className="flex items-center space-x-2 sm:space-x-4">
             {/* ✅ Visit Counter - RIGHT BEFORE Install App */}
             <VisitCounter />
@@ -306,6 +306,9 @@ const LandingPage = () => {
             </Link> 
             <Link to="/costumerLogin" className="text-white hover:text-blue-200 transition-colors text-sm sm:text-base">
               Customer
+            </Link>
+            <Link to="/driverLogin" className="text-white hover:text-blue-200 transition-colors text-sm sm:text-base">
+              Driver
             </Link>
           </nav>
         </div>
@@ -317,7 +320,7 @@ const LandingPage = () => {
         <section className="h-[500px] flex items-center justify-center">
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 max-w-2xl mx-4">
             <h1 className="text-5xl font-bold mb-4 text-white text-center">
-              Welcome to CafeX
+              Welcome to Cafe Delicity
             </h1>
             <p className="text-xl mb-8 text-white/80 text-center">
               Your Centralized Platform for Cafe
@@ -338,13 +341,13 @@ const LandingPage = () => {
         <section className="py-16 px-4">
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 max-w-6xl mx-auto">
             <h2 className="text-3xl font-bold text-center mb-12 text-white">
-              Why Choose CafeX?
+              Why Choose Cafe Delicity?
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
               {[
                 { icon: Coffee, title: "Premium Coffee", desc: "Expertly sourced and perfectly brewed coffee" },
                 { icon: Star, title: "Quality Service", desc: "Professional and friendly customer service" },
-                { icon: Clock, title: "Fast Ordering", desc: "Quick and easy online ordering system" },
+                { icon: Clock, title: "Simple Ordering", desc: "Quick and simple online ordering system" },
                 { icon: Users, title: "Customer First", desc: "Dedicated to customer satisfaction" }
               ].map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="bg-white/5 backdrop-blur-sm rounded-xl p-6 hover:bg-white/10 transition duration-300">
@@ -363,8 +366,8 @@ const LandingPage = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-xl font-bold mb-4 text-white">CafeX</h3>
-              <p className="text-white/70">Your Cafe Centralize Platform For Cafe</p>
+              <h3 className="text-xl font-bold mb-4 text-white">Cafe Delicity </h3>
+              <p className="text-white/70">Powered by CafeX</p>
             </div>
             <ContactSection />
             <div>

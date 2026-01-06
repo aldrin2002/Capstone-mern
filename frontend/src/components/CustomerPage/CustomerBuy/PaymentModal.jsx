@@ -3,8 +3,8 @@ import { X, CreditCard, Upload, Check, Truck, Loader } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import Swal from 'sweetalert2';
-import AddressAutocomplete from '../../Map/AddressAutoComplete'; // ✨ Import
-import AddressPickerMap from '../../Map/AddressPickerMap'; // ✨ Import
+import AddressAutocomplete from '../../Map/AddressAutoComplete';
+import AddressPickerMap from '../../Map/AddressPickerMap';
 import { useAuthStore } from '../../../store/authStore';
 
 const PaymentModal = ({ 
@@ -22,21 +22,18 @@ const PaymentModal = ({
   const [deliveryCoordinates, setDeliveryCoordinates] = useState(
     user?.location ? { lat: user.location.lat, lng: user.location.lng } : null
   );
-  
   const [gcashReference, setGcashReference] = useState("");
   const [proofImage, setProofImage] = useState(null);
   const [proofImagePreview, setProofImagePreview] = useState(null);
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
 
-  // ✅ NEW: Delivery fee states
-  const [deliveryFee, setDeliveryFee] = useState(50); // Default
+  const [deliveryFee, setDeliveryFee] = useState(50);
   const [deliveryDistance, setDeliveryDistance] = useState(0);
   const [isCalculatingFee, setIsCalculatingFee] = useState(false);
   const [deliverySettings, setDeliverySettings] = useState(null);
 
   const fileInputRef = useRef(null);
 
-  // ✅ NEW: Fetch delivery settings on mount
   useEffect(() => {
     fetchDeliverySettings();
   }, []);
@@ -46,7 +43,6 @@ const PaymentModal = ({
       const apiUrl = import.meta.env.MODE === "development" 
         ? "http://localhost:5000/api/delivery-settings" 
         : "/api/delivery-settings";
-      
       const response = await axios.get(apiUrl);
       setDeliverySettings(response.data);
     } catch (error) {
@@ -54,7 +50,6 @@ const PaymentModal = ({
     }
   };
 
-  // ✅ NEW: Calculate delivery fee when coordinates change
   useEffect(() => {
     if (deliveryCoordinates && deliverySettings) {
       calculateDeliveryFee();
@@ -62,11 +57,9 @@ const PaymentModal = ({
   }, [deliveryCoordinates, deliverySettings, cartTotal]);
 
   const calculateDeliveryFee = async () => {
-    // Get admin/cafe location from first admin user
     try {
       setIsCalculatingFee(true);
       
-      // Fetch admin location
       const usersApiUrl = import.meta.env.MODE === "development" 
         ? "http://localhost:5000/api/users" 
         : "/api/users";
@@ -82,7 +75,6 @@ const PaymentModal = ({
 
       const cafeLocation = admins[0].location;
       
-      // Calculate distance using Mapbox Directions API
       const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
       const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${cafeLocation.lng},${cafeLocation.lat};${deliveryCoordinates.lng},${deliveryCoordinates.lat}`;
       
@@ -96,11 +88,10 @@ const PaymentModal = ({
 
       if (mapboxResponse.data.routes && mapboxResponse.data.routes.length > 0) {
         const route = mapboxResponse.data.routes[0];
-        const distanceInKm = route.distance / 1000; // Convert meters to km
+        const distanceInKm = route.distance / 1000;
         
         setDeliveryDistance(distanceInKm);
         
-        // Calculate fee using backend
         const feeApiUrl = import.meta.env.MODE === "development" 
           ? "http://localhost:5000/api/delivery-settings/calculate" 
           : "/api/delivery-settings/calculate";
@@ -113,7 +104,6 @@ const PaymentModal = ({
         if (feeResponse.data.success) {
           setDeliveryFee(feeResponse.data.deliveryFee);
           
-          // Show free delivery notification
           if (feeResponse.data.isFreeDelivery) {
             toast.success('🎉 Free delivery! Your order qualifies!', {
               duration: 3000
@@ -123,7 +113,7 @@ const PaymentModal = ({
       }
     } catch (error) {
       console.error("Error calculating delivery fee:", error);
-      setDeliveryFee(50); // Fallback to default
+      setDeliveryFee(50);
     } finally {
       setIsCalculatingFee(false);
     }
@@ -139,7 +129,7 @@ const PaymentModal = ({
     } else {
       setDeliveryAddress("");
       setDeliveryCoordinates(null);
-      setDeliveryFee(50); // Reset to default
+      setDeliveryFee(50);
     }
   };
 
@@ -169,7 +159,7 @@ const PaymentModal = ({
         
       const response = await axios.post(apiUrl, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        withCredentials: true // ✅ This sends the cookie with JWT token
+        withCredentials: true
       });
       
       console.log("Upload response:", response.data);
@@ -186,35 +176,30 @@ const PaymentModal = ({
     try {
       setIsProcessingOrder(true);
       
-      // Validate delivery address
       if (!deliveryAddress.trim()) {
         toast.error("Please enter a delivery address");
         setIsProcessingOrder(false);
         return;
       }
 
-      // Validate location coordinates
       if (!deliveryCoordinates) {
         toast.error("Please select a valid address from the suggestions");
         setIsProcessingOrder(false);
         return;
       }
       
-      // Validate GCash reference number
       if (!gcashReference.trim()) {
         toast.error("Please enter GCash reference number");
         setIsProcessingOrder(false);
         return;
       }
       
-      // Validate proof of payment
       if (!proofImage) {
         toast.error("Please upload proof of payment");
         setIsProcessingOrder(false);
         return;
       }
       
-      // Upload proof image
       let proofImagePath = "";
       try {
         proofImagePath = await uploadProofImage();
@@ -225,13 +210,13 @@ const PaymentModal = ({
         return;
       }
       
-      // ✅ UPDATED: Build order data with delivery fee and distance
+      // ✅ FIXED: Use correct field names matching backend model
       const orderData = {
         customer: {
           name: user?.name || "Guest",
           email: user?.email || "guest@example.com",
           phone: user?.phone || "",
-          location: deliveryCoordinates ? {  // ✅ ADD THIS!
+          location: deliveryCoordinates ? {
             lat: deliveryCoordinates.lat,
             lng: deliveryCoordinates.lng
           } : null
@@ -243,19 +228,22 @@ const PaymentModal = ({
           price: Number(item.price)
         })),
         
-        // ✅ Ensure both are numbers before adding
         total: parseFloat((Number(cartTotal) + Number(deliveryFee)).toFixed(2)),
         
         deliveryFee: parseFloat(Number(deliveryFee).toFixed(2)),
         deliveryDistance: parseFloat(Number(deliveryDistance).toFixed(2)),
+        
+        // ✅ FIXED: Changed field names to match backend model
+        gcashReferenceNumber: gcashReference.trim(),  // was: gcashReference
+        gcashProofImage: proofImagePath,               // was: proofOfPayment
+        
+        deliveryAddress: deliveryAddress.trim(),
         notes: `GCash Ref: ${gcashReference.trim()}`,
-        gcashReferenceNumber: gcashReference.trim(),
-        gcashProofImage: proofImagePath,
-        deliveryAddress: deliveryAddress.trim()
+        paymentMethod: "GCash"
       };
       
       console.log("📦 Sending order data:", JSON.stringify(orderData, null, 2));
-      console.log("📍 Customer location being sent:", orderData.customer.location); // ✅ ADD THIS LOG
+      console.log("📍 Customer location being sent:", orderData.customer.location);
       console.log("🔢 Total calculation:", {
         cartTotal: Number(cartTotal),
         deliveryFee: Number(deliveryFee),
@@ -276,7 +264,6 @@ const PaymentModal = ({
       
       console.log("✅ Order created successfully:", response.data);
       
-      // Reset states
       setCart([]);
       setShowPaymentModal(false);
       setDeliveryAddress("");

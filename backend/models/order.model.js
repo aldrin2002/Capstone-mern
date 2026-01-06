@@ -29,7 +29,7 @@ const orderSchema = new mongoose.Schema(
     customer: {
       name: { type: String, required: true },
       email: { type: String, required: true },
-      phone: { type: String, required: true },
+      phone: { type: String, required: false, default: "" },
       location: {
         lat: { type: Number },
         lng: { type: Number },
@@ -65,9 +65,36 @@ const orderSchema = new mongoose.Schema(
       enum: ["Pending", "Paid", "Failed"],
       default: "Paid",
     },
-    gcashReferenceNumber: { type: String, required: true },
-    gcashProofImage: { type: String, required: true },
+    gcashReferenceNumber: { type: String, required: false, default: "" },
+    gcashProofImage: { type: String, required: false, default: "" },
     deliveryAddress: { type: String, required: true },
+    driverAssigned: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    pickupTime: { type: Date, default: null },
+    etaDelivery: { type: Date, default: null },
+    // ✅ NEW: Add rating and feedback fields
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: null,
+    },
+    feedback: {
+      type: String,
+      default: "",
+      maxLength: 500,
+    },
+    hasRated: {
+      type: Boolean,
+      default: false,
+    },
+    ratedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
