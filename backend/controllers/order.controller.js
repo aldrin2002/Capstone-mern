@@ -9,6 +9,7 @@ export const getAllOrders = async (req, res) => {
     try {
         const orders = await Order.find()
             .populate('items.product', 'name price image category stock')
+            .populate('driverAssigned', 'name email role')
             .sort({ createdAt: -1 });
         res.status(200).json(orders);
     } catch (error) {
@@ -21,7 +22,10 @@ export const getAllOrders = async (req, res) => {
 export const getOrdersByStatus = async (req, res) => {
     try {
         const { status } = req.params;
-        const orders = await Order.find({ status }).sort({ createdAt: -1 });
+        const orders = await Order.find({ status })
+            .populate('items.product', 'name price image category stock')
+            .populate('driverAssigned', 'name email role')
+            .sort({ createdAt: -1 });
         res.status(200).json(orders);
     } catch (error) {
         console.error("Error in getOrdersByStatus:", error);
@@ -33,7 +37,9 @@ export const getOrdersByStatus = async (req, res) => {
 export const getOrderById = async (req, res) => {
     try {
         const { id } = req.params;
-        const order = await Order.findById(id);
+        const order = await Order.findById(id)
+            .populate('items.product', 'name price image category stock')
+            .populate('driverAssigned', 'name email role');
         
         if (!order) {
             return res.status(404).json({ message: "Order not found" });
@@ -195,7 +201,7 @@ export const updateOrder = async (req, res) => {
       id,
       updates,
       { new: true, runValidators: true }
-    ).populate('customer', 'name email');
+    ).populate('driverAssigned', 'name email role');
         
         if (!updatedOrder) {
             return res.status(404).json({ message: "Order not found" });
@@ -219,7 +225,7 @@ export const updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ["Pending", "Processing", "Delivered", "Completed", "Cancelled"];
+    const validStatuses = ["Pending", "Preparing Food", "Ready for Delivery", "Processing", "Delivered", "Completed", "Cancelled"];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ 
         success: false, 
@@ -403,7 +409,7 @@ export const getCustomerOrders = async (req, res) => {
 // Get all possible order statuses
 export const getOrderStatuses = async (req, res) => {
     try {
-        const statuses = ["Pending", "Processing", "Delivered", "Completed", "Cancelled"];
+        const statuses = ["Pending", "Preparing Food", "Ready for Delivery", "Processing", "Delivered", "Completed", "Cancelled"];
         res.status(200).json(statuses);
     } catch (error) {
         console.error("Error in getOrderStatuses:", error);
@@ -414,22 +420,44 @@ export const getOrderStatuses = async (req, res) => {
 // Assign driver to order
 export const assignDriver = async (req, res) => {
     try {
-        const { orderId, driverId } = req.body;
-        
-        const order = await Order.findById(orderId);
+        const { id } = req.params;
+        const driverId = req.body?.driverId || req.userId;
+
+        if (!driverId) {
+            return res.status(400).json({ message: "Driver ID is required" });
+        }
+
+        const order = await Order.findById(id);
         if (!order) {
             return res.status(404).json({ message: "Order not found" });
         }
-        
+
+        if (order.driverAssigned && order.driverAssigned.toString() !== driverId) {
+            return res.status(409).json({ message: "Order is already assigned to another driver" });
+        }
+
         const driver = await User.findById(driverId);
         if (!driver || driver.role !== "driver") {
             return res.status(404).json({ message: "Driver not found" });
         }
-        
-        order.driver = driverId;
+
+        order.driverAssigned = driverId;
+        if (order.status === "Ready for Delivery") {
+            order.status = "Processing";
+        }
         await order.save();
-        
-        res.status(200).json({ message: "Driver assigned successfully", order });
+
+        const populatedOrder = await Order.findById(order._id)
+            .populate('items.product', 'name price image category stock')
+            .populate('driverAssigned', 'name email role');
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('order-assigned', { order: populatedOrder });
+            console.log(`📡 Broadcasting order assignment: ${order._id}`);
+        }
+
+        res.status(200).json({ message: "Driver assigned successfully", order: populatedOrder });
     } catch (error) {
         console.error("Error in assignDriver:", error);
         res.status(500).json({ message: "Server error while assigning driver" });
@@ -440,8 +468,10 @@ export const assignDriver = async (req, res) => {
 export const getDriverOrders = async (req, res) => {
     try {
         const driverId = req.userId;
-        
-        const orders = await Order.find({ driver: driverId })
+
+        const orders = await Order.find({ driverAssigned: driverId })
+            .populate('items.product', 'name price image category stock')
+            .populate('driverAssigned', 'name email role')
             .sort({ createdAt: -1 });
         
         res.status(200).json(orders);

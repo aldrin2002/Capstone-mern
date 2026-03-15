@@ -234,6 +234,20 @@ const CustomerOrders = () => {
           icon: <Clock className="h-4 w-4" />,
           border: "border-yellow-300"
         };
+      case "Preparing Food":
+        return {
+          bg: "bg-gradient-to-r from-indigo-100 to-blue-100",
+          text: "text-indigo-800",
+          icon: <Package className="h-4 w-4" />,
+          border: "border-indigo-300"
+        };
+      case "Ready for Delivery":
+        return {
+          bg: "bg-gradient-to-r from-cyan-100 to-teal-100",
+          text: "text-cyan-800",
+          icon: <Truck className="h-4 w-4" />,
+          border: "border-cyan-300"
+        };
       case "Processing":
         return {
           bg: "bg-gradient-to-r from-blue-100 to-indigo-100",
@@ -361,6 +375,8 @@ const CustomerOrders = () => {
                 >
                   <option value="All">All Orders</option>
                   <option value="Pending">Pending</option>
+                  <option value="Preparing Food">Preparing Food</option>
+                  <option value="Ready for Delivery">Ready for Delivery</option>
                   <option value="Processing">Processing</option>
                   <option value="Delivered">Delivered</option>
                   <option value="Completed">Completed</option>

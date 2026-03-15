@@ -30,7 +30,7 @@ const OrderManager = () => {
     const { socket } = useMessageNotifications();
     
     // UPDATE: Include "Delivered" status
-    const statuses = ["All", "Pending", "Processing", "Delivered", "Completed", "Cancelled"];
+    const statuses = ["All", "Pending", "Preparing Food", "Ready for Delivery", "Processing", "Delivered", "Completed", "Cancelled"];
     
     // Removed stats summary cards per request (previously computed here)
     
@@ -73,6 +73,38 @@ const OrderManager = () => {
 
         return () => {
             socket.off('order-status-updated', handleOrderStatusUpdate);
+        };
+    }, [socket]);
+
+    // NEW: Real-time driver assignment updates
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleOrderAssigned = (payload) => {
+            const order = payload?.order;
+            if (!order) return;
+
+            setOrders(prevOrders => {
+                const index = prevOrders.findIndex(o => o._id === order._id);
+                if (index >= 0) {
+                    const next = [...prevOrders];
+                    next[index] = order;
+                    return next;
+                }
+                return [order, ...prevOrders];
+            });
+
+            setSelectedOrder(prevSelected =>
+                prevSelected && prevSelected._id === order._id ? order : prevSelected
+            );
+        };
+
+        socket.on('order-assigned', handleOrderAssigned);
+        socket.on('order-updated', handleOrderAssigned);
+
+        return () => {
+            socket.off('order-assigned', handleOrderAssigned);
+            socket.off('order-updated', handleOrderAssigned);
         };
     }, [socket]);
 

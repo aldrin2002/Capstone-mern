@@ -6,9 +6,11 @@ import { useMessageNotifications } from "../../context/MessageNotificationContex
 import { Navigation, Truck, MapPin, Users, Mail, Phone, Calendar, ShoppingCart, Image, ZoomIn, CheckCircle, XCircle, Clock, ClipboardList, Search, Filter } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import RouteMap from "../Map/RouteMap";
+import { toast } from "react-hot-toast";
 
 const API_BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5000" : "";
 const API_URL_ORDERS = `${API_BASE_URL}/api/orders`;
+const DRIVER_VISIBLE_STATUSES = ["Ready for Delivery", "Processing", "Delivered", "Completed"];
 
 const DriverOrdersPage = () => {
   const { user } = useAuthStore();
@@ -24,18 +26,23 @@ const DriverOrdersPage = () => {
   const [showProofImage, setShowProofImage] = useState(false);
   const [fullScreenImage, setFullScreenImage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAccepting, setIsAccepting] = useState(false);
   const { socket } = useMessageNotifications();
 
   // Read orderId from the query string for deep-link selection
   const params = new URLSearchParams(location.search);
   const selectedOrderId = params.get("orderId");
 
+  const isVisibleToDriver = (order) => DRIVER_VISIBLE_STATUSES.includes(order?.status);
+
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
       try {
         const res = await axios.get(`${API_URL_ORDERS}`, { withCredentials: true });
-        const list = (res.data || []).sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
+        const list = (res.data || [])
+          .filter(isVisibleToDriver)
+          .sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
         setOrders(list);
 
         // Desktop: auto select (first or deep-link)
@@ -77,18 +84,27 @@ const DriverOrdersPage = () => {
     const handleAssign = (payload) => {
       if (!payload?.order) return;
       setOrders(prev => {
-        const idx = prev.findIndex(o => o._id === payload.order._id);
+        const order = payload.order;
+        const idx = prev.findIndex(o => o._id === order._id);
         let next;
-        if (idx >= 0) {
-          next = [...prev];
-          next[idx] = payload.order;
+
+        if (isVisibleToDriver(order)) {
+          if (idx >= 0) {
+            next = [...prev];
+            next[idx] = order;
+          } else {
+            next = [order, ...prev];
+          }
         } else {
-          next = [payload.order, ...prev];
+          next = prev.filter((o) => o._id !== order._id);
+          if (selectedOrder?._id === order._id) {
+            setSelectedOrder(null);
+          }
         }
 
         // Desktop auto-update selection; mobile only update if currently viewing that order
-        if (selectedOrderId && payload.order._id === selectedOrderId) {
-          setSelectedOrder(payload.order);
+        if (selectedOrderId && order._id === selectedOrderId) {
+          setSelectedOrder(order);
         } else if (!isMobile && !selectedOrder && next.length) {
           setSelectedOrder(next[0]);
         }
@@ -138,10 +154,42 @@ const DriverOrdersPage = () => {
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
+  const resolveDriverId = (driverAssigned) => {
+    if (!driverAssigned) return null;
+    if (typeof driverAssigned === "string") return driverAssigned;
+    return driverAssigned._id || null;
+  };
+
+  const handleAcceptOrder = async (orderToAccept) => {
+    if (!orderToAccept?._id || !user?._id) return;
+    setIsAccepting(true);
+    try {
+      const response = await axios.patch(
+        `${API_URL_ORDERS}/${orderToAccept._id}/assign-driver`,
+        { driverId: user._id },
+        { withCredentials: true }
+      );
+
+      const updatedOrder = response.data?.order || response.data;
+      if (selectedOrder?._id === updatedOrder._id) {
+        setSelectedOrder(updatedOrder);
+      }
+      setOrders((prev) => prev.map((o) => (o._id === updatedOrder._id ? updatedOrder : o)));
+      toast.success("Order accepted. Admin has been notified.");
+    } catch (error) {
+      const message = error.response?.data?.message || "Failed to accept order";
+      toast.error(message);
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
   const getStatusIcon = (status) => {
     switch(status) {
       case "Completed": return <CheckCircle className="h-5 w-5 text-green-500" />;
       case "Cancelled": return <XCircle className="h-5 w-5 text-red-500" />;
+      case "Ready for Delivery": return <Truck className="h-5 w-5 text-cyan-600" />;
+      case "Preparing Food": return <Clock className="h-5 w-5 text-indigo-500" />;
       case "Delivered": return <Truck className="h-5 w-5 text-blue-500" />;
       case "Processing": return <Clock className="h-5 w-5 text-blue-500" />;
       case "Pending": return <Clock className="h-5 w-5 text-yellow-500" />;
@@ -152,6 +200,8 @@ const DriverOrdersPage = () => {
     switch(status) {
       case "Completed": return "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300";
       case "Cancelled": return "bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300";
+      case "Ready for Delivery": return "bg-gradient-to-r from-cyan-100 to-teal-200 text-cyan-900 border-cyan-300";
+      case "Preparing Food": return "bg-gradient-to-r from-indigo-100 to-blue-200 text-indigo-900 border-indigo-300";
       case "Delivered": return "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300";
       case "Processing": return "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300";
       case "Pending": return "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300";
@@ -174,6 +224,9 @@ const DriverOrdersPage = () => {
   };
 
   const proofImageUrl = getProofImageUrl(selectedOrder?.proofOfPayment);
+  const assignedDriverId = resolveDriverId(selectedOrder?.driverAssigned);
+  const isAssignedToOtherDriver = assignedDriverId && assignedDriverId !== user?._id;
+  const canAcceptOrder = selectedOrder?.status === "Ready for Delivery" && !assignedDriverId;
 
   // Handle window resize (match other pages)
   useEffect(() => {
@@ -210,7 +263,7 @@ const DriverOrdersPage = () => {
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="text-xs md:text-sm bg-white/20 border border-white/30 rounded-lg px-3 py-2 focus:outline-none"
                   >
-                    {["All", "Pending", "Processing", "Delivered", "Completed", "Cancelled"].map(s => (
+                    {["All", "Ready for Delivery", "Processing", "Delivered", "Completed", "Cancelled"].map(s => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
@@ -241,7 +294,12 @@ const DriverOrdersPage = () => {
                     return filtered.length === 0 ? (
                       <div className="p-6 text-center text-gray-600">No orders{statusFilter !== "All" ? ` for ${statusFilter}` : ""}.</div>
                     ) : (
-                      filtered.map((o) => (
+                      filtered.map((o) => {
+                        const listDriverId = resolveDriverId(o.driverAssigned);
+                        const listCanAccept = o.status === "Ready for Delivery" && !listDriverId;
+                        const listAssignedToOther = listDriverId && listDriverId !== user?._id;
+
+                        return (
                         <button
                           key={o._id}
                           onClick={() => handleSelectOrder(o)}
@@ -260,15 +318,31 @@ const DriverOrdersPage = () => {
                               <div className="text-[11px] md:text-xs text-gray-700">
                                 <span className="font-medium">By:</span> <span className="truncate inline-block max-w-[140px] align-middle">{o.customer?.name || 'Unknown'}</span>
                               </div>
+                              <div className="text-[11px] md:text-xs text-gray-700">
+                                <span className="font-medium">Driver:</span> <span className="truncate inline-block max-w-[140px] align-middle">{o.driverAssigned?.name || (listDriverId ? "Assigned" : "Unassigned")}</span>
+                              </div>
                               {o.deliveryAddress && (
                                 <div className="text-[11px] md:text-xs text-gray-700 leading-snug whitespace-normal break-words max-w-full">
                                   <span className="font-medium">To:</span> <span className="line-clamp-2 block">{o.deliveryAddress}</span>
                                 </div>
                               )}
+                              {listCanAccept && !listAssignedToOther && (
+                                <button
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    handleAcceptOrder(o);
+                                  }}
+                                  disabled={isAccepting}
+                                  className="mt-2 inline-flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                  {isAccepting ? "Accepting..." : "Accept Order"}
+                                </button>
+                              )}
                             </div>
                           </div>
                         </button>
-                      ))
+                        );
+                      })
                     );
                   })()
                 )}
@@ -340,9 +414,31 @@ const DriverOrdersPage = () => {
                               </span>
                             </div>
                             <div className="flex items-center justify-between">
+                              <span className="text-green-700 text-sm font-medium">Driver:</span>
+                              <span className="text-green-900 font-medium">
+                                {selectedOrder.driverAssigned?.name || (assignedDriverId ? "Assigned" : "Unassigned")}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
                               <span className="text-green-700 text-sm font-medium">Payment:</span>
                               {getPaymentBadge(selectedOrder.paymentMethod)}
                             </div>
+
+                            {canAcceptOrder && !isAssignedToOtherDriver && (
+                              <button
+                                onClick={() => handleAcceptOrder(selectedOrder)}
+                                disabled={isAccepting}
+                                className="w-full mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                              >
+                                {isAccepting ? "Accepting..." : "Accept Order"}
+                              </button>
+                            )}
+
+                            {isAssignedToOtherDriver && (
+                              <div className="mt-3 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                                Assigned to another driver.
+                              </div>
+                            )}
 
                             {/* Delivery Details */}
                             {selectedOrder.deliveryDistance !== undefined && selectedOrder.deliveryFee !== undefined && (
@@ -554,9 +650,31 @@ const DriverOrdersPage = () => {
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
+                    <span className="text-green-700 font-medium">Driver:</span>
+                    <span className="text-green-900 font-medium text-sm">
+                      {selectedOrder.driverAssigned?.name || (assignedDriverId ? "Assigned" : "Unassigned")}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
                     <span className="text-green-700 font-medium">Payment:</span>
                     {getPaymentBadge(selectedOrder.paymentMethod)}
                   </div>
+
+                  {canAcceptOrder && !isAssignedToOtherDriver && (
+                    <button
+                      onClick={() => handleAcceptOrder(selectedOrder)}
+                      disabled={isAccepting}
+                      className="w-full mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {isAccepting ? "Accepting..." : "Accept Order"}
+                    </button>
+                  )}
+
+                  {isAssignedToOtherDriver && (
+                    <div className="mt-3 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                      Assigned to another driver.
+                    </div>
+                  )}
 
                   {selectedOrder.deliveryDistance !== undefined && selectedOrder.deliveryFee !== undefined && (
                     <>

@@ -14,19 +14,36 @@ const OrderActionButtons = ({
   deleteOrder, 
   isLoading 
 }) => {
-  const handleProcessOrder = () => {
+  const handleStartPreparingFood = () => {
     Swal.fire({
-      title: 'Process this order?',
-      text: "Status will be changed to Processing",
+      title: 'Start preparing this order?',
+      text: "Status will be changed to Preparing Food",
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#2563eb',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, process it!',
+      confirmButtonText: 'Yes, start preparing!',
       customClass: { popup: 'rounded-lg' }
     }).then((result) => {
       if (result.isConfirmed) {
-        updateOrderStatus(selectedOrder._id, "Processing");
+        updateOrderStatus(selectedOrder._id, "Preparing Food");
+      }
+    });
+  };
+
+  const handleFinishPreparingFood = () => {
+    Swal.fire({
+      title: 'Food ready for delivery?',
+      text: "This will send the order receipt to driver side",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#0f766e',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, done processing!',
+      customClass: { popup: 'rounded-lg' }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        updateOrderStatus(selectedOrder._id, "Ready for Delivery");
       }
     });
   };
@@ -109,11 +126,32 @@ const OrderActionButtons = ({
           <div className="grid grid-cols-2 gap-3">
             <button 
               className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-              onClick={handleProcessOrder}
+              onClick={handleStartPreparingFood}
               disabled={isLoading}
             >
               <Clock className="h-4 w-4 mr-2" />
-              Process
+              Preparing Food
+            </button>
+            <button 
+              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              onClick={handleCancelOrder}
+              disabled={isLoading}
+            >
+              <XCircle className="h-4 w-4 mr-2" />
+              Cancel
+            </button>
+          </div>
+        )}
+
+        {selectedOrder.status === "Preparing Food" && (
+          <div className="grid grid-cols-2 gap-3">
+            <button 
+              className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              onClick={handleFinishPreparingFood}
+              disabled={isLoading}
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Done Processing
             </button>
             <button 
               className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
@@ -188,11 +226,32 @@ const OrderActionButtons = ({
             <>
               <button 
                 className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold flex items-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                onClick={handleProcessOrder}
+                onClick={handleStartPreparingFood}
                 disabled={isLoading}
               >
                 <Clock className="h-4 w-4 mr-2" />
-                Process Order
+                Preparing Food
+              </button>
+              <button 
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-bold flex items-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                onClick={handleCancelOrder}
+                disabled={isLoading}
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Cancel Order
+              </button>
+            </>
+          )}
+
+          {selectedOrder.status === "Preparing Food" && (
+            <>
+              <button 
+                className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white px-6 py-3 rounded-xl font-bold flex items-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                onClick={handleFinishPreparingFood}
+                disabled={isLoading}
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Done Processing
               </button>
               <button 
                 className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-xl font-bold flex items-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"

@@ -4,7 +4,8 @@ import {
   Eye, 
   CheckCircle, 
   XCircle, 
-  Clock, 
+  Clock,
+  Truck,
   Image 
 } from "lucide-react";
 
@@ -15,6 +16,12 @@ const OrderTable = ({ filteredOrders, getOrderDetails, formatDate }) => {
         return <CheckCircle className="h-5 w-5 text-green-500" />;
       case "Cancelled":
         return <XCircle className="h-5 w-5 text-red-500" />;
+      case "Ready for Delivery":
+        return <Truck className="h-5 w-5 text-cyan-600" />;
+      case "Preparing Food":
+        return <Clock className="h-5 w-5 text-indigo-500" />;
+      case "Delivered":
+        return <Truck className="h-5 w-5 text-blue-500" />;
       case "Processing":
         return <Clock className="h-5 w-5 text-blue-500" />;
       case "Pending":
@@ -30,6 +37,12 @@ const OrderTable = ({ filteredOrders, getOrderDetails, formatDate }) => {
         return "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300";
       case "Cancelled":
         return "bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300";
+      case "Ready for Delivery":
+        return "bg-gradient-to-r from-cyan-100 to-teal-200 text-cyan-900 border-cyan-300";
+      case "Preparing Food":
+        return "bg-gradient-to-r from-indigo-100 to-blue-200 text-indigo-900 border-indigo-300";
+      case "Delivered":
+        return "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300";
       case "Processing":
         return "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300";
       case "Pending":
