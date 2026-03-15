@@ -244,6 +244,20 @@ export const updateOrderStatus = async (req, res) => {
 
     const previousStatus = order.status;
 
+        if (status === "Completed" && req.role !== "admin") {
+            return res.status(403).json({
+                success: false,
+                message: "Only admin can approve final completion"
+            });
+        }
+
+        if (status === "Completed" && !order.deliveryProofImage) {
+            return res.status(400).json({
+                success: false,
+                message: "Delivery proof is required before admin approval"
+            });
+        }
+
     // ✅ If order is being cancelled, restore product stock
     if (status === "Cancelled" && previousStatus !== "Cancelled") {
       console.log(`📦 Restoring inventory for cancelled order ${id}`);
@@ -273,6 +287,10 @@ export const updateOrderStatus = async (req, res) => {
 
     // Update order status
     order.status = status;
+        if (status === "Completed") {
+            order.deliveryApprovedAt = new Date();
+            order.deliveryApprovedBy = req.userId;
+        }
     order.updatedAt = new Date();
     await order.save();
 
@@ -397,6 +415,7 @@ export const getCustomerOrders = async (req, res) => {
         
         const orders = await Order.find({ "customer.email": customerEmail })
             .populate('items.product', 'name price image category stock')
+            .populate('driverAssigned', 'name email role')
             .sort({ createdAt: -1 });
         
         res.status(200).json(orders);
@@ -602,6 +621,90 @@ export const getAllRatings = async (req, res) => {
         res.status(500).json({ 
             success: false,
             message: "Server error while fetching ratings" 
+        });
+    }
+};
+
+// Driver submits delivery proof and marks order as delivered
+export const submitDriverDeliveryProof = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { deliveryProofImage } = req.body;
+
+        if (req.role !== "driver") {
+            return res.status(403).json({
+                success: false,
+                message: "Only drivers can submit delivery proof"
+            });
+        }
+
+        if (!deliveryProofImage) {
+            return res.status(400).json({
+                success: false,
+                message: "Delivery proof image is required"
+            });
+        }
+
+        const order = await Order.findById(id)
+            .populate("customer", "email name")
+            .populate("driverAssigned", "name email role");
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "Order not found"
+            });
+        }
+
+        if (!order.driverAssigned || order.driverAssigned._id.toString() !== req.userId) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not assigned to this order"
+            });
+        }
+
+        if (order.status !== "Processing") {
+            return res.status(400).json({
+                success: false,
+                message: "Order must be Processing before marking delivered"
+            });
+        }
+
+        const now = new Date();
+        order.deliveryProofImage = deliveryProofImage;
+        order.deliveryProofSubmittedAt = now;
+        order.status = "Delivered";
+        order.updatedAt = now;
+        await order.save();
+
+        const populatedOrder = await Order.findById(order._id)
+            .populate('items.product', 'name price image category stock')
+            .populate('driverAssigned', 'name email role');
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('order-updated', { order: populatedOrder });
+            io.emit('order-assigned', { order: populatedOrder });
+            if (order.customer?.email) {
+                io.to(order.customer.email).emit('order-status-updated', {
+                    orderId: order._id,
+                    status: order.status,
+                    updatedAt: order.updatedAt,
+                    previousStatus: "Processing"
+                });
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Delivery proof submitted and order marked Delivered",
+            order: populatedOrder
+        });
+    } catch (error) {
+        console.error("Error in submitDriverDeliveryProof:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server error"
         });
     }
 };

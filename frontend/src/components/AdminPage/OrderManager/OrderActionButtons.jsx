@@ -14,6 +14,8 @@ const OrderActionButtons = ({
   deleteOrder, 
   isLoading 
 }) => {
+  const hasDeliveryProof = Boolean(selectedOrder?.deliveryProofImage);
+
   const handleStartPreparingFood = () => {
     Swal.fire({
       title: 'Start preparing this order?',
@@ -85,13 +87,13 @@ const OrderActionButtons = ({
 
   const handleCompleteOrder = () => {
     Swal.fire({
-      title: 'Complete this order?',
-      text: "Order will be marked as completed",
+      title: 'Approve delivered order?',
+      text: "This is the final admin approval after checking driver proof",
       icon: 'success',
       showCancelButton: true,
       confirmButtonColor: '#16a34a',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Yes, complete it!',
+      confirmButtonText: 'Yes, approve',
       customClass: { popup: 'rounded-lg' }
     }).then((result) => {
       if (result.isConfirmed) {
@@ -181,10 +183,10 @@ const OrderActionButtons = ({
           <button 
             className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
             onClick={handleCompleteOrder}
-            disabled={isLoading}
+            disabled={isLoading || !hasDeliveryProof}
           >
             <CheckCircle className="h-4 w-4 mr-2" />
-            Mark as Completed
+            {hasDeliveryProof ? "Approve Delivery" : "Waiting Delivery Proof"}
           </button>
         )}
         
@@ -281,10 +283,10 @@ const OrderActionButtons = ({
             <button 
               className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-xl font-bold flex items-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               onClick={handleCompleteOrder}
-              disabled={isLoading}
+              disabled={isLoading || !hasDeliveryProof}
             >
               <CheckCircle className="h-4 w-4 mr-2" />
-              Mark as Completed
+              {hasDeliveryProof ? "Approve Delivery" : "Waiting Delivery Proof"}
             </button>
           )}
 

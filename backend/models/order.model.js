@@ -73,6 +73,23 @@ const orderSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
+    deliveryProofImage: {
+      type: String,
+      default: "",
+    },
+    deliveryProofSubmittedAt: {
+      type: Date,
+      default: null,
+    },
+    deliveryApprovedAt: {
+      type: Date,
+      default: null,
+    },
+    deliveryApprovedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
     pickupTime: { type: Date, default: null },
     etaDelivery: { type: Date, default: null },
     // ✅ NEW: Add rating and feedback fields

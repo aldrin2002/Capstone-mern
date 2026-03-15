@@ -152,6 +152,7 @@ const OrderDetailsModal = ({
   };
 
   const proofImageUrl = getProofImageUrl(selectedOrder.proofOfPayment);
+  const deliveryProofUrl = getProofImageUrl(selectedOrder.deliveryProofImage);
   
   console.log('🖼️ Final proof image URL:', proofImageUrl);
   console.log('📋 Selected order proof of payment:', selectedOrder.proofOfPayment);
@@ -440,6 +441,57 @@ const OrderDetailsModal = ({
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Delivery Proof Section */}
+            {selectedOrder.deliveryProofImage && (
+              <div className="bg-gradient-to-r from-emerald-50 to-cyan-50 border-2 border-emerald-200 rounded-2xl p-6 mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center">
+                    <div className="bg-emerald-500 p-2 rounded-xl mr-3 shadow-lg">
+                      <Image className="h-4 w-4 text-white" />
+                    </div>
+                    <h4 className="font-bold text-emerald-800 text-lg">Driver Delivery Proof</h4>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <img
+                      src={deliveryProofUrl}
+                      alt="Delivery proof"
+                      className="max-h-64 rounded-xl shadow-lg border-2 border-emerald-200 cursor-pointer hover:shadow-xl transition-all duration-300"
+                      onClick={() => setFullScreenImage(deliveryProofUrl)}
+                    />
+                    <button
+                      onClick={() => setFullScreenImage(deliveryProofUrl)}
+                      className="mt-3 text-emerald-700 hover:text-emerald-900 font-medium flex items-center space-x-2 bg-emerald-100 hover:bg-emerald-200 px-4 py-2 rounded-xl transition-all duration-300"
+                    >
+                      <ZoomIn className="h-4 w-4" />
+                      <span>View Full Size</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="bg-white border border-emerald-200 rounded-xl p-3">
+                      <p className="text-xs text-emerald-700 font-semibold mb-1">Submitted By Driver</p>
+                      <p className="text-sm font-bold text-emerald-900">{getDriverLabel(selectedOrder.driverAssigned)}</p>
+                    </div>
+                    <div className="bg-white border border-emerald-200 rounded-xl p-3">
+                      <p className="text-xs text-emerald-700 font-semibold mb-1">Submitted At</p>
+                      <p className="text-sm font-bold text-emerald-900">
+                        {selectedOrder.deliveryProofSubmittedAt ? formatDate(selectedOrder.deliveryProofSubmittedAt) : "-"}
+                      </p>
+                    </div>
+                    <div className="bg-white border border-emerald-200 rounded-xl p-3">
+                      <p className="text-xs text-emerald-700 font-semibold mb-1">Admin Approval</p>
+                      <p className="text-sm font-bold text-emerald-900">
+                        {selectedOrder.deliveryApprovedAt ? `Approved ${formatDate(selectedOrder.deliveryApprovedAt)}` : "Pending approval"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
             

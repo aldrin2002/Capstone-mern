@@ -13,6 +13,7 @@ import {
   getUnreadCount,
   markAllMessagesAsRead,
   getOrCreateOrderConversation,
+  getOrCreateDriverConversation,
   getOrCreateOrderConversationForStaff,
   getActiveOrderConversations,
   getOrderConversationDetails
@@ -76,6 +77,9 @@ router.get("/conversation", verifyToken, getOrCreateConversation);
 
 // Get or create order-specific conversation
 router.get("/conversation/order/:orderId", verifyToken, getOrCreateOrderConversation);
+
+// Get or create customer-driver conversation for a specific order
+router.get("/conversation/order/:orderId/driver", verifyToken, getOrCreateDriverConversation);
 
 // Staff (admin/driver): get or create order-specific conversation for a particular customer
 router.get("/conversation/order/:orderId/customer/:customerId", verifyToken, getOrCreateOrderConversationForStaff);

@@ -11,6 +11,7 @@ import {
     getOrderStatuses,
     assignDriver,
     getDriverOrders,
+    submitDriverDeliveryProof,
     addOrderRating,
     getAllRatings,
     restoreInventoryForOrder // ✅ ADD THIS
@@ -63,6 +64,7 @@ router.get("/:id", verifyToken, getOrderById);
 router.put("/:id", verifyToken, updateOrder);
 router.patch("/:id/status", verifyToken, updateOrderStatus);
 router.patch("/:id/assign-driver", verifyToken, assignDriver);
+router.patch("/:id/driver-delivered", verifyToken, submitDriverDeliveryProof);
 router.get("/driver/my-orders", verifyToken, getDriverOrders);
 router.delete("/:id", verifyToken, deleteOrder);
 router.post("/:id/rating", verifyToken, addOrderRating);

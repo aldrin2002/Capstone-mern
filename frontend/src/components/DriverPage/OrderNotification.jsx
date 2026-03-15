@@ -27,6 +27,9 @@ const DriverOrdersPage = () => {
   const [fullScreenImage, setFullScreenImage] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAccepting, setIsAccepting] = useState(false);
+  const [deliveryProofFile, setDeliveryProofFile] = useState(null);
+  const [deliveryProofPreview, setDeliveryProofPreview] = useState("");
+  const [isSubmittingDelivery, setIsSubmittingDelivery] = useState(false);
   const { socket } = useMessageNotifications();
 
   // Read orderId from the query string for deep-link selection
@@ -154,6 +157,17 @@ const DriverOrdersPage = () => {
     return new Date(dateString).toLocaleDateString('en-US', options);
   };
 
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   const resolveDriverId = (driverAssigned) => {
     if (!driverAssigned) return null;
     if (typeof driverAssigned === "string") return driverAssigned;
@@ -181,6 +195,60 @@ const DriverOrdersPage = () => {
       toast.error(message);
     } finally {
       setIsAccepting(false);
+    }
+  };
+
+  const handleDeliveryProofChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file.");
+      return;
+    }
+
+    setDeliveryProofFile(file);
+    setDeliveryProofPreview(URL.createObjectURL(file));
+  };
+
+  const handleSubmitDelivered = async () => {
+    if (!selectedOrder?._id) return;
+    if (!deliveryProofFile) {
+      toast.error("Please upload delivery proof image first.");
+      return;
+    }
+
+    setIsSubmittingDelivery(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", deliveryProofFile);
+
+      const uploadRes = await axios.post(`${API_URL_ORDERS}/upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true
+      });
+
+      const deliveryProofImage = uploadRes.data?.imagePath;
+      if (!deliveryProofImage) {
+        throw new Error("Upload failed");
+      }
+
+      const submitRes = await axios.patch(
+        `${API_URL_ORDERS}/${selectedOrder._id}/driver-delivered`,
+        { deliveryProofImage },
+        { withCredentials: true }
+      );
+
+      const updatedOrder = submitRes.data?.order || submitRes.data;
+      setSelectedOrder(updatedOrder);
+      setOrders(prev => prev.map(o => (o._id === updatedOrder._id ? updatedOrder : o)));
+      setDeliveryProofFile(null);
+      setDeliveryProofPreview("");
+      toast.success("Delivered submitted. Waiting for admin approval.");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to submit delivered proof");
+    } finally {
+      setIsSubmittingDelivery(false);
     }
   };
 
@@ -224,9 +292,19 @@ const DriverOrdersPage = () => {
   };
 
   const proofImageUrl = getProofImageUrl(selectedOrder?.proofOfPayment);
+  const deliveryProofImageUrl = getProofImageUrl(selectedOrder?.deliveryProofImage);
   const assignedDriverId = resolveDriverId(selectedOrder?.driverAssigned);
   const isAssignedToOtherDriver = assignedDriverId && assignedDriverId !== user?._id;
   const canAcceptOrder = selectedOrder?.status === "Ready for Delivery" && !assignedDriverId;
+  const canSubmitDelivered = selectedOrder?.status === "Processing" && assignedDriverId === user?._id;
+
+  useEffect(() => {
+    return () => {
+      if (deliveryProofPreview && deliveryProofPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(deliveryProofPreview);
+      }
+    };
+  }, [deliveryProofPreview]);
 
   // Handle window resize (match other pages)
   useEffect(() => {
@@ -469,6 +547,38 @@ const DriverOrdersPage = () => {
                               <span className="text-green-700 text-sm font-medium">Total:</span>
                               <span className="font-bold text-xl text-green-600">₱{Number(selectedOrder.total).toFixed(2)}</span>
                             </div>
+
+                            {canSubmitDelivered && (
+                              <div className="mt-4 p-3 border border-blue-200 rounded-xl bg-blue-50 space-y-3">
+                                <p className="text-xs font-semibold text-blue-700">Delivery Proof (required)</p>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  onChange={handleDeliveryProofChange}
+                                  className="block w-full text-xs text-blue-800"
+                                />
+                                {deliveryProofPreview && (
+                                  <img
+                                    src={deliveryProofPreview}
+                                    alt="Delivery proof preview"
+                                    className="max-h-36 rounded-lg border"
+                                  />
+                                )}
+                                <button
+                                  onClick={handleSubmitDelivered}
+                                  disabled={isSubmittingDelivery || !deliveryProofFile}
+                                  className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                                >
+                                  {isSubmittingDelivery ? "Submitting..." : "Order Delivered"}
+                                </button>
+                              </div>
+                            )}
+
+                            {selectedOrder?.deliveryProofSubmittedAt && (
+                              <div className="mt-3 text-xs text-gray-600 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2">
+                                Submitted: {formatDateTime(selectedOrder.deliveryProofSubmittedAt)}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -704,6 +814,38 @@ const DriverOrdersPage = () => {
                     <span className="text-green-700 font-medium">Total:</span>
                     <span className="font-bold text-lg text-green-600">₱{Number(selectedOrder.total).toFixed(2)}</span>
                   </div>
+
+                  {canSubmitDelivered && (
+                    <div className="mt-3 p-3 border border-blue-200 rounded-xl bg-blue-50 space-y-2">
+                      <p className="text-xs font-semibold text-blue-700">Delivery Proof (required)</p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleDeliveryProofChange}
+                        className="block w-full text-xs text-blue-800"
+                      />
+                      {deliveryProofPreview && (
+                        <img
+                          src={deliveryProofPreview}
+                          alt="Delivery proof preview"
+                          className="max-h-28 rounded-lg border"
+                        />
+                      )}
+                      <button
+                        onClick={handleSubmitDelivered}
+                        disabled={isSubmittingDelivery || !deliveryProofFile}
+                        className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {isSubmittingDelivery ? "Submitting..." : "Order Delivered"}
+                      </button>
+                    </div>
+                  )}
+
+                  {selectedOrder?.deliveryProofSubmittedAt && (
+                    <div className="mt-3 text-xs text-gray-600 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2">
+                      Submitted: {formatDateTime(selectedOrder.deliveryProofSubmittedAt)}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -769,6 +911,24 @@ const DriverOrdersPage = () => {
                       </button>
                     </div>
                   )}
+                </div>
+              )}
+
+              {selectedOrder.deliveryProofImage && (
+                <div className="bg-white rounded-xl shadow p-4 border">
+                  <h3 className="font-bold text-gray-900 text-base flex items-center mb-2">
+                    <Image className="h-5 w-5 mr-2 text-emerald-600" />
+                    Delivery Proof
+                  </h3>
+                  <img
+                    src={deliveryProofImageUrl}
+                    alt="Delivery proof"
+                    className="max-h-56 rounded-lg shadow border mx-auto"
+                    onClick={() => setFullScreenImage(deliveryProofImageUrl)}
+                  />
+                  <p className="text-xs text-gray-600 mt-2">
+                    Submitted: {formatDateTime(selectedOrder.deliveryProofSubmittedAt)}
+                  </p>
                 </div>
               )}
 

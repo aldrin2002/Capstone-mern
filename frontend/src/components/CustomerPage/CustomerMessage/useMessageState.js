@@ -103,7 +103,7 @@ export const useMessageState = (API_URL, API_BASE_URL, socket, { autoCreate = tr
     
     if (!isTyping) {
       setIsTyping(true);
-      socket.emit("customer-typing", true);
+      socket.emit("customer-typing", { conversationId: conversation._id, isTyping: true });
     }
     
     // Clear existing timeout
@@ -114,7 +114,7 @@ export const useMessageState = (API_URL, API_BASE_URL, socket, { autoCreate = tr
     // Set new timeout to stop typing indicator after 2 seconds of inactivity
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
-      socket.emit("customer-typing", false);
+      socket.emit("customer-typing", { conversationId: conversation._id, isTyping: false });
     }, 2000);
   };
   
@@ -255,7 +255,7 @@ export const useMessageState = (API_URL, API_BASE_URL, socket, { autoCreate = tr
       
       // Stop typing indicator
       setIsTyping(false);
-      socket.emit("customer-typing", false);
+      socket.emit("customer-typing", { conversationId: conversation._id, isTyping: false });
       
     } catch (error) {
       console.error("Error sending message:", error);

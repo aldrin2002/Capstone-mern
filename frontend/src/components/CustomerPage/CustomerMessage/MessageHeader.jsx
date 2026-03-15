@@ -1,7 +1,7 @@
 import React from "react";
 import { User, MessageCircle, Wifi, WifiOff } from "lucide-react";
 
-const MessageHeader = ({ adminOnlineCount, isConnected }) => {
+const MessageHeader = ({ adminOnlineCount, isConnected, partnerLabel = "Store Owner", partnerStatus = "Available to chat" }) => {
   return (
     <div className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white p-4 shrink-0 shadow-lg backdrop-blur-xl border-b border-white/10">
       {/* Header background pattern */}
@@ -18,10 +18,10 @@ const MessageHeader = ({ adminOnlineCount, isConnected }) => {
           </div>
           
           <div>
-            <h1 className="text-xl font-bold">Store Owner</h1>
+            <h1 className="text-xl font-bold">{partnerLabel}</h1>
             <p className="text-xs text-blue-100 flex items-center">
               <MessageCircle size={12} className="mr-1" />
-              {adminOnlineCount > 0 ? 'Available to chat' : 'Offline'}
+              {partnerStatus || (adminOnlineCount > 0 ? 'Available to chat' : 'Offline')}
             </p>
           </div>
         </div>

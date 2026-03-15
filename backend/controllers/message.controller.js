@@ -23,9 +23,13 @@ export const getOrCreateConversation = async (req, res) => {
   try {
     const customerId = req.userId;
     // General (non-order) conversation
-    let conversation = await Conversation.findOne({ customer: customerId, order: null });
+    let conversation = await Conversation.findOne({
+      customer: customerId,
+      order: null,
+      $or: [{ threadType: "admin" }, { threadType: { $exists: false } }]
+    });
     if (!conversation) {
-      conversation = await Conversation.create({ customer: customerId });
+      conversation = await Conversation.create({ customer: customerId, threadType: "admin" });
     }
     res.status(200).json(conversation);
   } catch (error) {
@@ -44,29 +48,23 @@ export const getOrCreateOrderConversation = async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
-    // Try to find conversation already tied to this order
-    let conversation = await Conversation.findOne({ customer: customerId, order: orderId });
+    // Store owner thread for this order
+    let conversation = await Conversation.findOne({
+      customer: customerId,
+      order: orderId,
+      $or: [{ threadType: "admin" }, { threadType: { $exists: false } }]
+    });
     if (!conversation) {
-      // Reuse general conversation if available
-      let general = await Conversation.findOne({ customer: customerId, order: null });
-      if (general) {
-        general.order = orderId;
-        general.lastMessageContent = "Order inquiry thread created";
-        general.lastMessageSender = "customer";
-        await general.save();
-        conversation = general;
-      } else {
-        // As a fallback create a new conversation (first for this user)
-        conversation = await Conversation.create({
-          customer: customerId,
-          order: orderId,
-          lastMessageContent: "Order inquiry thread created",
-          lastMessageSender: "customer"
-        });
-      }
+      conversation = await Conversation.create({
+        customer: customerId,
+        order: orderId,
+        threadType: "admin",
+        lastMessageContent: "Order inquiry thread created",
+        lastMessageSender: "customer"
+      });
       // Add system message marking thread creation
       await Message.create({
-        sender: { id: customerId, name: order.customer.name, role: "customer" },
+        sender: { id: customerId, name: order.customer?.name || "Customer", role: "customer" },
         content: `Inquiry thread opened for order #${orderId.toString().slice(-6)}`,
         conversation: conversation._id,
         order: orderId,
@@ -74,7 +72,10 @@ export const getOrCreateOrderConversation = async (req, res) => {
       });
     }
 
-    await conversation.populate('order');
+    await conversation.populate([
+      { path: 'order', populate: { path: 'driverAssigned', select: 'name email role' } },
+      { path: 'driver', select: 'name email role' }
+    ]);
     res.status(200).json(conversation);
   } catch (error) {
     console.error("Error in getOrCreateOrderConversation:", error);
@@ -82,31 +83,104 @@ export const getOrCreateOrderConversation = async (req, res) => {
   }
 };
 
+// Create or get customer-driver conversation for a specific order
+export const getOrCreateDriverConversation = async (req, res) => {
+  try {
+    const customerId = req.userId;
+    const { orderId } = req.params;
+
+    const [order, customerUser] = await Promise.all([
+      Order.findById(orderId),
+      User.findById(customerId).select("email name")
+    ]);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (!customerUser || order.customer?.email !== customerUser.email) {
+      return res.status(403).json({ message: "You can only message drivers for your own orders" });
+    }
+
+    if (!order.driverAssigned) {
+      return res.status(400).json({ message: "No driver assigned yet" });
+    }
+
+    let conversation = await Conversation.findOne({
+      customer: customerId,
+      order: orderId,
+      threadType: "driver",
+      driver: order.driverAssigned
+    });
+
+    if (!conversation) {
+      conversation = await Conversation.create({
+        customer: customerId,
+        order: orderId,
+        threadType: "driver",
+        driver: order.driverAssigned,
+        lastMessageContent: "Driver chat opened",
+        lastMessageSender: "customer"
+      });
+
+      await Message.create({
+        sender: { id: customerId, name: customerUser.name, role: "customer" },
+        content: `Driver chat opened for order #${orderId.toString().slice(-6)}`,
+        conversation: conversation._id,
+        order: orderId,
+        isRead: true
+      });
+    }
+
+    await conversation.populate([
+      { path: 'order', populate: { path: 'driverAssigned', select: 'name email role' } },
+      { path: 'driver', select: 'name email role' }
+    ]);
+    res.status(200).json(conversation);
+  } catch (error) {
+    console.error("Error in getOrCreateDriverConversation:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // Create or get a conversation for staff tied to a specific order
 export const getOrCreateOrderConversationForStaff = async (req, res) => {
   try {
-    const { orderId } = req.params;
+    const { orderId, customerId } = req.params;
 
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Find existing conversation for this order (regardless of requester)
-    let conversation = await Conversation.findOne({ order: orderId });
+    const threadType = req.role === "driver" ? "driver" : "admin";
+    const findFilter = {
+      order: orderId,
+      threadType,
+      ...(threadType === "driver" ? { driver: req.userId } : {}),
+      ...(customerId ? { customer: customerId } : {})
+    };
 
-    // If none exists, create one using the order's customer
+    let conversation = await Conversation.findOne(findFilter);
+
+    // If none exists, create one
     if (!conversation) {
+      if (!customerId) {
+        return res.status(400).json({ message: "customerId is required" });
+      }
+
       conversation = await Conversation.create({
-        customer: order.customer?.id || undefined, // fallback if schema differs
+        customer: customerId,
         order: orderId,
+        threadType,
+        driver: threadType === "driver" ? req.userId : null,
         lastMessageContent: "Order inquiry thread created by staff",
-        lastMessageSender: "admin",
+        lastMessageSender: req.role === "driver" ? "driver" : "admin",
       });
 
       // Seed a system message to mark thread creation
       await Message.create({
-        sender: { id: req.userId, name: "Admin", role: "admin" },
+        sender: { id: req.userId, name: req.role === "driver" ? "Driver" : "Admin", role: req.role === "driver" ? "driver" : "admin" },
         content: `Staff opened inquiry thread for order #${orderId.toString().slice(-6)}`,
         conversation: conversation._id,
         order: orderId,
@@ -114,7 +188,10 @@ export const getOrCreateOrderConversationForStaff = async (req, res) => {
       });
     }
 
-    await conversation.populate("order");
+    await conversation.populate([
+      { path: 'order', populate: { path: 'driverAssigned', select: 'name email role' } },
+      { path: 'driver', select: 'name email role' }
+    ]);
     res.status(200).json(conversation);
   } catch (error) {
     console.error("Error in getOrCreateOrderConversationForStaff:", error);
@@ -126,9 +203,14 @@ export const getOrCreateOrderConversationForStaff = async (req, res) => {
 export const getActiveOrderConversations = async (req, res) => {
   try {
     const customerId = req.userId;
-    // Find conversations with orders not Completed/Cancelled
+    // Find order-linked conversations (store owner + driver) with active orders
     const conversations = await Conversation.find({ customer: customerId, order: { $ne: null } })
-      .populate({ path: 'order', match: { status: { $nin: ["Completed", "Cancelled"] } } })
+      .populate({
+        path: 'order',
+        match: { status: { $nin: ["Completed", "Cancelled"] } },
+        populate: { path: 'driverAssigned', select: 'name email role' }
+      })
+      .populate('driver', 'name email role')
       .sort({ updatedAt: -1 });
 
     // Filter out those where order populate failed (status completed/cancelled)
@@ -145,7 +227,18 @@ export const getOrderConversationDetails = async (req, res) => {
   try {
     const { orderId } = req.params;
     const customerId = req.userId;
-    const conversation = await Conversation.findOne({ customer: customerId, order: orderId }).populate('order');
+    const threadType = req.query.threadType === "driver" ? "driver" : "admin";
+
+    const conversation = await Conversation.findOne({
+      customer: customerId,
+      order: orderId,
+      $or: threadType === "admin"
+        ? [{ threadType: "admin" }, { threadType: { $exists: false } }]
+        : [{ threadType: "driver" }]
+    })
+      .populate({ path: 'order', populate: { path: 'driverAssigned', select: 'name email role' } })
+      .populate('driver', 'name email role');
+
     if (!conversation) return res.status(404).json({ message: "Order conversation not found" });
     const messages = await Message.find({ conversation: conversation._id }).sort({ createdAt: 1 });
     res.status(200).json({ conversation, messages });
@@ -158,8 +251,19 @@ export const getOrderConversationDetails = async (req, res) => {
 // Get all conversations (for admin)
 export const getAllConversations = async (req, res) => {
   try {
-    const conversations = await Conversation.find()
+    const role = req.role;
+
+    let filter = {};
+    if (role === "driver") {
+      filter = { threadType: "driver", driver: req.userId };
+    } else if (role === "admin") {
+      filter = { $or: [{ threadType: "admin" }, { threadType: { $exists: false } }] };
+    }
+
+    const conversations = await Conversation.find(filter)
       .populate('customer', 'name email')
+      .populate('driver', 'name email role')
+      .populate('order', 'status driverAssigned')
       .sort({ lastMessage: -1 });
     
     res.status(200).json(conversations);

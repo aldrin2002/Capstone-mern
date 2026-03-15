@@ -21,7 +21,8 @@ import {
   Calendar,
   Filter,
   X, // ✅ Added for modal close button
-  MessageSquare // ✅ Added for feedback icon
+  MessageSquare, // ✅ Added for feedback icon
+  MessageCircle
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useCustomerMessages } from "../../context/CustomerMessageContext";
@@ -609,6 +610,18 @@ const CustomerOrders = () => {
                                 </p>
                               </div>
                             </div>
+
+                            <div className="flex items-start space-x-3 mt-4 pt-4 border-t border-gray-200">
+                              <div className="bg-indigo-100 p-2 rounded-lg">
+                                <MessageCircle className="h-5 w-5 text-indigo-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-700 mb-1">Assigned Driver:</p>
+                                <p className="text-gray-900 font-medium leading-relaxed">
+                                  {order.driverAssigned?.name || "Waiting for driver assignment"}
+                                </p>
+                              </div>
+                            </div>
                             
                             {/* Optional: Display GCash Reference if available */}
                             {order.gcashReferenceNumber && (
@@ -715,6 +728,26 @@ const CustomerOrders = () => {
                                 </span>
                               </div>
                             </div>
+                          </div>
+
+                          <div className="mt-6 pt-4 border-t border-gray-200 flex flex-wrap gap-3">
+                            <button
+                              onClick={() => navigate(`/customer-message?orderId=${order._id}&thread=admin`)}
+                              className="inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-semibold shadow hover:from-blue-700 hover:to-indigo-800 transition-all duration-300"
+                            >
+                              <MessageCircle className="h-4 w-4 mr-2" />
+                              Message Store Owner
+                            </button>
+
+                            {order.driverAssigned && (
+                              <button
+                                onClick={() => navigate(`/customer-message?orderId=${order._id}&thread=driver`)}
+                                className="inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-teal-600 to-cyan-700 text-white font-semibold shadow hover:from-teal-700 hover:to-cyan-800 transition-all duration-300"
+                              >
+                                <MessageCircle className="h-4 w-4 mr-2" />
+                                Message Driver
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>

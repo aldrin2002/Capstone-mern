@@ -271,10 +271,17 @@ io.on("connection", async (socket) => {
       try {
         const { conversationId } = data;
 
+        const senderRolesToMark =
+          user.role === "admin"
+            ? ["customer"]
+            : user.role === "driver"
+            ? ["customer"]
+            : ["admin", "driver"];
+
         await Message.updateMany(
           {
             conversation: conversationId,
-            "sender.role": user.role === "admin" ? "customer" : "admin",
+            "sender.role": { $in: senderRolesToMark },
             isRead: false,
           },
           { isRead: true }
@@ -298,16 +305,19 @@ io.on("connection", async (socket) => {
     });
 
     // Fix customer typing to include customer ID
-    socket.on("customer-typing", async (isTyping) => {
+    socket.on("customer-typing", async (payload) => {
       try {
         if (socket.role !== "customer") return;
+
+        const isTyping = Boolean(payload?.isTyping);
+        const conversationId = payload?.conversationId;
 
         const user = await User.findById(socket.userId).select("name");
         if (!user) return;
 
-        const conversation = await Conversation.findOne({
-          customer: socket.userId,
-        });
+        const conversation = conversationId
+          ? await Conversation.findById(conversationId)
+          : await Conversation.findOne({ customer: socket.userId }).sort({ updatedAt: -1 });
         if (!conversation) return;
 
         // Broadcast to all admin sockets with customer ID

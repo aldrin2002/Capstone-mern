@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import CustomerSideNav from "../../pages/customer/customerSideNav";
 import { useAuthStore } from "../../store/authStore";
@@ -21,6 +21,7 @@ const API_URL = `${API_BASE_URL}/api/messages`;
 const CustomerMessage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuthStore();
   
   // Use the global context
@@ -57,41 +58,72 @@ const CustomerMessage = () => {
   // Order-linked conversation (single latest active)
   const [loadingOrderConversation, setLoadingOrderConversation] = useState(false);
   const [activeOrderConversation, setActiveOrderConversation] = useState(null); // conversation object with order populated
+  const [orderThreadConversations, setOrderThreadConversations] = useState([]);
+  const [selectedThreadType, setSelectedThreadType] = useState("admin");
   const [summaryProduct, setSummaryProduct] = useState(null);
 
-  // Fetch latest active order conversation (first in list)
+  // Load owner/driver conversations and pick target via URL query
   useEffect(() => {
-    const fetchLatestOrderConversation = async () => {
+    const loadConversations = async () => {
       if (!socket) return;
+
+      const params = new URLSearchParams(location.search);
+      const targetOrderId = params.get("orderId");
+      const requestedThread = params.get("thread") === "driver" ? "driver" : "admin";
+
       setLoadingOrderConversation(true);
       try {
-        const res = await axios.get(`${API_URL}/conversations/active-orders`, { withCredentials: true });
-        const list = res.data || [];
-        if (list.length > 0) {
-          const latest = list[0];
-          setActiveOrderConversation(latest);
-          setConversation(latest); // drive message loading in hook
-        } else {
-          setActiveOrderConversation(null);
-          // Fallback to general conversation so messaging still works
-          try {
-            const generalRes = await axios.get(`${API_URL}/conversation`, { withCredentials: true });
-            if (generalRes.data) {
-              setConversation(generalRes.data);
+        // Ensure requested conversation exists when opened from My Orders buttons
+        if (targetOrderId) {
+          await axios.get(`${API_URL}/conversation/order/${targetOrderId}`, { withCredentials: true });
+          if (requestedThread === "driver") {
+            try {
+              await axios.get(`${API_URL}/conversation/order/${targetOrderId}/driver`, { withCredentials: true });
+            } catch (driverErr) {
+              console.log("Driver conversation not ready yet:", driverErr.response?.data?.message || driverErr.message);
             }
-          } catch (genErr) {
-            console.error("Failed to load general conversation fallback", genErr.message);
-            setConversation(null);
           }
         }
+
+        const res = await axios.get(`${API_URL}/conversations/active-orders`, { withCredentials: true });
+        const list = res.data || [];
+
+        let selected = null;
+        let availableThreads = [];
+
+        if (targetOrderId) {
+          availableThreads = list.filter((c) => c.order?._id?.toString() === targetOrderId);
+          selected = availableThreads.find((c) => (c.threadType || "admin") === requestedThread) || availableThreads[0] || null;
+        } else if (list.length > 0) {
+          selected = list[0];
+          availableThreads = list.filter((c) => c.order?._id?.toString() === selected.order?._id?.toString());
+        }
+
+        if (selected) {
+          setActiveOrderConversation(selected);
+          setConversation(selected);
+          setOrderThreadConversations(availableThreads);
+          setSelectedThreadType(selected.threadType || "admin");
+          return;
+        }
+
+        setActiveOrderConversation(null);
+        setOrderThreadConversations([]);
+        // Fallback to general conversation so messaging still works
+        const generalRes = await axios.get(`${API_URL}/conversation`, { withCredentials: true });
+        if (generalRes.data) {
+          setConversation(generalRes.data);
+          setSelectedThreadType("admin");
+        }
       } catch (err) {
-        console.error("Failed loading latest order conversation", err.message);
+        console.error("Failed loading conversations", err.message);
       } finally {
         setLoadingOrderConversation(false);
       }
     };
-    fetchLatestOrderConversation();
-  }, [socket, API_URL, setConversation]);
+
+    loadConversations();
+  }, [socket, API_URL, setConversation, location.search]);
 
   // (Removed synthetic summary message injection per request to restore header summary)
 
@@ -112,6 +144,28 @@ const CustomerMessage = () => {
     };
     loadFirstProduct();
   }, [activeOrderConversation]);
+
+  const switchThread = (threadType) => {
+    const target = orderThreadConversations.find((c) => (c.threadType || "admin") === threadType);
+    if (!target) return;
+
+    setSelectedThreadType(threadType);
+    setActiveOrderConversation(target);
+    setConversation(target);
+
+    const orderId = target.order?._id;
+    if (orderId) {
+      navigate(`/customer-message?orderId=${orderId}&thread=${threadType}`, { replace: true });
+    }
+  };
+
+  const activePartnerLabel = selectedThreadType === "driver"
+    ? (activeOrderConversation?.driver?.name ? `Driver: ${activeOrderConversation.driver.name}` : "Assigned Driver")
+    : "Store Owner";
+
+  const activePartnerStatus = selectedThreadType === "driver"
+    ? "Direct delivery chat"
+    : (adminOnlineCount > 0 ? "Available to chat" : "Offline");
   
   const {
     messagesEndRef,
@@ -208,9 +262,15 @@ const CustomerMessage = () => {
       if (payload.orderId?.toString() !== activeOrderConversation.order._id?.toString()) return;
       // Update status and other fields
       setActiveOrderConversation(prev => prev ? { ...prev, order: payload.order || { ...prev.order, status: payload.status } } : prev);
+      setOrderThreadConversations(prev => prev.map((c) =>
+        c.order?._id?.toString() === payload.orderId?.toString()
+          ? { ...c, order: payload.order || { ...c.order, status: payload.status } }
+          : c
+      ));
       // If order completed or cancelled, fallback to general conversation
       if (["Completed", "Cancelled"].includes(payload.status)) {
         setActiveOrderConversation(null);
+        setOrderThreadConversations([]);
         // Load / create general conversation
         axios.get(`${API_URL}/conversation`, { withCredentials: true })
           .then(r => setConversation(r.data))
@@ -222,6 +282,11 @@ const CustomerMessage = () => {
       if (!order || !activeOrderConversation?.order) return;
       if (order._id?.toString() !== activeOrderConversation.order._id?.toString()) return;
       setActiveOrderConversation(prev => prev ? { ...prev, order } : prev);
+      setOrderThreadConversations(prev => prev.map((c) =>
+        c.order?._id?.toString() === order._id?.toString()
+          ? { ...c, order }
+          : c
+      ));
     };
 
     socket.on('order-status-updated', handleStatusUpdate);
@@ -261,7 +326,35 @@ const CustomerMessage = () => {
         <MessageHeader
           adminOnlineCount={adminOnlineCount}
           isConnected={isConnected}
+          partnerLabel={activePartnerLabel}
+          partnerStatus={activePartnerStatus}
         />
+
+        {activeOrderConversation?.order && (
+          <div className="px-4 py-2 bg-white border-b border-gray-200 flex flex-wrap gap-2">
+            <button
+              onClick={() => switchThread("admin")}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 ${
+                selectedThreadType === "admin"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+              }`}
+            >
+              Store Owner
+            </button>
+            <button
+              onClick={() => switchThread("driver")}
+              disabled={!orderThreadConversations.some((c) => (c.threadType || "admin") === "driver")}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 ${
+                selectedThreadType === "driver"
+                  ? "bg-teal-600 text-white border-teal-600"
+                  : "bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              Driver
+            </button>
+          </div>
+        )}
         {/* Order Summary Header (restored) */}
         {activeOrderConversation?.order && (
           <div className="sticky top-0 z-20 px-4 py-3 bg-white/95 backdrop-blur-md shadow border-b border-gray-200">
@@ -275,6 +368,8 @@ const CustomerMessage = () => {
                 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect width="80" height="80" fill="%23eef2ff"/><path d="M10 60 L30 40 L45 55 L60 35 L70 60 Z" fill="%2393c5fd"/><circle cx="28" cy="28" r="8" fill="%2373a6f5"/></svg>';
               const statusColorMap = {
                 Pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+                'Preparing Food': 'bg-indigo-100 text-indigo-800 border-indigo-300',
+                'Ready for Delivery': 'bg-cyan-100 text-cyan-800 border-cyan-300',
                 Processing: 'bg-blue-100 text-blue-800 border-blue-300',
                 Delivered: 'bg-purple-100 text-purple-800 border-purple-300',
                 Completed: 'bg-green-100 text-green-800 border-green-300',
@@ -308,6 +403,7 @@ const CustomerMessage = () => {
                       <div className="text-gray-700 truncate" title={productLabel}>Product: {productLabel}</div>
                       <div className="text-gray-700">Total: ₱{order.total?.toFixed(2)}</div>
                       <div className="text-gray-700">Delivery: ₱{order.deliveryFee?.toFixed(2)}</div>
+                      <div className="text-gray-700">Driver: {order.driverAssigned?.name || 'Unassigned'}</div>
                       <div className="col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4 flex items-center gap-2 mt-1">
                         <span className="text-gray-600">To:</span>
                         <span className="truncate text-gray-800" title={order.deliveryAddress}>{order.deliveryAddress}</span>

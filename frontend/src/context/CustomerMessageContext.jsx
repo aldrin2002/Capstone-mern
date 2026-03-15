@@ -102,9 +102,9 @@ export const CustomerMessageProvider = ({ children }) => {
       
       // FIXED: Play notification for ALL incoming admin messages, regardless of page
       // But only increment counter when not on messages page
-      if (message.sender.role === 'admin') {
+      if (message.sender.role === 'admin' || message.sender.role === 'driver') {
         // Always play notification sound for received messages
-        console.log("🔊 Playing notification for new admin message");
+        console.log("🔊 Playing notification for incoming staff message");
         audioService.playNotification();
         
         // Only increment unread counter when NOT on messages page
