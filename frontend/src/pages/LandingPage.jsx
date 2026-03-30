@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Coffee, Star, Clock, Users, Download, TrendingUp } from 'lucide-react'; // ✅ Add TrendingUp
+import { Coffee, Star, Clock, Users, Download, TrendingUp, Menu, X } from 'lucide-react'; // ✅ Add TrendingUp
 import { useEffect, useState } from 'react';
 
 // ✅ NEW: Simple Visit Counter Component
@@ -270,6 +270,25 @@ const ContactSection = () => {
 
 // Main Landing Page Component
 const LandingPage = () => {
+  const [isNavOpen, setIsNavOpen] = useState(false);
+
+  const navLinks = [
+    { to: '/login', label: 'Admin' },
+    { to: '/costumerLogin', label: 'Customer' },
+    { to: '/driverLogin', label: 'Driver' },
+  ];
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && isNavOpen) {
+        setIsNavOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isNavOpen]);
+
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-b from-blue-500 to-blue-900">
       {/* Meteor Effect */}
@@ -294,24 +313,56 @@ const LandingPage = () => {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 bg-white/10 backdrop-blur-md border-b border-white/20">
-        <div className="container mx-auto flex justify-between items-center py-4 px-6">
-          <h1 className="text-2xl font-bold text-white">Cafe Delicity</h1>
-          <nav className="flex items-center space-x-2 sm:space-x-4">
-            {/* ✅ Visit Counter - RIGHT BEFORE Install App */}
+      <header className="relative z-20 bg-white/10 backdrop-blur-md border-b border-white/20">
+        <div className="container mx-auto flex items-center justify-between py-4 px-4 sm:px-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Cafe Delicity</h1>
+
+          <nav className="hidden md:flex items-center space-x-2 lg:space-x-4">
             <VisitCounter />
             <InstallPWA />
-            <Link to="/login" className="text-white hover:text-blue-200 transition-colors text-sm sm:text-base">
-              Admin
-            </Link> 
-            <Link to="/costumerLogin" className="text-white hover:text-blue-200 transition-colors text-sm sm:text-base">
-              Customer
-            </Link>
-            <Link to="/driverLogin" className="text-white hover:text-blue-200 transition-colors text-sm sm:text-base">
-              Driver
-            </Link>
+            {navLinks.map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                className="text-white hover:text-blue-200 transition-colors text-sm sm:text-base"
+              >
+                {label}
+              </Link>
+            ))}
           </nav>
+
+          <button
+            type="button"
+            aria-label="Toggle navigation"
+            className="md:hidden inline-flex items-center justify-center rounded-lg bg-white/20 text-white p-2 hover:bg-white/30 transition"
+            onClick={() => setIsNavOpen((prev) => !prev)}
+          >
+            {isNavOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
+
+        {isNavOpen && (
+          <div className="md:hidden bg-blue-900/95 backdrop-blur-lg border-t border-white/10">
+            <div className="container mx-auto px-4 py-4 space-y-4">
+              <div className="flex flex-wrap gap-3">
+                <VisitCounter />
+                <InstallPWA />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {navLinks.map(({ to, label }) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    onClick={() => setIsNavOpen(false)}
+                    className="text-white hover:text-blue-200 transition-colors text-base text-center py-2 rounded-lg bg-white/10"
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content - Keep all existing code */}

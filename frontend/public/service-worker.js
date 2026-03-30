@@ -1,5 +1,5 @@
 // Less aggressive caching strategy to avoid stale/unstyled refreshes
-const VERSION = '2025-11-22-2';
+const VERSION = '2026-03-30-1';
 const STATIC_CACHE = `cafex-static-${VERSION}`;
 const RUNTIME_CACHE = `cafex-runtime-${VERSION}`;
 
@@ -56,6 +56,10 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return; // ignore non-GET
   const url = new URL(request.url);
 
+  // Never intercept local dev server requests (e.g. Vite /src/* modules)
+  const isLocalDev = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+  if (isLocalDev) return;
+
   // Skip API caching entirely
   if (url.pathname.startsWith('/api/')) return; // let network handle
 
@@ -84,7 +88,14 @@ self.addEventListener('fetch', (event) => {
   }
   // For everything else (JS/CSS), just use network; fallback to cache if exists
   event.respondWith(
-    fetch(request).catch(() => caches.match(request))
+    (async () => {
+      try {
+        return await fetch(request);
+      } catch {
+        const cached = await caches.match(request);
+        return cached || Response.error();
+      }
+    })()
   );
 });
 

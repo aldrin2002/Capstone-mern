@@ -378,10 +378,18 @@ const DriverOrdersPage = () => {
                         const listAssignedToOther = listDriverId && listDriverId !== user?._id;
 
                         return (
-                        <button
+                        <div
                           key={o._id}
                           onClick={() => handleSelectOrder(o)}
-                          className={`w-full text-left px-4 md:px-5 py-4 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition group ${selectedOrder?._id === o._id && !isMobile ? 'bg-blue-50' : ''}`}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              handleSelectOrder(o);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          className={`w-full text-left px-4 md:px-5 py-4 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${selectedOrder?._id === o._id && !isMobile ? 'bg-blue-50' : ''}`}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0 space-y-1">
@@ -418,7 +426,7 @@ const DriverOrdersPage = () => {
                               )}
                             </div>
                           </div>
-                        </button>
+                        </div>
                         );
                       })
                     );
