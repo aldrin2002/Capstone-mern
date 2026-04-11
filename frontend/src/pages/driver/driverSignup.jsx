@@ -104,22 +104,22 @@ const DriverSignUpPage = () => {
     <>
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 flex items-center justify-center bg-gradient-to-r from-blue-500 to-blue-700 overflow-y-auto p-4"
+        className="fixed inset-0 flex items-start sm:items-center justify-center bg-gradient-to-r from-blue-500 to-blue-700 overflow-y-auto px-3 py-4 sm:p-4"
       >
-        <div className="max-w-4xl w-full bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-lg shadow-lg overflow-hidden border border-gray-200 my-8">
-          <div className="p-8">
-            <h2 className="text-3xl font-bold text-center text-white mb-2">
+        <div className="w-full max-w-4xl bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-xl sm:rounded-lg shadow-lg overflow-hidden border border-gray-200 my-2 sm:my-8">
+          <div className="p-4 sm:p-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-center text-white mb-2">
               Create Driver Account
             </h2>
-            <p className="text-center text-white/80 mb-6">
+            <p className="text-center text-sm sm:text-base text-white/80 mb-5 sm:mb-6">
               Register your contact and delivery location
             </p>
-            <div className="h-1 w-20 bg-blue-500 mx-auto mb-8"></div>
+            <div className="h-1 w-16 sm:w-20 bg-blue-500 mx-auto mb-6 sm:mb-8"></div>
 
             <form onSubmit={handleSignUp}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {/* Left Column */}
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <Input icon={User} type="text" placeholder="Full Name (letters only)" value={name} onChange={handleNameChange} />
                   <Input icon={Mail} type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} />
                   <Input icon={Lock} type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
@@ -137,15 +137,15 @@ const DriverSignUpPage = () => {
                 </div>
 
                 {/* Right Column */}
-                <div className="space-y-4">
-                  <label className="block text-sm font-medium text-white mb-2">📍 Location Preview</label>
+                <div className="space-y-3 sm:space-y-4">
+                  <label className="block text-sm font-medium text-white mb-1 sm:mb-2">📍 Location Preview</label>
                   <AddressPickerMap coordinates={locationCoords} selectedAddress={address} />
-                  <p className="text-xs text-white/80">Pin shows your location for delivery routing</p>
+                  <p className="text-xs sm:text-sm text-white/80">Pin shows your location for delivery routing</p>
                 </div>
               </div>
 
               <button
-                className="mt-6 w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+                className="mt-5 sm:mt-6 w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
                 type="submit"
                 disabled={isLoading}
               >
@@ -154,7 +154,7 @@ const DriverSignUpPage = () => {
 
               {/* Terms & Privacy */}
               <div className="text-center mt-3">
-                <p className="text-xs text-white">
+                <p className="text-[11px] sm:text-xs leading-relaxed text-white px-1">
                   By signing up, you agree to our{" "}
                   <Link
                     to="/terms-conditions"
@@ -175,8 +175,8 @@ const DriverSignUpPage = () => {
             </form>
           </div>
 
-          <div className="px-8 py-4 bg-gray-50 bg-opacity-20 flex justify-center">
-            <p className="text-sm text-white">
+          <div className="px-4 sm:px-8 py-3 sm:py-4 bg-gray-50 bg-opacity-20 flex justify-center">
+            <p className="text-xs sm:text-sm text-white text-center">
               Already have an account?{" "}
               <Link to={"/driverLogin"} className="text-blue-300 font-medium hover:underline">
                 Login

@@ -42,7 +42,7 @@ const AddressPickerMap = ({ coordinates, selectedAddress }) => {
 
   if (!MAPBOX_TOKEN) {
     return (
-      <div className="w-full h-64 bg-red-50 border-2 border-red-300 rounded-lg flex items-center justify-center">
+      <div className="w-full h-52 sm:h-64 bg-red-50 border-2 border-red-300 rounded-lg flex items-center justify-center">
         <div className="text-center p-4">
           <MapPin className="h-8 w-8 text-red-500 mx-auto mb-2" />
           <p className="text-red-700 font-bold text-sm">Mapbox Token Missing</p>
@@ -59,7 +59,7 @@ const AddressPickerMap = ({ coordinates, selectedAddress }) => {
         <MapContainer
           center={mapCenter}
           zoom={coordinates ? 15 : 11}
-          style={{ height: '250px', width: '100%' }}
+          style={{ height: 'clamp(200px, 36vh, 250px)', width: '100%' }}
           scrollWheelZoom={false}
           zoomControl={true}
         >

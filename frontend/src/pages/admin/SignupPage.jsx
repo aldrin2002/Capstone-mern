@@ -141,23 +141,23 @@ const SignUpPage = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center bg-gradient-to-r from-blue-500 to-blue-700 overflow-y-auto p-4"
+      className="fixed inset-0 flex items-start sm:items-center justify-center bg-gradient-to-r from-blue-500 to-blue-700 overflow-y-auto px-3 py-4 sm:p-4"
     >
-      <div className="max-w-4xl w-full bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-lg shadow-lg overflow-hidden border border-gray-200 my-8">
-        <div className="p-8">
-          <h2 className="text-3xl font-bold text-center text-white mb-2">
+      <div className="w-full max-w-4xl bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-xl sm:rounded-lg shadow-lg overflow-hidden border border-gray-200 my-2 sm:my-8">
+        <div className="p-4 sm:p-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center text-white mb-2">
             Create Admin Account
           </h2>
-          <p className="text-center text-white/80 mb-6">
+          <p className="text-center text-sm sm:text-base text-white/80 mb-5 sm:mb-6">
             Register your cafe location
           </p>
-          <div className="h-1 w-20 bg-blue-500 mx-auto mb-8"></div>
+          <div className="h-1 w-16 sm:w-20 bg-blue-500 mx-auto mb-6 sm:mb-8"></div>
 
           <form onSubmit={handleSignUp}>
             {/* ✅ UPDATED: Two-column layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Left Column - Form Fields */}
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <Input
                   icon={User}
                   type="text"
@@ -203,22 +203,22 @@ const SignUpPage = () => {
               </div>
 
               {/* Right Column - Map Preview */}
-              <div className="space-y-4">
-                <label className="block text-sm font-medium text-white mb-2">
+              <div className="space-y-3 sm:space-y-4">
+                <label className="block text-sm font-medium text-white mb-1 sm:mb-2">
                   📍 Cafe Location Preview
                 </label>
                 <AddressPickerMap
                   coordinates={locationCoords}
                   selectedAddress={address}
                 />
-                <p className="text-xs text-white/80">
+                <p className="text-xs sm:text-sm text-white/80">
                   Pin shows your cafe location for delivery routing
                 </p>
               </div>
             </div>
 
             <button
-              className="mt-6 w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md 
+              className="mt-5 sm:mt-6 w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md 
                             hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                             transition duration-200"
               type="submit"
@@ -232,8 +232,8 @@ const SignUpPage = () => {
             </button>
           </form>
         </div>
-        <div className="px-8 py-4 bg-gray-50 bg-opacity-20 flex justify-center">
-          <p className="text-sm text-white">
+        <div className="px-4 sm:px-8 py-3 sm:py-4 bg-gray-50 bg-opacity-20 flex justify-center">
+          <p className="text-xs sm:text-sm text-white text-center">
             Already have an account?{" "}
             <Link
               to={"/login"}
