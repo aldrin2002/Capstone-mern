@@ -161,6 +161,70 @@ export const useProductManager = () => {
     }
   };
 
+  const bulkUpdateProductStocks = async (productUpdates) => {
+    if (!Array.isArray(productUpdates) || productUpdates.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Products Selected',
+        text: 'Please select products to update.',
+        confirmButtonColor: '#3085d6',
+      });
+      return false;
+    }
+
+    setIsLoading(true);
+    try {
+      const results = await Promise.allSettled(
+        productUpdates.map(({ id, stock }) => {
+          const updateData = new FormData();
+          updateData.append('stock', String(stock));
+
+          return axios.put(`${API_URL}/${id}`, updateData, {
+            headers: {
+              ...getAuthHeaders(),
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+        })
+      );
+
+      const failed = results.filter((result) => result.status === 'rejected');
+      const successCount = results.length - failed.length;
+
+      await fetchProducts();
+
+      if (failed.length > 0) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Bulk Update Partially Completed',
+          text: `${successCount} product(s) updated, ${failed.length} failed.`,
+          confirmButtonColor: '#3085d6',
+        });
+        return false;
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Bulk Update Complete',
+        text: `${successCount} product(s) updated successfully.`,
+        timer: 1700,
+        showConfirmButton: false,
+      });
+      return true;
+    } catch (error) {
+      console.error('❌ Error in bulk stock update:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Bulk Update Failed',
+        text: error.response?.data?.message || 'Failed to update selected product quantities.',
+        confirmButtonColor: '#3085d6',
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const deleteProduct = async (id, productName) => {
     const result = await Swal.fire({
       icon: 'warning',
@@ -234,6 +298,7 @@ export const useProductManager = () => {
     fetchProducts,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    bulkUpdateProductStocks
   };
 };

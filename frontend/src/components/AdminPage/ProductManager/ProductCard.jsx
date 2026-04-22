@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
 import { Coffee, Edit2, Trash2 } from 'lucide-react';
 
-const ProductCard = ({ product, viewMode, onEdit, onDelete }) => {
+const ProductCard = ({
+  product,
+  viewMode,
+  onEdit,
+  onDelete,
+  bulkMode = false,
+  isSelected = false,
+  onToggleSelect = () => {}
+}) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -17,9 +25,22 @@ const ProductCard = ({ product, viewMode, onEdit, onDelete }) => {
     <div
       className={`bg-white rounded-2xl shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${
         viewMode === "list" ? "flex items-center p-4" : ""
-      }`}
+      } ${bulkMode && isSelected ? "ring-2 ring-blue-400" : ""}`}
     >
       <div className={`${viewMode === "list" ? "w-24 h-24 flex-shrink-0 mr-4" : "h-48"} bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden ${viewMode === "grid" ? "rounded-t-2xl" : "rounded-xl"}`}>
+        {bulkMode && (
+          <div className="absolute top-3 right-3 z-20" onClick={(e) => e.stopPropagation()}>
+            <label className="flex items-center justify-center w-7 h-7 bg-white/95 rounded-md shadow border border-gray-200 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={() => onToggleSelect(product._id)}
+                className="h-4 w-4 accent-blue-600"
+              />
+            </label>
+          </div>
+        )}
+
         {/* Simple image display */}
         {product.image && !imageError ? (
           <>
@@ -52,24 +73,26 @@ const ProductCard = ({ product, viewMode, onEdit, onDelete }) => {
         )}
         
         {/* Enhanced overlay with actions */}
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-          <div className="flex space-x-3">
-            <button
-              onClick={() => onEdit(product)}
-              className="p-3 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transform hover:scale-110 transition-all duration-300"
-              title="Edit Product"
-            >
-              <Edit2 className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => onDelete(product._id, product.name)}
-              className="p-3 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transform hover:scale-110 transition-all duration-300"
-              title="Delete Product"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+        {!bulkMode && (
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <div className="flex space-x-3">
+              <button
+                onClick={() => onEdit(product)}
+                className="p-3 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transform hover:scale-110 transition-all duration-300"
+                title="Edit Product"
+              >
+                <Edit2 className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => onDelete(product._id, product.name)}
+                className="p-3 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transform hover:scale-110 transition-all duration-300"
+                title="Delete Product"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Enhanced stock indicator */}
         <div className="absolute top-3 left-3">
@@ -85,7 +108,7 @@ const ProductCard = ({ product, viewMode, onEdit, onDelete }) => {
         </div>
 
         {/* Featured badge */}
-        {product.featured && (
+        {product.featured && !bulkMode && (
           <div className="absolute top-3 right-3">
             <div className="flex items-center px-2 py-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full shadow-lg text-xs font-bold">
               <span>★ FEATURED</span>
@@ -113,7 +136,7 @@ const ProductCard = ({ product, viewMode, onEdit, onDelete }) => {
             {product.category}
           </span>
           
-          {viewMode === "list" && (
+          {viewMode === "list" && !bulkMode && (
             <div className="flex space-x-2">
               <button
                 onClick={() => onEdit(product)}

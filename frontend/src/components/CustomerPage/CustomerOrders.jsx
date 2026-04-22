@@ -471,10 +471,10 @@ const CustomerOrders = () => {
                         </div>
                         
                         {/* ✅ MODIFIED: Status with Rate It button */}
-                        <div className="space-y-1">
+                        <div className="space-y-1 col-span-2 md:col-span-1">
                           <p className="text-sm font-medium text-gray-500">Status</p>
-                          <div className="flex items-center gap-2">
-                            <div className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-bold ${statusStyle.bg} ${statusStyle.text} border-2 ${statusStyle.border} shadow-md`}>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <div className={`inline-flex items-center px-3 md:px-4 py-2 rounded-full text-xs md:text-sm font-bold ${statusStyle.bg} ${statusStyle.text} border-2 ${statusStyle.border} shadow-md`}>
                               {statusStyle.icon}
                               <span className="ml-2">{order.status}</span>
                             </div>
@@ -483,7 +483,7 @@ const CustomerOrders = () => {
                             {(order.status === "Completed" || order.status === "Delivered") && (
                               <button
                                 onClick={() => openRatingModal(order)}
-                                className={`inline-flex items-center px-3 py-2 rounded-full text-sm font-bold transition-all duration-300 ${
+                                className={`inline-flex items-center px-3 py-2 rounded-full text-xs md:text-sm font-bold whitespace-nowrap transition-all duration-300 ${
                                   order.hasRated || order.rating
                                     ? 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-2 border-green-300'
                                     : 'bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-800 border-2 border-orange-300 hover:from-yellow-200 hover:to-orange-200 animate-pulse'
@@ -825,7 +825,7 @@ const CustomerOrders = () => {
 
               {/* Feedback Text Area */}
               <div className="mb-6">
-                <label className="block text-gray-700 font-bold mb-2 flex items-center">
+                <label className="text-gray-700 font-bold mb-2 flex items-center">
                   <MessageSquare className="h-5 w-5 mr-2 text-blue-600" />
                   Share Your Feedback
                 </label>

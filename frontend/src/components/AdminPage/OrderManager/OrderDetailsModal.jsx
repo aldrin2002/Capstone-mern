@@ -151,11 +151,15 @@ const OrderDetailsModal = ({
     return proofPath;
   };
 
-  const proofImageUrl = getProofImageUrl(selectedOrder.proofOfPayment);
+  // Support both legacy and current payload keys from backend
+  const paymentReferenceNumber = selectedOrder.gcashReferenceNumber || selectedOrder.gcashReference;
+  const paymentProofPath = selectedOrder.gcashProofImage || selectedOrder.proofOfPayment;
+
+  const proofImageUrl = getProofImageUrl(paymentProofPath);
   const deliveryProofUrl = getProofImageUrl(selectedOrder.deliveryProofImage);
   
   console.log('🖼️ Final proof image URL:', proofImageUrl);
-  console.log('📋 Selected order proof of payment:', selectedOrder.proofOfPayment);
+  console.log('📋 Selected order proof of payment:', paymentProofPath);
 
   const handleRestoreInventory = async () => {
     try {
@@ -377,8 +381,8 @@ const OrderDetailsModal = ({
               </div>
             )}
 
-            {/* GCash Reference Number Section */}
-            {selectedOrder.gcashReference && (
+            {/* GCash Reference Number Section
+            {paymentReferenceNumber && (
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 mb-6">
                 <div className="flex items-center mb-3">
                   <div className="bg-blue-500 p-2 rounded-xl mr-3 shadow-lg">
@@ -386,12 +390,12 @@ const OrderDetailsModal = ({
                   </div>
                   <h4 className="font-bold text-blue-800 text-lg">GCash Reference Number</h4>
                 </div>
-                <p className="text-blue-700 bg-blue-100 p-4 rounded-xl border border-blue-200 font-mono text-lg">{selectedOrder.gcashReference}</p>
+                <p className="text-blue-700 bg-blue-100 p-4 rounded-xl border border-blue-200 font-mono text-lg">{paymentReferenceNumber}</p>
               </div>
-            )}
+            )} */}
 
             {/* Proof of Payment Section */}
-            {selectedOrder.proofOfPayment && (
+            {paymentProofPath && (
               <div className="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-2xl p-6 mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center">
@@ -419,7 +423,7 @@ const OrderDetailsModal = ({
                         onError={(e) => {
                           console.error('❌ Error loading proof image:', {
                             src: e.target.src,
-                            originalProofPath: selectedOrder.proofOfPayment,
+                            originalProofPath: paymentProofPath,
                             error: e
                           });
                           e.target.style.border = '2px solid red';

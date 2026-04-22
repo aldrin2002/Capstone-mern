@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Plus, Package } from "lucide-react";
+import { Plus, Package, Boxes, CheckSquare, Square } from "lucide-react";
 import Swal from "sweetalert2";
 
 // Components
@@ -18,7 +18,8 @@ const ProductManager = () => {
     stats,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    bulkUpdateProductStocks
   } = useProductManager();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -27,6 +28,10 @@ const ProductManager = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [viewMode, setViewMode] = useState("grid");
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selectedProductIds, setSelectedProductIds] = useState([]);
+  const [bulkAction, setBulkAction] = useState("set");
+  const [bulkValue, setBulkValue] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -49,6 +54,11 @@ const ProductManager = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    const existingIds = new Set(products.map((product) => product._id));
+    setSelectedProductIds((prev) => prev.filter((id) => existingIds.has(id)));
+  }, [products]);
 
   // Remove or comment out all console.log except for errors and one summary
   const validateImageFile = (file) => {
@@ -267,6 +277,124 @@ const ProductManager = () => {
     return matchesSearch && matchesCategory;
   });
 
+  const clearBulkSelection = () => {
+    setSelectedProductIds([]);
+    setBulkValue("");
+    setBulkAction("set");
+  };
+
+  const toggleBulkMode = () => {
+    setBulkMode((prev) => {
+      const next = !prev;
+      if (!next) {
+        clearBulkSelection();
+      }
+      return next;
+    });
+  };
+
+  const toggleProductSelection = (productId) => {
+    setSelectedProductIds((prev) =>
+      prev.includes(productId)
+        ? prev.filter((id) => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  const toggleSelectAllFiltered = () => {
+    const filteredIds = filteredProducts.map((product) => product._id);
+    const selectedInFiltered = filteredIds.filter((id) => selectedProductIds.includes(id));
+
+    if (selectedInFiltered.length === filteredIds.length && filteredIds.length > 0) {
+      setSelectedProductIds((prev) => prev.filter((id) => !filteredIds.includes(id)));
+      return;
+    }
+
+    setSelectedProductIds((prev) => {
+      const merged = new Set([...prev, ...filteredIds]);
+      return Array.from(merged);
+    });
+  };
+
+  const handleBulkUpdate = async () => {
+    if (selectedProductIds.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "No Products Selected",
+        text: "Select at least one product to update quantity.",
+        confirmButtonColor: "#3085d6",
+      });
+      return;
+    }
+
+    const parsedValue = Number(bulkValue);
+    const isInvalidValue = Number.isNaN(parsedValue) || parsedValue < 0;
+    const isZeroChange = (bulkAction === "increase" || bulkAction === "decrease") && parsedValue === 0;
+
+    if (isInvalidValue || isZeroChange) {
+      Swal.fire({
+        icon: "warning",
+        title: "Invalid Quantity",
+        text: bulkAction === "set"
+          ? "Set quantity must be 0 or greater."
+          : "Adjustment quantity must be greater than 0.",
+        confirmButtonColor: "#3085d6",
+      });
+      return;
+    }
+
+    const selectedProducts = products.filter((product) => selectedProductIds.includes(product._id));
+    const updates = selectedProducts
+      .map((product) => {
+        let nextStock = product.stock;
+
+        if (bulkAction === "set") {
+          nextStock = parsedValue;
+        }
+        if (bulkAction === "increase") {
+          nextStock = product.stock + parsedValue;
+        }
+        if (bulkAction === "decrease") {
+          nextStock = Math.max(0, product.stock - parsedValue);
+        }
+
+        return { id: product._id, stock: nextStock };
+      })
+      .filter((update) => {
+        const original = selectedProducts.find((product) => product._id === update.id);
+        return original && original.stock !== update.stock;
+      });
+
+    if (updates.length === 0) {
+      Swal.fire({
+        icon: "info",
+        title: "No Changes Needed",
+        text: "Selected products already have the target quantity.",
+        confirmButtonColor: "#3085d6",
+      });
+      return;
+    }
+
+    const result = await Swal.fire({
+      icon: "question",
+      title: "Confirm Bulk Quantity Update",
+      html: `Apply <strong>${bulkAction}</strong> with value <strong>${parsedValue}</strong> to <strong>${updates.length}</strong> product(s)?`,
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, update quantities",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!result.isConfirmed) return;
+
+    const success = await bulkUpdateProductStocks(updates);
+    if (success) {
+      clearBulkSelection();
+      setBulkMode(false);
+    }
+  };
+
   // Log product image status on component load
   useEffect(() => {
     if (products.length > 0) {
@@ -345,16 +473,30 @@ const ProductManager = () => {
           </h2>
           <p className="text-gray-600 mt-1">Manage your cafe menu items</p>
         </div>
-        <button
-          onClick={() => {
-            console.log("➕ Add Product button clicked");
-            setShowModal(true);
-          }}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-2xl flex items-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-        >
-          <Plus className="h-5 w-5" />
-          <span className="font-medium">Add Product</span>
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            onClick={toggleBulkMode}
+            className={`px-6 py-3 rounded-2xl flex items-center justify-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
+              bulkMode
+                ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white"
+                : "bg-gradient-to-r from-slate-500 to-slate-600 hover:from-slate-600 hover:to-slate-700 text-white"
+            }`}
+          >
+            <Boxes className="h-5 w-5" />
+            <span className="font-medium">{bulkMode ? "Cancel Bulk" : "Bulk Update Qty"}</span>
+          </button>
+
+          <button
+            onClick={() => {
+              console.log("➕ Add Product button clicked");
+              setShowModal(true);
+            }}
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-2xl flex items-center justify-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          >
+            <Plus className="h-5 w-5" />
+            <span className="font-medium">Add Product</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -370,6 +512,69 @@ const ProductManager = () => {
         setViewMode={setViewMode}
         categories={categories}
       />
+
+      {bulkMode && (
+        <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 border border-blue-100">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-800">Bulk Quantity Update</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                {selectedProductIds.length} selected from {filteredProducts.length} filtered product(s)
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={toggleSelectAllFiltered}
+                className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-300 flex items-center gap-2"
+              >
+                {filteredProducts.length > 0 && filteredProducts.every((product) => selectedProductIds.includes(product._id)) ? (
+                  <CheckSquare className="h-4 w-4" />
+                ) : (
+                  <Square className="h-4 w-4" />
+                )}
+                <span>Select Filtered</span>
+              </button>
+
+              <button
+                onClick={clearBulkSelection}
+                className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-300"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <select
+              value={bulkAction}
+              onChange={(e) => setBulkAction(e.target.value)}
+              className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+            >
+              <option value="set">Set quantity to</option>
+              <option value="increase">Increase by</option>
+              <option value="decrease">Decrease by</option>
+            </select>
+
+            <input
+              type="number"
+              min="0"
+              value={bulkValue}
+              onChange={(e) => setBulkValue(e.target.value)}
+              className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+              placeholder="Enter quantity"
+            />
+
+            <button
+              onClick={handleBulkUpdate}
+              disabled={isLoading}
+              className="w-full px-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 text-white rounded-xl font-medium transition-all duration-300"
+            >
+              Apply Bulk Update
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Products Display */}
       {filteredProducts.length === 0 ? (
@@ -390,6 +595,9 @@ const ProductManager = () => {
               viewMode={viewMode}
               onEdit={handleEdit}
               onDelete={deleteProduct}
+              bulkMode={bulkMode}
+              isSelected={selectedProductIds.includes(product._id)}
+              onToggleSelect={toggleProductSelection}
             />
           ))}
         </div>
