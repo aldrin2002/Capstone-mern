@@ -1,8 +1,15 @@
 import jwt from "jsonwebtoken";
 
 export const verifyToken = (req, res, next) => {
-	const token = req.cookies.token;
-	if (!token) return res.status(401).json({ success: false, message: "Unauthorized - no token provided" });
+	const cookieToken = req.cookies?.token;
+	const authHeader = req.headers.authorization || "";
+	const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
+	const token = cookieToken || bearerToken;
+
+	if (!token) {
+		return res.status(401).json({ success: false, message: "Unauthorized - no token provided" });
+	}
+
 	try {
 		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
@@ -13,6 +20,11 @@ export const verifyToken = (req, res, next) => {
 		next();
 	} catch (error) {
 		console.log("Error in verifyToken ", error);
+
+		if (error.name === "TokenExpiredError" || error.name === "JsonWebTokenError") {
+			return res.status(401).json({ success: false, message: "Unauthorized - invalid token" });
+		}
+
 		return res.status(500).json({ success: false, message: "Server error" });
 	}
 };

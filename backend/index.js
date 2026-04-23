@@ -29,14 +29,51 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const railwayOrigin = process.env.RAILWAY_PUBLIC_DOMAIN
+  ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+  : null;
+
+const defaultAllowedOrigins = [
+  "http://localhost:5173",
+  "https://cafex.site",
+  "https://www.cafex.site",
+  "https://capstone-mern-production-de37.up.railway.app",
+  railwayOrigin,
+];
+
+const envAllowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const allowedOrigins = new Set([...defaultAllowedOrigins, ...envAllowedOrigins]);
+
+const isOriginAllowed = (origin) => {
+  if (!origin) {
+    return true;
+  }
+
+  return allowedOrigins.has(origin);
+};
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (isOriginAllowed(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 200,
+};
+
 // Create HTTP server and Socket.IO instance
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
-  cors: {
-    origin:
-      process.env.NODE_ENV === "production" ? true : "http://localhost:5173",
-    credentials: true, // Make sure this is enabled
-  },
+  cors: corsOptions,
 });
 
 // Add this after creating the io instance
@@ -54,15 +91,7 @@ if (!fs.existsSync(uploadsDir)) {
   console.log("Created uploads directory at:", uploadsDir);
 }
 
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production" ? true : "http://localhost:5173",
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

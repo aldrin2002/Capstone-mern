@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.model.js";
+import { getAuthCookieOptions } from "./authCookieOptions.js";
 
 export const generateTokenAndSetCookie = async (res, userId) => {
     // Fetch user to get role
@@ -20,12 +21,7 @@ export const generateTokenAndSetCookie = async (res, userId) => {
         }
     );
 
-    res.cookie("token", token, {
-        httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        sameSite: "strict",
-        secure: process.env.NODE_ENV === "production",
-    });
+    res.cookie("token", token, getAuthCookieOptions());
     
     return token; // Return the token so it can be included in response body
 };

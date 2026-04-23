@@ -1,6 +1,7 @@
 import bcryptjs from "bcryptjs";
 import jwt from 'jsonwebtoken';
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
+import { getClearAuthCookieOptions } from "../utils/authCookieOptions.js";
 import { User } from "../models/user.model.js";
 import { sendVerificationEmail } from "../utils/emailService.js";
 
@@ -206,14 +207,7 @@ export const driverLogin = async (req, res) => {
 
 export const logout = async (req, res) => {
     try {
-        res.clearCookie("token", {
-            httpOnly: true,
-            sameSite: "strict",
-            secure: process.env.NODE_ENV === "production",
-            path: "/"
-        });
-        
-        res.clearCookie("token");
+        res.clearCookie("token", getClearAuthCookieOptions());
         
         res.status(200).json({ 
             success: true, 
