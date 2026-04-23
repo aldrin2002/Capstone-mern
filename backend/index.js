@@ -27,10 +27,23 @@ import visitRoutes from "./routes/visit.routes.js";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-const railwayOrigin = process.env.RAILWAY_PUBLIC_DOMAIN
-  ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+const cleanEnvValue = (value) => {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim().replace(/^['\"]|['\"]$/g, "");
+};
+
+const NODE_ENV = cleanEnvValue(process.env.NODE_ENV);
+const portFromEnv = Number.parseInt(cleanEnvValue(process.env.PORT), 10);
+const PORT = Number.isFinite(portFromEnv) ? portFromEnv : 5000;
+
+const railwayPublicDomain = cleanEnvValue(process.env.RAILWAY_PUBLIC_DOMAIN);
+
+const railwayOrigin = railwayPublicDomain
+  ? `https://${railwayPublicDomain}`
   : null;
 
 const defaultAllowedOrigins = [
@@ -41,7 +54,7 @@ const defaultAllowedOrigins = [
   railwayOrigin,
 ];
 
-const envAllowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || "")
+const envAllowedOrigins = cleanEnvValue(process.env.CORS_ALLOWED_ORIGINS)
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);

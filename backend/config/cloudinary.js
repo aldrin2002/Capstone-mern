@@ -2,17 +2,33 @@ import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import multer from 'multer';
 
+const cleanEnvValue = (value) => {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  return value.trim().replace(/^['\"]|['\"]$/g, '');
+};
+
+const cloudName = cleanEnvValue(process.env.CLOUDINARY_CLOUD_NAME);
+const cloudApiKey = cleanEnvValue(process.env.CLOUDINARY_API_KEY);
+const cloudApiSecret = cleanEnvValue(process.env.CLOUDINARY_API_SECRET);
+
+if (!cloudName || !cloudApiKey || !cloudApiSecret) {
+  throw new Error('Missing Cloudinary environment variables');
+}
+
 // Configure Cloudinary with debug logging
 cloudinary.config({
-  cloud_name: 'djmmcxkg2',
-  api_key: '884838246632958',
-  api_secret: 'ARXeZPm4vS2VHPWuVU9D8ggzfMk'
+  cloud_name: cloudName,
+  api_key: cloudApiKey,
+  api_secret: cloudApiSecret
 });
 
 // Test Cloudinary connection
 console.log("🔧 Cloudinary Config:");
 console.log("Cloud Name:", cloudinary.config().cloud_name);
-console.log("API Key:", cloudinary.config().api_key);
+console.log("API Key:", cloudinary.config().api_key ? "***SET***" : "NOT SET");
 console.log("API Secret:", cloudinary.config().api_secret ? "***SET***" : "NOT SET");
 
 // Configure Cloudinary storage for product images

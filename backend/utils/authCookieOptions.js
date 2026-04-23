@@ -1,5 +1,13 @@
 const AUTH_COOKIE_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
 
+const cleanEnvValue = (value) => {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim().replace(/^['\"]|['\"]$/g, "");
+};
+
 const normalizeSameSite = (value) => {
   const normalized = (value || "").toLowerCase();
 
@@ -11,8 +19,8 @@ const normalizeSameSite = (value) => {
 };
 
 const getSameSite = () => {
-  const isProduction = process.env.NODE_ENV === "production";
-  const envSameSite = normalizeSameSite(process.env.COOKIE_SAME_SITE);
+  const isProduction = cleanEnvValue(process.env.NODE_ENV) === "production";
+  const envSameSite = normalizeSameSite(cleanEnvValue(process.env.COOKIE_SAME_SITE));
 
   if (envSameSite) {
     return envSameSite;
@@ -24,7 +32,7 @@ const getSameSite = () => {
 
 export const getAuthCookieOptions = () => {
   const sameSite = getSameSite();
-  const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = cleanEnvValue(process.env.NODE_ENV) === "production";
 
   const cookieOptions = {
     httpOnly: true,
@@ -34,8 +42,9 @@ export const getAuthCookieOptions = () => {
     path: "/",
   };
 
-  if (process.env.COOKIE_DOMAIN) {
-    cookieOptions.domain = process.env.COOKIE_DOMAIN;
+  const cookieDomain = cleanEnvValue(process.env.COOKIE_DOMAIN);
+  if (cookieDomain) {
+    cookieOptions.domain = cookieDomain;
   }
 
   return cookieOptions;

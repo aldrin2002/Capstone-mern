@@ -1,9 +1,23 @@
 import mongoose from "mongoose";
 
+const cleanEnvValue = (value) => {
+	if (typeof value !== "string") {
+		return "";
+	}
+
+	return value.trim().replace(/^['\"]|['\"]$/g, "");
+};
+
 export const connectDB = async () => {
 	try {
-		console.log("mongo_uri: ", process.env.MONGO_URI);
-		const conn = await mongoose.connect(process.env.MONGO_URI);
+		const mongoUri = cleanEnvValue(process.env.MONGO_URI);
+
+		if (!mongoUri) {
+			throw new Error("MONGO_URI is missing");
+		}
+
+		console.log("mongo_uri is configured");
+		const conn = await mongoose.connect(mongoUri);
 		console.log(`MongoDB Connected: ${conn.connection.host}`);
 	} catch (error) {
 		console.log("Error connection to MongoDB: ", error.message);
