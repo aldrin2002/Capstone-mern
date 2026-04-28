@@ -80,8 +80,19 @@ const InstallPWA = () => {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [isAppInstalled, setIsAppInstalled] = useState(false);
   const [showInstallButton, setShowInstallButton] = useState(false);
+  const [isIOSDevice, setIsIOSDevice] = useState(false);
 
   useEffect(() => {
+    const detectIOS = () => {
+      const userAgent = navigator.userAgent || "";
+      const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+      // iPadOS 13+ reports as MacIntel but has touch points.
+      const isIPadOS = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+      return isIOS || isIPadOS;
+    };
+
+    setIsIOSDevice(detectIOS());
+
     // Function to check if app is currently installed
     const checkInstallationStatus = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
@@ -125,6 +136,11 @@ const InstallPWA = () => {
 
     // Initial check
     shouldShowInstallButton();
+
+    // iOS Safari never fires beforeinstallprompt; show a button that opens instructions.
+    if (detectIOS() && !checkInstallationStatus()) {
+      setShowInstallButton(true);
+    }
 
     // Listen for the beforeinstallprompt event
     const handleBeforeInstallPrompt = (e) => {
@@ -177,8 +193,7 @@ const InstallPWA = () => {
   const handleInstallClick = async () => {
     if (!installPrompt) {
       // If on iOS, show instructions for adding to home screen
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-      if (isIOS) {
+      if (isIOSDevice) {
         alert("To install this app on iOS: tap the share icon and then 'Add to Home Screen'");
       } else if (isAppInstalled) {
         alert("App is already installed!");
@@ -211,7 +226,7 @@ const InstallPWA = () => {
     }
   };
 
-  // Only show button if app is not installed and we have an install prompt or it's installable
+  // Show on iOS (instructions) or when beforeinstallprompt is available.
   if (isAppInstalled || !showInstallButton) {
     return null;
   }
