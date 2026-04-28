@@ -13,7 +13,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 );
 
 // Register service worker for PWA
-if ("serviceWorker" in navigator) {
+if ("serviceWorker" in navigator && window.isSecureContext) {
 	window.addEventListener("load", () => {
 		navigator.serviceWorker
 			.register("/service-worker.js")
@@ -35,4 +35,11 @@ if ("serviceWorker" in navigator) {
 				console.log("Service Worker registration failed: ", error);
 			});
 	});
+}
+
+if ("serviceWorker" in navigator && !window.isSecureContext) {
+	console.warn(
+		"Service Worker not registered because the page is not a secure context. " +
+			"This usually means an SSL/certificate warning was bypassed or the page is not served over HTTPS."
+	);
 }
