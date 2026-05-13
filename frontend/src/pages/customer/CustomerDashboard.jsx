@@ -56,8 +56,8 @@ const CustomerDashboard = () => {
       title: "Our Menu",
       description: "Explore our delicious offerings",
       link: "/customer-menu",
-      bgColor: "bg-blue-500",
-      hoverColor: "hover:bg-blue-600",
+      bgColor: "bg-brand",
+      hoverColor: "hover:bg-primary-700",
       icon: <Menu className="h-8 w-8 text-white" />,
       feature: "New Items Added"
     },
@@ -98,7 +98,7 @@ const CustomerDashboard = () => {
         {/* Main Content - Offset by sidebar width on desktop */}
         <main className={`${isMobile ? 'pb-20' : 'ml-64'}`}>
             {/* Welcome Section */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white relative overflow-hidden">
+            <div className="bg-gradient-to-r from-brand to-primary-800 text-white relative overflow-hidden">
           {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-24 -mb-24"></div>
@@ -106,7 +106,7 @@ const CustomerDashboard = () => {
           <div className="relative container mx-auto px-4 py-16">
             <div className="max-w-4xl mx-auto text-center">
               {/* Greeting */}
-              <div className="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 rounded-full text-blue-100 text-sm font-medium mb-6">
+              <div className="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 rounded-full text-primary-100 text-sm font-medium mb-6">
                 <Sparkles className="h-4 w-4 mr-2" />
                 {getGreeting()}, {user?.name || "Guest"}!
               </div>
@@ -116,7 +116,7 @@ const CustomerDashboard = () => {
                 Welcome to <span className="text-yellow-300">CafeX</span>
               </h1>
               
-              <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-3xl mx-auto">
+              <p className="text-xl md:text-2xl text-primary-100 mb-8 max-w-3xl mx-auto">
                 Discover exceptional coffee, delightful ambiance, and seamless online ordering experience
               </p>
               

@@ -14,8 +14,8 @@ const OrderStats = ({ stats }) => {
       title: "Total Orders",
       value: stats.total,
       icon: ShoppingCart,
-      color: "blue",
-      hoverColor: "blue"
+      color: "primary",
+      hoverColor: "primary"
     },
     {
       title: "Pending",
@@ -28,8 +28,8 @@ const OrderStats = ({ stats }) => {
       title: "Processing",
       value: stats.processing,
       icon: Package,
-      color: "blue",
-      hoverColor: "blue"
+      color: "primary",
+      hoverColor: "primary"
     },
     {
       title: "Completed",

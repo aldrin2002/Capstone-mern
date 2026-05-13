@@ -70,7 +70,7 @@ const GalleryManager = () => {
         icon: "error",
         title: "Load Failed",
         text: "Failed to load gallery images",
-        confirmButtonColor: "#3085d6",
+        confirmButtonColor: "#F13E93",
       });
     } finally {
       setIsLoading(false);
@@ -92,7 +92,7 @@ const GalleryManager = () => {
           icon: "error",
           title: "File Too Large",
           text: "Image must be less than 10MB",
-          confirmButtonColor: "#3085d6",
+          confirmButtonColor: "#F13E93",
         });
         e.target.value = null;
         return;
@@ -262,7 +262,7 @@ const GalleryManager = () => {
         icon: "error",
         title: "Save Failed",
         text: error.response?.data?.message || "An error occurred while saving the image",
-        confirmButtonColor: "#3085d6",
+        confirmButtonColor: "#F13E93",
       });
     } finally {
       setIsLoading(false);
@@ -276,7 +276,7 @@ const GalleryManager = () => {
       html: `Are you sure you want to delete <strong>${title}</strong>?<br><span class="text-red-600 text-sm">This action cannot be undone!</span>`,
       showCancelButton: true,
       confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
+      cancelButtonColor: "#F13E93",
       confirmButtonText: "Yes, delete it!",
       cancelButtonText: "Cancel",
     });
@@ -315,7 +315,7 @@ const GalleryManager = () => {
         icon: "error",
         title: "Delete Failed",
         text: "Failed to delete gallery image",
-        confirmButtonColor: "#3085d6",
+        confirmButtonColor: "#F13E93",
       });
     } finally {
       setIsLoading(false);
@@ -348,9 +348,9 @@ const GalleryManager = () => {
       <div className="p-6 h-full flex justify-center items-center">
         <div className="text-center">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <div className="w-16 h-16 border-4 border-primary-200 border-t-brand rounded-full animate-spin mx-auto"></div>
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="w-8 h-8 bg-blue-600 rounded-full animate-pulse"></div>
+              <div className="w-8 h-8 bg-brand rounded-full animate-pulse"></div>
             </div>
           </div>
           <p className="mt-4 text-gray-600 font-medium">Loading gallery...</p>
@@ -360,12 +360,12 @@ const GalleryManager = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-full pb-28">
+    <div className="p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-primary-100 min-h-full pb-28">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center">
-            <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full mr-3"></div>
+            <div className="w-2 h-8 bg-gradient-to-b from-brand to-primary-700 rounded-full mr-3"></div>
             Gallery Management
           </h2>
           <p className="text-gray-600 mt-1">Manage your cafe gallery images</p>
@@ -382,7 +382,7 @@ const GalleryManager = () => {
             setImagePreview(null);
             setShowModal(true);
           }}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-2xl flex items-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+          className="bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-6 py-3 rounded-2xl flex items-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
         >
           <PlusCircle className="h-5 w-5" />
           <span className="font-medium">Add Image</span>
@@ -395,12 +395,12 @@ const GalleryManager = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Total Images</p>
-              <p className="text-2xl md:text-3xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 group-hover:text-brand transition-colors">
                 {stats.total}
               </p>
             </div>
-            <div className="p-3 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition-colors">
-              <Image className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-primary-100 rounded-xl group-hover:bg-primary-200 transition-colors">
+              <Image className="w-6 h-6 text-brand" />
             </div>
           </div>
         </div>
@@ -444,7 +444,7 @@ const GalleryManager = () => {
               </div>
               <input
                 type="text"
-                className="pl-12 w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                className="pl-12 w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
                 placeholder="Search gallery by title or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -459,7 +459,7 @@ const GalleryManager = () => {
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="border-2 border-gray-200 rounded-xl p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                className="border-2 border-gray-200 rounded-xl p-2 focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
               >
                 <option value="all">All Images</option>
                 <option value="featured">Featured Only</option>
@@ -473,7 +473,7 @@ const GalleryManager = () => {
                 onClick={() => setViewMode("grid")}
                 className={`p-2 rounded-lg transition-all duration-300 ${
                   viewMode === "grid"
-                    ? "bg-blue-500 text-white shadow-md"
+                    ? "bg-brand text-white shadow-md"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
@@ -483,7 +483,7 @@ const GalleryManager = () => {
                 onClick={() => setViewMode("list")}
                 className={`p-2 rounded-lg transition-all duration-300 ${
                   viewMode === "list"
-                    ? "bg-blue-500 text-white shadow-md"
+                    ? "bg-brand text-white shadow-md"
                     : "text-gray-500 hover:text-gray-700"
                 }`}
               >
@@ -508,7 +508,7 @@ const GalleryManager = () => {
             <div className="mt-6">
               <button
                 onClick={() => setShowModal(true)}
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-2xl flex items-center space-x-2 mx-auto transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-6 py-3 rounded-2xl flex items-center space-x-2 mx-auto transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
                 <PlusCircle className="h-5 w-5" />
                 <span className="font-medium">Add First Image</span>
@@ -552,7 +552,7 @@ const GalleryManager = () => {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleEditImage(image)}
-                      className="p-3 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transform hover:scale-110 transition-all duration-300"
+                      className="p-3 bg-brand hover:bg-primary-700 text-white rounded-full shadow-lg transform hover:scale-110 transition-all duration-300"
                     >
                       <Edit2 className="h-4 w-4" />
                     </button>
@@ -567,7 +567,7 @@ const GalleryManager = () => {
               </div>
 
               <div className="p-4">
-                <h3 className="font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <h3 className="font-bold text-gray-900 mb-2 group-hover:text-brand transition-colors">
                   {image.title}
                 </h3>
                 {image.description && (
@@ -618,7 +618,7 @@ const GalleryManager = () => {
                 {filteredGallery.map((image, index) => (
                   <tr
                     key={image._id}
-                    className={`group hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 ${
+                    className={`group hover:bg-gradient-to-r hover:from-primary-100 hover:to-purple-50 transition-all duration-300 ${
                       index % 2 === 0 ? "bg-gray-50" : "bg-white"
                     }`}
                   >
@@ -638,7 +638,7 @@ const GalleryManager = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
+                      <div className="text-sm font-bold text-gray-900 group-hover:text-brand transition-colors">
                         {image.title}
                       </div>
                     </td>
@@ -663,7 +663,7 @@ const GalleryManager = () => {
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => handleEditImage(image)}
-                          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-2 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                          className="bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white p-2 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                         >
                           <Edit2 className="h-4 w-4" />
                         </button>
@@ -687,7 +687,7 @@ const GalleryManager = () => {
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+            <div className="bg-gradient-to-r from-brand to-primary-700 p-6 text-white">
               <div className="flex justify-between items-center">
                 <h3 className="text-xl font-bold">
                   {editingImage ? "Edit Gallery Image" : "Add New Image"}
@@ -706,7 +706,7 @@ const GalleryManager = () => {
                         text: "Any unsaved changes will be lost",
                         icon: "question",
                         showCancelButton: true,
-                        confirmButtonColor: "#3085d6",
+                        confirmButtonColor: "#F13E93",
                         cancelButtonColor: "#d33",
                         confirmButtonText: "Yes, discard",
                         cancelButtonText: "No, keep editing",
@@ -737,7 +737,7 @@ const GalleryManager = () => {
                     name="title"
                     value={formData.title}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
                     required
                     placeholder="Enter image title"
                   />
@@ -752,7 +752,7 @@ const GalleryManager = () => {
                     value={formData.description}
                     onChange={handleChange}
                     rows="3"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 resize-none"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300 resize-none"
                     placeholder="Describe the image (optional)"
                   ></textarea>
                 </div>
@@ -766,7 +766,7 @@ const GalleryManager = () => {
                     name="image"
                     onChange={handleChange}
                     accept="image/*"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
                     required={!editingImage}
                   />
                   {imagePreview && (
@@ -801,7 +801,7 @@ const GalleryManager = () => {
                     name="featured"
                     checked={formData.featured}
                     onChange={handleChange}
-                    className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    className="h-5 w-5 text-brand rounded border-gray-300 focus:ring-brand"
                   />
                   <div className="flex items-center space-x-2">
                     <Star className="h-5 w-5 text-yellow-500" />
@@ -827,7 +827,7 @@ const GalleryManager = () => {
                           text: "Any unsaved changes will be lost",
                           icon: "question",
                           showCancelButton: true,
-                          confirmButtonColor: "#3085d6",
+                          confirmButtonColor: "#F13E93",
                           cancelButtonColor: "#d33",
                           confirmButtonText: "Yes, discard",
                           cancelButtonText: "No, keep editing",
@@ -846,7 +846,7 @@ const GalleryManager = () => {
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                    className="px-6 py-3 bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
                     disabled={isLoading}
                   >
                     {isLoading ? (

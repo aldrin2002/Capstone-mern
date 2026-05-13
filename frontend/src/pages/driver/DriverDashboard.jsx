@@ -101,7 +101,7 @@ const DriverDashboard = () => {
       return "bg-rose-100 text-rose-700 border-rose-200";
     }
     if (value.includes("assign")) {
-      return "bg-blue-100 text-blue-700 border-blue-200";
+      return "bg-primary-100 text-primary-800 border-primary-200";
     }
     return "bg-amber-100 text-amber-700 border-amber-200";
   };
@@ -117,18 +117,18 @@ const DriverDashboard = () => {
       <main className={`flex-1 ${isMobile ? 'pb-24' : 'ml-64'} overflow-y-auto`}>
         <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
           {/* Header */}
-          <div className="relative overflow-hidden bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-900 rounded-2xl sm:rounded-3xl shadow-xl">
+          <div className="relative overflow-hidden bg-gradient-to-r from-brand via-primary-700 to-primary-900 rounded-2xl sm:rounded-3xl shadow-xl">
             <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"></div>
             <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-white/10 blur-2xl"></div>
             <div className="relative px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
-              <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-sm rounded-full text-blue-100 text-xs sm:text-sm font-medium mb-3 sm:mb-4">
+              <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-sm rounded-full text-primary-100 text-xs sm:text-sm font-medium mb-3 sm:mb-4">
                 <Truck className="h-4 w-4 mr-2" />
                 Driver Dashboard
               </div>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-2">
                 Orders Summary
               </h1>
-              <p className="text-blue-100 text-sm sm:text-base lg:text-lg max-w-2xl">
+              <p className="text-primary-100 text-sm sm:text-base lg:text-lg max-w-2xl">
                 Track assigned deliveries, inspect customer details, and manage active drop-offs in one place.
               </p>
             </div>
@@ -139,7 +139,7 @@ const DriverDashboard = () => {
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
               <div className="flex items-center justify-between">
                 <p className="text-slate-500 text-sm">Total Orders</p>
-                <Package className="h-5 w-5 text-blue-600" />
+                  <Package className="h-5 w-5 text-brand" />
               </div>
               <p className="text-2xl sm:text-3xl font-bold text-slate-900 mt-2">{orders.length}</p>
             </div>
@@ -147,7 +147,7 @@ const DriverDashboard = () => {
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5">
               <div className="flex items-center justify-between">
                 <p className="text-slate-500 text-sm">Assigned</p>
-                <Truck className="h-5 w-5 text-indigo-600" />
+                  <Truck className="h-5 w-5 text-brand" />
               </div>
               <p className="text-2xl sm:text-3xl font-bold text-slate-900 mt-2">{assignedCount}</p>
             </div>
@@ -165,7 +165,7 @@ const DriverDashboard = () => {
           <div id="assigned" className="space-y-4">
             {orders.map(o => (
               <article key={o._id} className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200">
+                <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-slate-50 to-primary-100 border-b border-slate-200">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
                       <h3 className="font-bold text-slate-900 text-base sm:text-lg">
@@ -186,7 +186,7 @@ const DriverDashboard = () => {
                   {/* Customer info */}
                   <section className="space-y-3 bg-slate-50 rounded-xl p-4 border border-slate-200">
                     <h4 className="font-bold text-slate-900 flex items-center gap-2">
-                      <User className="h-4 w-4 text-blue-600" />
+                      <User className="h-4 w-4 text-brand" />
                       Customer Info
                     </h4>
                     <div className="text-sm text-slate-700 space-y-2">
@@ -208,7 +208,7 @@ const DriverDashboard = () => {
                   {/* Delivery times */}
                   <section className="space-y-3 bg-slate-50 rounded-xl p-4 border border-slate-200">
                     <h4 className="font-bold text-slate-900 flex items-center gap-2">
-                      <Route className="h-4 w-4 text-indigo-600" />
+                      <Route className="h-4 w-4 text-brand" />
                       Delivery Details
                     </h4>
                     <div className="text-sm text-slate-700 space-y-2">

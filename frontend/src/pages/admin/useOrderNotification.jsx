@@ -43,7 +43,7 @@ export const useOrderNotifications = (
           </div>
           <div className="text-sm mt-1">From: {orderData.customerName}</div>
           <div className="text-sm font-medium">{formattedTotal}</div>
-          <div className="text-xs mt-1 text-blue-500 hover:underline">
+          <div className="text-xs mt-1 text-brand hover:underline">
             Click to view details
           </div>
         </div>,
@@ -117,7 +117,7 @@ export const useOrderNotifications = (
             {
               duration: 5000,
               style: {
-                borderLeft: "4px solid #0070f3",
+                borderLeft: "4px solid #F13E93",
               },
             }
           );

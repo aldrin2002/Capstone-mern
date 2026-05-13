@@ -19,11 +19,11 @@ const OrderTable = ({ filteredOrders, getOrderDetails, formatDate }) => {
       case "Ready for Delivery":
         return <Truck className="h-5 w-5 text-cyan-600" />;
       case "Preparing Food":
-        return <Clock className="h-5 w-5 text-indigo-500" />;
+        return <Clock className="h-5 w-5 text-brand" />;
       case "Delivered":
-        return <Truck className="h-5 w-5 text-blue-500" />;
+        return <Truck className="h-5 w-5 text-brand" />;
       case "Processing":
-        return <Clock className="h-5 w-5 text-blue-500" />;
+        return <Clock className="h-5 w-5 text-brand" />;
       case "Pending":
         return <Clock className="h-5 w-5 text-yellow-500" />;
       default:
@@ -40,11 +40,11 @@ const OrderTable = ({ filteredOrders, getOrderDetails, formatDate }) => {
       case "Ready for Delivery":
         return "bg-gradient-to-r from-cyan-100 to-teal-200 text-cyan-900 border-cyan-300";
       case "Preparing Food":
-        return "bg-gradient-to-r from-indigo-100 to-blue-200 text-indigo-900 border-indigo-300";
+        return "bg-gradient-to-r from-primary-100 to-primary-200 text-primary-900 border-primary-300";
       case "Delivered":
-        return "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300";
+        return "bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800 border-primary-300";
       case "Processing":
-        return "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300";
+        return "bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800 border-primary-300";
       case "Pending":
         return "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300";
       default:
@@ -111,14 +111,14 @@ const OrderTable = ({ filteredOrders, getOrderDetails, formatDate }) => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
             {filteredOrders.map((order, index) => (
-              <tr key={order._id} className={`group hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+              <tr key={order._id} className={`group hover:bg-gradient-to-r hover:from-primary-100 hover:to-primary-200 transition-all duration-300 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap">
-                  <div className="text-xs md:text-sm font-bold text-gray-900 group-hover:text-blue-700 transition-colors truncate max-w-[80px] md:max-w-[120px]">
+                  <div className="text-xs md:text-sm font-bold text-gray-900 group-hover:text-brand transition-colors truncate max-w-[80px] md:max-w-[120px]">
                     #{order._id.slice(-6)}
                   </div>
                 </td>
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap">
-                  <div className="text-xs md:text-sm font-medium text-gray-900 group-hover:text-blue-700 transition-colors truncate max-w-[80px] md:max-w-full">
+                  <div className="text-xs md:text-sm font-medium text-gray-900 group-hover:text-brand transition-colors truncate max-w-[80px] md:max-w-full">
                     {order.customer.name}
                   </div>
                 </td>
@@ -140,7 +140,7 @@ const OrderTable = ({ filteredOrders, getOrderDetails, formatDate }) => {
                 <td className="px-3 md:px-6 py-4 whitespace-nowrap text-right">
                   <button 
                     onClick={() => getOrderDetails(order._id)}
-                    className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-xl inline-flex items-center text-xs transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    className="bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-4 py-2 rounded-xl inline-flex items-center text-xs transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                   >
                     <Eye className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                     <span className="font-medium">View</span>

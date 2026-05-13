@@ -20,8 +20,8 @@ const ConversationItem = ({
   return (
     <div className={`relative p-4 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] group rounded-2xl mx-2 mb-3 mt-3 overflow-hidden
       ${isSelected 
-        ? 'bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-blue-500/10 border-2 border-blue-500/30 shadow-xl backdrop-blur-sm' 
-        : 'bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:border-blue-300/50 hover:shadow-lg group-hover:bg-gradient-to-r group-hover:from-blue-50/50 group-hover:to-purple-50/50'
+        ? 'bg-gradient-to-r from-primary-400/10 via-purple-500/10 to-primary-400/10 border-2 border-brand/30 shadow-xl backdrop-blur-sm' 
+        : 'bg-white/80 backdrop-blur-sm border border-gray-200/50 hover:border-primary-300/50 hover:shadow-lg group-hover:bg-gradient-to-r group-hover:from-primary-100/50 group-hover:to-purple-50/50'
       }`}
       onClick={() => onSelect(conversation)}
     >
@@ -30,7 +30,7 @@ const ConversationItem = ({
       
       {/* Selected indicator */}
       {isSelected && (
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-purple-600 rounded-r-full shadow-lg"></div>
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-brand to-purple-600 rounded-r-full shadow-lg"></div>
       )}
 
       {/* Main conversation content */}
@@ -42,8 +42,8 @@ const ConversationItem = ({
           {/* Avatar with enhanced styling */}
           <div className={`h-12 w-12 rounded-full flex items-center justify-center font-bold text-lg shadow-lg transition-all duration-300 transform group-hover:scale-110
             ${isSelected 
-              ? 'bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-blue-500/30' 
-              : 'bg-gradient-to-br from-gray-400 to-gray-600 text-white group-hover:from-blue-500 group-hover:to-purple-600'
+              ? 'bg-gradient-to-br from-brand to-purple-600 text-white shadow-brand/30' 
+              : 'bg-gradient-to-br from-gray-400 to-gray-600 text-white group-hover:from-brand group-hover:to-purple-600'
             }`}>
             {conversation.customer?.name?.charAt(0).toUpperCase() || 'C'}
           </div>
@@ -70,17 +70,17 @@ const ConversationItem = ({
           <div className="flex items-center justify-between mb-1">
             <p className={`font-semibold text-sm truncate transition-colors duration-200
               ${isSelected 
-                ? 'text-blue-800' 
-                : 'text-gray-800 group-hover:text-blue-700'
+                ? 'text-primary-800' 
+                : 'text-gray-800 group-hover:text-primary-700'
               }`}>
               {conversation.customer?.name || 'Customer'}
             </p>
             <div className="flex items-center space-x-1">
-              <Clock size={12} className={`${isSelected ? 'text-blue-600' : 'text-gray-400'} transition-colors duration-200`} />
+              <Clock size={12} className={`${isSelected ? 'text-brand' : 'text-gray-400'} transition-colors duration-200`} />
               <span className={`text-xs font-medium
                 ${isSelected 
-                  ? 'text-blue-600' 
-                  : 'text-gray-500 group-hover:text-blue-600'
+                  ? 'text-brand' 
+                  : 'text-gray-500 group-hover:text-brand'
                 } transition-colors duration-200`}>
                 {formatTime(conversation.lastMessage || conversation.createdAt)}
               </span>
@@ -88,10 +88,10 @@ const ConversationItem = ({
           </div>
           
           <div className="flex items-center space-x-2">
-            <MessageCircle size={12} className={`${isSelected ? 'text-blue-500' : 'text-gray-400'} transition-colors duration-200`} />
+            <MessageCircle size={12} className={`${isSelected ? 'text-brand' : 'text-gray-400'} transition-colors duration-200`} />
             <p className={`text-xs truncate
               ${isSelected 
-                ? 'text-blue-700' 
+                ? 'text-primary-700' 
                 : 'text-gray-600 group-hover:text-gray-700'
               } transition-colors duration-200`}>
               {conversation.lastMessageContent || 'No messages yet'}
@@ -115,11 +115,11 @@ const ConversationItem = ({
       </button>
 
       {/* Subtle hover glow effect */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary-400/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
       
       {/* Selected conversation glow */}
       {isSelected && (
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 animate-pulse pointer-events-none"></div>
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary-400/10 to-purple-500/10 animate-pulse pointer-events-none"></div>
       )}
     </div>
   );

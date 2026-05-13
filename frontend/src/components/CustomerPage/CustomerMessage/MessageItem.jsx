@@ -44,7 +44,7 @@ const MessageItem = ({ message, isCustomer, index, API_BASE_URL }) => {
       <div 
         className={`px-4 py-2 rounded-xl inline-block ${
           isCustomer 
-            ? 'bg-blue-500 text-white' 
+            ? 'bg-brand text-white' 
             : 'bg-gray-200 text-gray-800'
         }`}
       >
@@ -75,7 +75,7 @@ const MessageItem = ({ message, isCustomer, index, API_BASE_URL }) => {
         
         {/* Message time - Fixed to align properly regardless of message length */}
         <div className={`text-xs mt-1 ${
-          isCustomer ? 'text-blue-100 text-right' : 'text-gray-500'
+          isCustomer ? 'text-primary-100 text-right' : 'text-gray-500'
         } clear-both`}>
           {formatTime(message.timestamp || message.createdAt)}
           

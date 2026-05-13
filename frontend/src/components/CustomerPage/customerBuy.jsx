@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import CustomerSideNav from "../../pages/customer/customerSideNav";
@@ -13,19 +13,20 @@ import PaymentModal from "./CustomerBuy/PaymentModal";
 import BackgroundElements from "./CustomerBuy/BackgroundElements";
 import CustomStyles from "./CustomerBuy/CustomStyles";
 
+const PRODUCTS_API_URL = import.meta.env.MODE === "development"
+  ? "http://localhost:5000/api/products"
+  : "/api/products";
+
+const CATEGORIES_API_URL = import.meta.env.MODE === "development"
+  ? "http://localhost:5000/api/categories"
+  : "/api/categories";
+
 const CustomerBuy = () => {
   const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("Coffee");
-  const [categories] = useState([
-    "Coffee",   
-    "Tea", 
-    "Pastry", 
-    "Sandwich", 
-    "Dessert", 
-    "Other"
-  ]);
+  const [dbCategories, setDbCategories] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   
   // Modal States
@@ -49,10 +50,7 @@ const CustomerBuy = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const apiUrl = import.meta.env.MODE === "development" 
-          ? "http://localhost:5000/api/products" 
-          : "/api/products";
-        const response = await axios.get(apiUrl);
+        const response = await axios.get(PRODUCTS_API_URL);
         setProducts(response.data);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -65,10 +63,49 @@ const CustomerBuy = () => {
     fetchProducts();
   }, []);
 
+  // Fetch categories (public)
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get(CATEGORIES_API_URL);
+        setDbCategories(Array.isArray(res.data) ? res.data : []);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // Merge DB categories with any categories found in products (fallback)
+  const categories = useMemo(() => {
+    const fromDb = (dbCategories || []).map((c) => c?.name).filter(Boolean);
+    const merged = [...fromDb];
+    const seen = new Set(fromDb);
+
+    for (const product of products || []) {
+      const name = product?.category;
+      if (name && !seen.has(name)) {
+        merged.push(name);
+        seen.add(name);
+      }
+    }
+
+    return merged;
+  }, [dbCategories, products]);
+
+  // Ensure activeCategory is always valid
+  useEffect(() => {
+    if (!categories.length) return;
+    if (!activeCategory || !categories.includes(activeCategory)) {
+      setActiveCategory(categories[0]);
+    }
+  }, [categories, activeCategory]);
+
   // Filter products by category
-  const filteredProducts = products.filter(
-    (product) => product.category === activeCategory
-  );
+  const filteredProducts = activeCategory
+    ? products.filter((product) => product.category === activeCategory)
+    : products;
 
   // Cart functions
   const addToCart = (product) => {
@@ -125,7 +162,7 @@ const CustomerBuy = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-100 to-primary-200 relative overflow-hidden">
       <BackgroundElements />
       
       <CustomerSideNav />

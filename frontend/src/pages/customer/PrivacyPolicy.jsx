@@ -29,14 +29,14 @@ const PrivacyPolicy = () => {
   const lastUpdated = "December 2024";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-primary-100 to-primary-200">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white">
+      <div className="bg-gradient-to-r from-brand via-primary-700 to-primary-900 text-white">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center mb-4">
             <Link 
               to="/costumerSignup" 
-              className="flex items-center text-blue-200 hover:text-white transition-colors mr-4"
+              className="flex items-center text-primary-200 hover:text-white transition-colors mr-4"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
               Back to Signup
@@ -46,7 +46,7 @@ const PrivacyPolicy = () => {
             <Shield className="h-12 w-12 mr-4" />
             <div>
               <h1 className="text-3xl md:text-4xl font-bold">Privacy Policy</h1>
-              <p className="text-blue-200 mt-2">Last updated: {lastUpdated}</p>
+              <p className="text-primary-200 mt-2">Last updated: {lastUpdated}</p>
             </div>
           </div>
         </div>
@@ -60,7 +60,7 @@ const PrivacyPolicy = () => {
             {/* Introduction */}
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-                <Lock className="h-6 w-6 mr-3 text-blue-600" />
+                <Lock className="h-6 w-6 mr-3 text-brand" />
                 Introduction
               </h2>
               <p className="text-gray-700 leading-relaxed">
@@ -74,12 +74,12 @@ const PrivacyPolicy = () => {
             {/* Information We Collect */}
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-                <Database className="h-6 w-6 mr-3 text-blue-600" />
+                <Database className="h-6 w-6 mr-3 text-brand" />
                 Information We Collect
               </h2>
               
               <div className="space-y-6">
-                <div className="bg-blue-50 rounded-lg p-6">
+                <div className="bg-primary-100 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
                     <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
                     Personal Information
@@ -93,7 +93,7 @@ const PrivacyPolicy = () => {
 
                 <div className="bg-green-50 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                    <CreditCard className="h-5 w-5 mr-2 text-blue-600" />
+                    <CreditCard className="h-5 w-5 mr-2 text-brand" />
                     Order and Payment Information
                   </h3>
                   <ul className="space-y-2 text-gray-700">
@@ -217,11 +217,11 @@ const PrivacyPolicy = () => {
             {/* Data Security */}
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-                <Lock className="h-6 w-6 mr-3 text-blue-600" />
+                <Lock className="h-6 w-6 mr-3 text-brand" />
                 Data Security
               </h2>
               
-              <div className="bg-blue-50 rounded-lg p-6">
+              <div className="bg-primary-100 rounded-lg p-6">
                 <p className="text-gray-700 mb-4">
                   We implement appropriate technical and organizational security measures to protect your personal information:
                 </p>
@@ -256,7 +256,7 @@ const PrivacyPolicy = () => {
                     <p className="text-gray-700 text-sm">Request a copy of your personal data and download your information.</p>
                   </div>
                   
-                  <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="bg-primary-100 rounded-lg p-4">
                     <h3 className="font-semibold text-gray-900 mb-2">Correction</h3>
                     <p className="text-gray-700 text-sm">Update or correct inaccurate personal information in your account.</p>
                   </div>
@@ -295,24 +295,24 @@ const PrivacyPolicy = () => {
             {/* Contact Information */}
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
-                <Phone className="h-6 w-6 mr-3 text-blue-600" />
+                <Phone className="h-6 w-6 mr-3 text-brand" />
                 Contact Us
               </h2>
-              <div className="bg-blue-50 rounded-lg p-6">
+              <div className="bg-primary-100 rounded-lg p-6">
                 <p className="text-gray-700 mb-4">
                   If you have any questions about this Privacy Policy or want to exercise your privacy rights, please contact us:
                 </p>
                 <div className="space-y-2 text-gray-700">
                   <div className="flex items-center">
-                    <Mail className="h-4 w-4 mr-2 text-blue-600" />
+                    <Mail className="h-4 w-4 mr-2 text-brand" />
                     <span>Email: chentots7@gmail.com</span>
                   </div>
                   <div className="flex items-center">
-                    <Phone className="h-4 w-4 mr-2 text-blue-600" />
+                    <Phone className="h-4 w-4 mr-2 text-brand" />
                     <span>Phone: (+63) 912-464-7745</span>
                   </div>
                   <div className="flex items-center">
-                    <MessageCircle className="h-4 w-4 mr-2 text-blue-600" />
+                    <MessageCircle className="h-4 w-4 mr-2 text-brand" />
                     <span>Live Chat: Available through our customer messaging system</span>
                   </div>
                 </div>
@@ -338,7 +338,7 @@ const PrivacyPolicy = () => {
               </p>
               <Link 
                 to="/costumerSignup" 
-                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-6 py-3 bg-brand text-white rounded-lg hover:bg-primary-700 transition-colors"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Signup

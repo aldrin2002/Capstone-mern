@@ -32,7 +32,7 @@ const CategoryNavigation = ({
 
   return (
     <div className="sticky top-0 bg-white/90 backdrop-blur-xl border-b border-gray-200/50 z-30 shadow-lg">
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-primary-400/5 to-purple-500/5"></div>
       
       <div className="relative container mx-auto px-4 py-4 md:py-6">
         <div className="flex items-center justify-between">
@@ -45,13 +45,13 @@ const CategoryNavigation = ({
                   key={category}
                   className={`group flex items-center justify-center px-4 py-2.5 md:px-6 md:py-3 whitespace-nowrap text-sm md:text-base font-semibold rounded-xl md:rounded-2xl transition-all duration-500 transform hover:scale-105 relative overflow-hidden min-w-0 flex-shrink-0 ${
                     activeCategory === category
-                      ? "bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white shadow-xl shadow-blue-500/25"
-                      : "bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-lg border border-gray-200/50 hover:border-blue-300/50"
+                      ? "bg-gradient-to-r from-brand via-primary-700 to-primary-800 text-white shadow-xl shadow-brand/25"
+                      : "bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white hover:shadow-lg border border-gray-200/50 hover:border-primary-300/50"
                   }`}
                   onClick={() => setActiveCategory(category)}
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl md:rounded-2xl ${
+                  <div className={`absolute inset-0 bg-gradient-to-r from-primary-400/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl md:rounded-2xl ${
                     activeCategory === category ? 'opacity-100' : ''
                   }`}></div>
                   
@@ -66,7 +66,7 @@ const CategoryNavigation = ({
                   <div className={`relative ml-1.5 md:ml-3 px-2 md:px-3 py-0.5 md:py-1 text-xs font-bold rounded-full transition-all duration-300 flex items-center justify-center ${
                     activeCategory === category
                       ? "bg-white/20 text-white border border-white/30"
-                      : "bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-700 border border-gray-200"
+                      : "bg-gray-100 text-gray-600 group-hover:bg-primary-100 group-hover:text-primary-700 border border-gray-200"
                   }`}>
                     {productCount}
                   </div>
@@ -79,7 +79,7 @@ const CategoryNavigation = ({
             <div className="ml-4 flex-shrink-0">
               <button
                 onClick={() => setShowCartModal(true)}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 relative group"
+                className="bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white p-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 relative group"
               >
                 <div className="relative">
                   <ShoppingCart className="w-6 h-6" />
@@ -96,9 +96,9 @@ const CategoryNavigation = ({
             <div className="fixed bottom-6 right-6 z-40">
               <button
                 onClick={() => setShowCartModal(true)}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white p-4 rounded-2xl shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-110 group relative overflow-hidden"
+                className="bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white p-4 rounded-2xl shadow-2xl hover:shadow-brand/25 transition-all duration-300 transform hover:scale-110 group relative overflow-hidden"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-brand to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 
                 <div className="relative flex items-center">
                   <ShoppingCart className="w-6 h-6 mr-2" />

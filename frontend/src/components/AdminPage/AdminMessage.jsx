@@ -662,9 +662,9 @@ const handleFileChange = (e) => {
             /* Mobile Sidebar - Conversations list */
             <div className="w-full h-full flex flex-col bg-gray-50">
               {/* Mobile Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
+              <div className="bg-gradient-to-r from-brand to-primary-700 text-white p-4">
                 <h1 className="text-lg font-semibold">Messages</h1>
-                <p className="text-blue-100 text-sm">Manage customer conversations</p>
+                <p className="text-primary-100 text-sm">Manage customer conversations</p>
               </div>
 
               {/* Search bar */}
@@ -675,7 +675,7 @@ const handleFileChange = (e) => {
                     placeholder="Search conversations..."
                     value={searchTerm}
                     onChange={handleSearch}
-                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand"
                   />
                   <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
                 </div>
@@ -688,7 +688,7 @@ const handleFileChange = (e) => {
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center py-8">
-                    <Loader className="animate-spin h-6 w-6 text-blue-500" />
+                    <Loader className="animate-spin h-6 w-6 text-brand" />
                   </div>
                 ) : conversations.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-gray-500 p-8">
@@ -717,7 +717,7 @@ const handleFileChange = (e) => {
             /* Mobile Messages View */
             <div className="w-full h-full flex flex-col">
               {/* Mobile Chat Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 flex items-center">
+              <div className="bg-gradient-to-r from-brand to-primary-700 text-white p-4 flex items-center">
                 <button 
                   onClick={() => setSelectedConversation(null)}
                   className="p-2 hover:bg-white/10 rounded-full mr-3"
@@ -735,7 +735,7 @@ const handleFileChange = (e) => {
                     <h2 className="font-semibold">
                       {selectedConversation.customer?.name || 'Customer'}
                     </h2>
-                    <p className="text-xs text-blue-100">
+                    <p className="text-xs text-primary-100">
                       {isCustomerOnline(selectedConversation.customer?._id) ? 'Online' : 'Offline'}
                     </p>
                   </div>
@@ -791,7 +791,7 @@ const handleFileChange = (e) => {
                   placeholder="Search conversations..."
                   value={searchTerm}
                   onChange={handleSearch}
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand"
                 />
                 <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
               </div>

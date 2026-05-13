@@ -159,7 +159,7 @@ const CustomerGallery = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-100 to-primary-200">
       {/* Sidebar */}
       <CustomerSideNav />
 
@@ -172,12 +172,12 @@ const CustomerGallery = () => {
             backgroundImage: "url('https://images.unsplash.com/photo-1447933601403-0c6688de566e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80')",
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 bg-opacity-90 flex items-center justify-center">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-900 via-primary-800 to-primary-900 bg-opacity-90 flex items-center justify-center">
             <div className="text-center px-4">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2">
                 CAFE GALLERY
               </h1>
-              <p className="text-blue-200 text-sm md:text-base">
+              <p className="text-primary-200 text-sm md:text-base">
                 Discover the beautiful moments and ambiance of our cafe
               </p>
             </div>
@@ -194,7 +194,7 @@ const CustomerGallery = () => {
             <input
               type="text"
               placeholder="Search gallery..."
-              className="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 shadow-sm hover:shadow-md"
+              className="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-200 shadow-sm hover:shadow-md"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -204,7 +204,7 @@ const CustomerGallery = () => {
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
               <div className="text-center">
-                <Loader className="h-12 w-12 text-blue-500 animate-spin mx-auto mb-4" />
+                <Loader className="h-12 w-12 text-brand animate-spin mx-auto mb-4" />
                 <p className="text-gray-500">Loading gallery images...</p>
               </div>
             </div>
@@ -303,7 +303,7 @@ const CustomerGallery = () => {
                 {/* Share button */}
                 <button
                   onClick={shareImage}
-                  className="p-2 md:p-2.5 text-white hover:text-blue-400 hover:bg-white/20 rounded-full transition-all duration-200 active:scale-95"
+                  className="p-2 md:p-2.5 text-white hover:text-primary-300 hover:bg-white/20 rounded-full transition-all duration-200 active:scale-95"
                   title="Share"
                 >
                   <Share2 size={isMobile ? 16 : 18} />

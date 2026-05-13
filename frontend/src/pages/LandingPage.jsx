@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Coffee, Star, Clock, Users, Download, TrendingUp, Menu, X } from 'lucide-react'; // ✅ Add TrendingUp
 import { useEffect, useState } from 'react';
+import cafeDelicityLogo from '../assets/cafe-delicity-logo.jpg';
 
 // ✅ NEW: Simple Visit Counter Component
 const VisitCounter = () => {
@@ -234,7 +235,7 @@ const InstallPWA = () => {
   return (
     <button
       onClick={handleInstallClick}
-      className="flex items-center justify-center gap-1.5 bg-white text-blue-700 
+      className="flex items-center justify-center gap-1.5 bg-white text-brand 
                 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-semibold 
                 hover:bg-white/90 transition duration-200 text-sm sm:text-base 
                 whitespace-nowrap min-w-[106px] sm:min-w-[120px]"
@@ -305,7 +306,7 @@ const LandingPage = () => {
   }, [isNavOpen]);
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-b from-blue-500 to-blue-900">
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-b from-brand via-primary-700 to-primary-900">
       {/* Meteor Effect */}
       <div className="fixed inset-0 pointer-events-none">
         {[...Array(30)].map((_, i) => (
@@ -327,10 +328,22 @@ const LandingPage = () => {
         ))}
       </div>
 
-      {/* Header */}
-      <header className="relative z-20 bg-white/10 backdrop-blur-md border-b border-white/20">
-        <div className="container mx-auto flex items-center justify-between py-4 px-4 sm:px-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-white">Cafe Delicity</h1>
+     {/* Header */}
+<header className="relative z-20 bg-white/10 backdrop-blur-md border-b border-white/20">
+  <div className="container mx-auto flex items-center justify-between py-4 px-4 sm:px-6">
+    
+    <Link to="/" className="flex items-center" aria-label="Cafe Delicity">
+      
+      {/* Logo Container (circle) */}
+      <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full overflow-hidden flex items-center justify-center bg-white/20">
+        <img
+          src={cafeDelicityLogo}
+          alt="Cafe Delicity"
+          className="h-full w-full object-contain"
+        />
+      </div>
+
+    </Link>
 
           <nav className="hidden md:flex items-center space-x-2 lg:space-x-4">
             <VisitCounter />
@@ -339,7 +352,7 @@ const LandingPage = () => {
               <Link
                 key={to}
                 to={to}
-                className="text-white hover:text-blue-200 transition-colors text-sm sm:text-base"
+                className="text-white hover:text-primary-200 transition-colors text-sm sm:text-base"
               >
                 {label}
               </Link>
@@ -357,7 +370,7 @@ const LandingPage = () => {
         </div>
 
         {isNavOpen && (
-          <div className="md:hidden bg-blue-900/95 backdrop-blur-lg border-t border-white/10">
+          <div className="md:hidden bg-primary-900/95 backdrop-blur-lg border-t border-white/10">
             <div className="container mx-auto px-4 py-4 space-y-4">
               <div className="flex flex-wrap gap-3">
                 <VisitCounter />
@@ -369,7 +382,7 @@ const LandingPage = () => {
                     key={to}
                     to={to}
                     onClick={() => setIsNavOpen(false)}
-                    className="text-white hover:text-blue-200 transition-colors text-base text-center py-2 rounded-lg bg-white/10"
+                    className="text-white hover:text-primary-200 transition-colors text-base text-center py-2 rounded-lg bg-white/10"
                   >
                     {label}
                   </Link>
@@ -394,8 +407,8 @@ const LandingPage = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link 
                 to="/costumerLogin"
-                className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold 
-                                             hover:bg-blue-700 transition duration-200 text-center"
+                className="bg-brand text-white px-8 py-3 rounded-lg font-semibold 
+                                             hover:bg-brand/90 transition duration-200 text-center"
               >
                 Order Now
               </Link>
@@ -417,7 +430,7 @@ const LandingPage = () => {
                 { icon: Users, title: "Customer First", desc: "Dedicated to customer satisfaction" }
               ].map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="bg-white/5 backdrop-blur-sm rounded-xl p-6 hover:bg-white/10 transition duration-300">
-                  <Icon className="w-12 h-12 mx-auto mb-4 text-blue-200" />
+                  <Icon className="w-12 h-12 mx-auto mb-4 text-primary-200" />
                   <h3 className="text-xl font-semibold mb-2 text-white">{title}</h3>
                   <p className="text-white/70">{desc}</p>
                 </div>

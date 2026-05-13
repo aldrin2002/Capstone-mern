@@ -19,12 +19,12 @@ const CustomerAboutUs = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 relative">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-primary-100 to-primary-200 relative">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-indigo-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-purple-400/5 to-blue-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-primary-400/10 to-purple-400/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-primary-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-purple-400/5 to-primary-400/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
       {/* Sidebar */}
@@ -33,7 +33,7 @@ const CustomerAboutUs = () => {
       {/* Main Content - Adjusted for fixed sidebar */}
       <main className={`relative z-10 ${isMobile ? 'pb-20' : 'ml-64'}`}>
         {/* Enhanced Header Section */}
-        <div className="relative bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 text-white overflow-hidden">
+        <div className="relative bg-gradient-to-r from-primary-900 via-primary-800 to-primary-900 text-white overflow-hidden">
           {/* Background pattern */}
           <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent"></div>
           <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
@@ -44,14 +44,14 @@ const CustomerAboutUs = () => {
           
           <div className="relative h-80 flex items-center justify-center">
             <div className="text-center px-4">
-              <div className="inline-flex items-center px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full text-blue-200 text-sm font-medium mb-6">
+              <div className="inline-flex items-center px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full text-primary-200 text-sm font-medium mb-6">
                 <Users className="h-4 w-4 mr-2" />
                 Meet Our Amazing Team
               </div>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 bg-gradient-to-r from-white to-primary-200 bg-clip-text text-transparent">
                 ABOUT US
               </h1>
-              <p className="text-lg md:text-xl text-blue-200 max-w-2xl mx-auto">
+              <p className="text-lg md:text-xl text-primary-200 max-w-2xl mx-auto">
                 Discover the passionate individuals behind CafeX's innovative management system
               </p>
             </div>
@@ -64,24 +64,24 @@ const CustomerAboutUs = () => {
             <div className="p-6 md:p-8 lg:p-12">
               <div className="space-y-12">
                 {/* Enhanced Team Section */}
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 md:p-8 lg:p-10 rounded-3xl border border-blue-100 relative overflow-hidden">
+                <div className="bg-gradient-to-br from-primary-100 to-primary-200 p-6 md:p-8 lg:p-10 rounded-3xl border border-primary-200 relative overflow-hidden">
                   {/* Background decoration */}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-200/20 to-transparent rounded-full -mr-16 -mt-16"></div>
-                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-indigo-200/20 to-transparent rounded-full -ml-12 -mb-12"></div>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full -mr-16 -mt-16"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full -ml-12 -mb-12"></div>
                   
                   <div className="relative">
                     <div className="text-center mb-12">
-                      <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-900 to-indigo-800 bg-clip-text text-transparent mb-4">
+                      <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary-900 to-primary-700 bg-clip-text text-transparent mb-4">
                         Meet the Person Behind All of These
                       </h3>
-                      <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full mx-auto"></div>
+                      <div className="w-24 h-1 bg-gradient-to-r from-brand to-primary-700 rounded-full mx-auto"></div>
                     </div>
                     
                     {/* Enhanced Developer Section */}
                     <div className="flex flex-col lg:flex-row items-center mb-12 group">
                       <div className="relative mb-6 lg:mb-0 lg:mr-8 flex-shrink-0">
                         {/* Animated border */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 rounded-full p-1 animate-spin-slow">
+                        <div className="absolute inset-0 bg-gradient-to-r from-brand via-purple-500 to-brand rounded-full p-1 animate-spin-slow">
                           <div className="w-48 h-48 md:w-56 md:h-56 bg-white rounded-full"></div>
                         </div>
                         
@@ -93,7 +93,7 @@ const CustomerAboutUs = () => {
                             className="w-full h-full object-cover"
                           />
                           {/* Overlay icon */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-blue-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+                          <div className="absolute inset-0 bg-gradient-to-t from-primary-900/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
                             <div className="bg-white/20 backdrop-blur-sm rounded-full p-2">
                               <Code className="h-6 w-6 text-white" />
                             </div>
@@ -103,12 +103,12 @@ const CustomerAboutUs = () => {
                       
                       <div className="flex-1 text-center lg:text-left">
                         <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-                          <h4 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-800 to-indigo-700 bg-clip-text text-transparent mb-2">
+                          <h4 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary-800 to-primary-700 bg-clip-text text-transparent mb-2">
                             Aldrin G. Fechalin
                           </h4>
                           <div className="flex items-center justify-center lg:justify-start mb-4">
-                            <Code className="h-5 w-5 text-blue-600 mr-2" />
-                            <p className="text-blue-600 font-semibold">Lead Developer</p>
+                            <Code className="h-5 w-5 text-brand mr-2" />
+                            <p className="text-brand font-semibold">Lead Developer</p>
                           </div>
                           <p className="text-gray-700 leading-relaxed text-sm md:text-base">
                             As the sole programmer of this project, I've dedicated countless hours to designing and implementing 
@@ -123,7 +123,7 @@ const CustomerAboutUs = () => {
                     <div className="flex flex-col lg:flex-row-reverse items-center mb-12 group">
                       <div className="relative mb-6 lg:mb-0 lg:ml-8 flex-shrink-0">
                         {/* Animated border */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-blue-500 to-green-500 rounded-full p-1 animate-spin-slow">
+                        <div className="absolute inset-0 bg-gradient-to-r from-green-500 via-brand to-green-500 rounded-full p-1 animate-spin-slow">
                           <div className="w-48 h-48 md:w-56 md:h-56 bg-white rounded-full"></div>
                         </div>
                         
@@ -145,7 +145,7 @@ const CustomerAboutUs = () => {
                       
                       <div className="flex-1 text-center lg:text-right">
                         <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-                          <h4 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-green-800 to-blue-700 bg-clip-text text-transparent mb-2">
+                          <h4 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-green-800 to-primary-700 bg-clip-text text-transparent mb-2">
                             Ms. Christianne E. Tebelin
                           </h4>
                           <div className="flex items-center justify-center lg:justify-end mb-4">
@@ -166,7 +166,7 @@ const CustomerAboutUs = () => {
                     <div className="flex flex-col lg:flex-row items-center group">
                       <div className="relative mb-6 lg:mb-0 lg:mr-8 flex-shrink-0">
                         {/* Animated border */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 rounded-full p-1 animate-spin-slow">
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-brand to-purple-500 rounded-full p-1 animate-spin-slow">
                           <div className="w-48 h-48 md:w-56 md:h-56 bg-white rounded-full"></div>
                         </div>
                         
@@ -188,7 +188,7 @@ const CustomerAboutUs = () => {
                       
                       <div className="flex-1 text-center lg:text-left">
                         <div className="bg-white/70 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300">
-                          <h4 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-800 to-blue-700 bg-clip-text text-transparent mb-2">
+                          <h4 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-800 to-primary-700 bg-clip-text text-transparent mb-2">
                             Mr. Owen Jasper Vargas
                           </h4>
                           <div className="flex items-center justify-center lg:justify-start mb-4">
@@ -208,19 +208,19 @@ const CustomerAboutUs = () => {
                 </div>
 
                 {/* Enhanced Project Overview Section */}
-                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 md:p-8 lg:p-10 rounded-3xl border border-indigo-100 relative overflow-hidden">
+                <div className="bg-gradient-to-br from-primary-100 to-purple-50 p-6 md:p-8 lg:p-10 rounded-3xl border border-primary-200 relative overflow-hidden">
                   {/* Background decoration */}
-                  <div className="absolute top-0 left-0 w-40 h-40 bg-gradient-to-br from-indigo-200/20 to-transparent rounded-full -ml-20 -mt-20"></div>
+                  <div className="absolute top-0 left-0 w-40 h-40 bg-gradient-to-br from-primary-200/20 to-transparent rounded-full -ml-20 -mt-20"></div>
                   <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-200/20 to-transparent rounded-full -mr-16 -mb-16"></div>
                   
                   <div className="relative">
                     <div className="flex items-center justify-center mb-6">
-                      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 rounded-2xl shadow-lg">
+                      <div className="bg-gradient-to-r from-brand to-purple-600 p-4 rounded-2xl shadow-lg">
                         <Target className="h-8 w-8 text-white" />
                       </div>
                     </div>
                     
-                    <h3 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-indigo-900 to-purple-800 bg-clip-text text-transparent mb-6 text-center">
+                    <h3 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary-900 to-purple-800 bg-clip-text text-transparent mb-6 text-center">
                       Project Overview
                     </h3>
                     
@@ -244,7 +244,7 @@ const CustomerAboutUs = () => {
                         {
                           icon: <Users className="h-6 w-6" />,
                           label: "Customer Experience",
-                          color: "text-blue-600"
+                          color: "text-brand"
                         },
                         {
                           icon: <Heart className="h-6 w-6" />,

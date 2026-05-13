@@ -4,10 +4,10 @@ import { Coffee, Star, ShoppingCart } from 'lucide-react';
 const ProductCard = ({ product, index, addToCart }) => {
   return (
     <div
-      className="group bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl overflow-hidden transform transition-all duration-700 hover:scale-[1.03] hover:shadow-2xl border border-white/60 hover:border-blue-300/60 animate-fade-in-up relative"
+      className="group bg-white/90 backdrop-blur-lg rounded-3xl shadow-xl overflow-hidden transform transition-all duration-700 hover:scale-[1.03] hover:shadow-2xl border border-white/60 hover:border-primary-300/60 animate-fade-in-up relative"
       style={{ animationDelay: `${index * 100}ms` }}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-400/10 via-purple-500/10 to-primary-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
       
       {/* Product Image */}
       <div className="relative h-48 md:h-56 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
@@ -71,7 +71,7 @@ const ProductCard = ({ product, index, addToCart }) => {
       {/* Product Info */}
       <div className="p-6 relative">
         <div className="mb-4">
-          <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-600 transition-colors duration-300 group-hover:scale-105 transform transition-transform duration-300">
+          <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-brand transition-colors duration-300 group-hover:scale-105 transform transition-transform duration-300">
             {product.name}
           </h3>
           <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-700 transition-colors duration-300">
@@ -85,7 +85,7 @@ const ProductCard = ({ product, index, addToCart }) => {
           disabled={product.stock <= 0}
           className={`w-full py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 flex items-center justify-center shadow-lg hover:shadow-xl text-base relative overflow-hidden group ${
             product.stock > 0 
-              ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white" 
+              ? "bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white" 
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
         >
@@ -101,7 +101,7 @@ const ProductCard = ({ product, index, addToCart }) => {
           )}
         </button>
         
-        <div className="absolute bottom-2 right-2 w-2 h-2 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
+        <div className="absolute bottom-2 right-2 w-2 h-2 bg-brand rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
       </div>
     </div>
   );

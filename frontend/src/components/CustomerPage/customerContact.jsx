@@ -35,17 +35,17 @@ const CustomerContact = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-100 to-primary-200 relative overflow-hidden">
       {/* Enhanced animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-blue-400/15 to-purple-500/15 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-indigo-400/10 to-pink-400/10 rounded-full blur-3xl animate-float-delayed"></div>
-        <div className="absolute top-1/2 left-1/4 w-72 h-72 bg-gradient-to-br from-purple-400/8 to-blue-400/8 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-primary-400/15 to-purple-500/15 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-primary-400/10 to-pink-400/10 rounded-full blur-3xl animate-float-delayed"></div>
+        <div className="absolute top-1/2 left-1/4 w-72 h-72 bg-gradient-to-br from-purple-400/8 to-primary-400/8 rounded-full blur-3xl animate-pulse-slow"></div>
         
         {/* Floating sparkles */}
-        <div className="absolute top-20 left-1/4 w-2 h-2 bg-blue-400 rounded-full opacity-60 animate-twinkle"></div>
+        <div className="absolute top-20 left-1/4 w-2 h-2 bg-primary-400 rounded-full opacity-60 animate-twinkle"></div>
         <div className="absolute top-40 right-1/3 w-1 h-1 bg-purple-400 rounded-full opacity-40 animate-twinkle-delayed"></div>
-        <div className="absolute bottom-32 left-1/3 w-1.5 h-1.5 bg-indigo-400 rounded-full opacity-50 animate-twinkle"></div>
+        <div className="absolute bottom-32 left-1/3 w-1.5 h-1.5 bg-primary-400 rounded-full opacity-50 animate-twinkle"></div>
       </div>
 
       {/* Sidebar */}
@@ -54,7 +54,7 @@ const CustomerContact = () => {
       {/* Main Content - Adjusted for fixed sidebar */}
       <main className={`relative z-10 ${isMobile ? 'pb-20' : 'ml-64'}`}>
         {/* Enhanced Header Section */}
-        <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
+        <div className="bg-gradient-to-br from-slate-900 via-primary-900 to-primary-900 text-white relative overflow-hidden">
           {/* Animated background pattern */}
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent"></div>
@@ -69,25 +69,25 @@ const CustomerContact = () => {
           
           {/* Enhanced floating decoration elements */}
           <div className="absolute top-8 right-8 w-20 h-20 border-2 border-white/20 rounded-full animate-spin-slow"></div>
-          <div className="absolute top-16 right-24 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+          <div className="absolute top-16 right-24 w-2 h-2 bg-primary-400 rounded-full animate-pulse"></div>
           <div className="absolute bottom-12 left-12 w-16 h-16 border border-white/10 rounded-full animate-pulse-delayed"></div>
           <div className="absolute bottom-20 left-6 w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce-gentle"></div>
           
           <div className="relative px-4 py-12 md:py-16">
             <div className="container mx-auto text-center">
               {/* Enhanced badge */}
-              <div className="inline-flex items-center px-6 py-3 bg-white/10 backdrop-blur-lg rounded-full text-blue-200 text-sm font-medium mb-6 border border-white/20 shadow-lg hover:bg-white/15 transition-all duration-300">
+              <div className="inline-flex items-center px-6 py-3 bg-white/10 backdrop-blur-lg rounded-full text-primary-200 text-sm font-medium mb-6 border border-white/20 shadow-lg hover:bg-white/15 transition-all duration-300">
                 <MessageCircle className="h-4 w-4 mr-2 animate-pulse" />
                 <Sparkles className="h-3 w-3 mr-2 text-yellow-300" />
                 Get in Touch
               </div>
               
               {/* Enhanced title with gradient animation */}
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-4 bg-gradient-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent animate-gradient-x bg-300% leading-tight">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-4 bg-gradient-to-r from-white via-primary-100 to-purple-200 bg-clip-text text-transparent animate-gradient-x bg-300% leading-tight">
                 CONTACT US
               </h1>
               
-              <p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto leading-relaxed font-light">
+              <p className="text-lg md:text-xl text-primary-100 max-w-2xl mx-auto leading-relaxed font-light">
                 We're here to help and answer any questions you might have.
               </p>
             </div>
@@ -98,7 +98,7 @@ const CustomerContact = () => {
         <div className="container mx-auto px-4 py-12">
           <div className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl overflow-hidden border border-white/60 relative">
             {/* Card glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-blue-500/5 rounded-3xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-brand/5 via-purple-500/5 to-brand/5 rounded-3xl"></div>
             
             <div className="relative p-8 md:p-12">
               {/* Enhanced Contact Information - Now full width */}
@@ -106,10 +106,10 @@ const CustomerContact = () => {
                 <div className="space-y-8">
                   <div className="space-y-3 text-center">
                     <div className="flex items-center justify-center space-x-3">
-                      <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg">
+                      <div className="p-3 bg-gradient-to-br from-brand to-primary-700 rounded-2xl shadow-lg">
                         <MessageCircle className="h-6 w-6 text-white" />
                       </div>
-                      <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent">
+                      <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 to-brand bg-clip-text text-transparent">
                         Get in Touch
                       </h2>
                     </div>
@@ -121,14 +121,14 @@ const CustomerContact = () => {
                   {contactInfo ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Address */}
-                      <div className="group p-6 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm rounded-2xl border border-blue-100/50 hover:shadow-lg transition-all duration-500 hover:scale-[1.02] relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
+                      <div className="group p-6 bg-gradient-to-r from-primary-100/80 to-primary-200/80 backdrop-blur-sm rounded-2xl border border-primary-200/50 hover:shadow-lg transition-all duration-500 hover:scale-[1.02] relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-r from-brand/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
                         <div className="relative flex items-start">
-                          <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg mr-4 group-hover:scale-110 transition-transform duration-300">
+                          <div className="p-3 bg-gradient-to-br from-brand to-primary-700 rounded-xl shadow-lg mr-4 group-hover:scale-110 transition-transform duration-300">
                             <MapPin className="w-6 h-6 text-white" />
                           </div>
                           <div className="flex-1">
-                            <h3 className="font-bold text-gray-900 text-lg mb-2 group-hover:text-blue-600 transition-colors duration-300">Address</h3>
+                            <h3 className="font-bold text-gray-900 text-lg mb-2 group-hover:text-brand transition-colors duration-300">Address</h3>
                             <p className="text-gray-600 leading-relaxed">{contactInfo.address}</p>
                           </div>
                         </div>

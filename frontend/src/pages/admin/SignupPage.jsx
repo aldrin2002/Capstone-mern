@@ -141,7 +141,7 @@ const SignUpPage = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-start sm:items-center justify-center bg-gradient-to-r from-blue-500 to-blue-700 overflow-y-auto px-3 py-4 sm:p-4"
+      className="fixed inset-0 flex items-start sm:items-center justify-center bg-gradient-to-r from-brand to-primary-800 overflow-y-auto px-3 py-4 sm:p-4"
     >
       <div className="w-full max-w-4xl bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-xl sm:rounded-lg shadow-lg overflow-hidden border border-gray-200 my-2 sm:my-8">
         <div className="p-4 sm:p-8">
@@ -151,7 +151,7 @@ const SignUpPage = () => {
           <p className="text-center text-sm sm:text-base text-white/80 mb-5 sm:mb-6">
             Register your cafe location
           </p>
-          <div className="h-1 w-16 sm:w-20 bg-blue-500 mx-auto mb-6 sm:mb-8"></div>
+          <div className="h-1 w-16 sm:w-20 bg-brand mx-auto mb-6 sm:mb-8"></div>
 
           <form onSubmit={handleSignUp}>
             {/* ✅ UPDATED: Two-column layout */}
@@ -218,8 +218,8 @@ const SignUpPage = () => {
             </div>
 
             <button
-              className="mt-5 sm:mt-6 w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md 
-                            hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+              className="mt-5 sm:mt-6 w-full py-3 px-4 bg-brand text-white font-semibold rounded-md shadow-md 
+                            hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2
                             transition duration-200"
               type="submit"
               disabled={isLoading}
@@ -237,7 +237,7 @@ const SignUpPage = () => {
             Already have an account?{" "}
             <Link
               to={"/login"}
-              className="text-blue-300 font-medium hover:underline"
+              className="text-primary-200 font-medium hover:underline"
             >
               Login
             </Link>
@@ -255,16 +255,16 @@ const SignUpPage = () => {
             onChange={(e)=>setCode(e.target.value.replace(/\D/g,'').slice(0,6))}
             maxLength={6}
             placeholder="123456"
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 tracking-widest text-center font-mono"
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand tracking-widest text-center font-mono"
           />
           <div className="flex items-center justify-between text-sm">
-            <button type="button" onClick={handleResend} className="text-blue-600 hover:underline">Resend code</button>
+            <button type="button" onClick={handleResend} className="text-brand hover:underline">Resend code</button>
             <button type="button" onClick={()=>{setShowVerify(false); setCode("");}} className="text-gray-500 hover:underline">Cancel</button>
           </div>
           <button
             onClick={handleVerify}
             disabled={code.length !== 6}
-            className="w-full py-2 rounded-lg bg-blue-600 text-white font-semibold disabled:opacity-40"
+            className="w-full py-2 rounded-lg bg-brand text-white font-semibold disabled:opacity-40"
           >Verify</button>
         </div>
       </div>

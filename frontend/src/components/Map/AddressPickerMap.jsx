@@ -80,18 +80,18 @@ const AddressPickerMap = ({ coordinates, selectedAddress }) => {
 
       {/* Info Box */}
       {coordinates && (
-        <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="mt-3 p-3 bg-primary-100 rounded-lg border border-primary-200">
           <div className="flex items-start space-x-2">
-            <MapPin className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <MapPin className="h-5 w-5 text-primary-700 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-xs font-medium text-blue-900 mb-1">
+              <p className="text-xs font-medium text-primary-900 mb-1">
                 Pinned Location:
               </p>
-              <p className="text-xs text-blue-700">
+              <p className="text-xs text-primary-700">
                 <strong>Coordinates:</strong> {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
               </p>
               {selectedAddress && (
-                <p className="text-xs text-blue-700 mt-1">
+                <p className="text-xs text-primary-700 mt-1">
                   <strong>Address:</strong> {selectedAddress}
                 </p>
               )}

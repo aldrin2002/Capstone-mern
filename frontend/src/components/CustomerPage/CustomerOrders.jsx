@@ -80,7 +80,7 @@ const CustomerOrders = () => {
       toast.success(
         <div className="flex flex-col">
           <div className="font-bold flex items-center">
-            <span className="bg-blue-500 rounded-full w-2 h-2 mr-2 animate-pulse"></span>
+            <span className="bg-brand rounded-full w-2 h-2 mr-2 animate-pulse"></span>
             Order Status Updated!
           </div>
           <div className="text-sm mt-1">Order #{data.orderId.slice(-6)} is now {data.status}</div>
@@ -88,8 +88,8 @@ const CustomerOrders = () => {
         {
           duration: 5000,
           style: {
-            borderLeft: "4px solid #3B82F6",
-            background: "linear-gradient(135deg, #EBF8FF 0%, #DBEAFE 100%)",
+            borderLeft: "4px solid #F13E93",
+            background: "linear-gradient(135deg, rgba(241, 62, 147, 0.12) 0%, rgba(241, 62, 147, 0.22) 100%)",
           },
         }
       );
@@ -237,10 +237,10 @@ const CustomerOrders = () => {
         };
       case "Preparing Food":
         return {
-          bg: "bg-gradient-to-r from-indigo-100 to-blue-100",
-          text: "text-indigo-800",
+          bg: "bg-gradient-to-r from-primary-100 to-primary-200",
+          text: "text-primary-800",
           icon: <Package className="h-4 w-4" />,
-          border: "border-indigo-300"
+          border: "border-primary-300"
         };
       case "Ready for Delivery":
         return {
@@ -251,10 +251,10 @@ const CustomerOrders = () => {
         };
       case "Processing":
         return {
-          bg: "bg-gradient-to-r from-blue-100 to-indigo-100",
-          text: "text-blue-800",
+          bg: "bg-gradient-to-r from-primary-100 to-primary-200",
+          text: "text-primary-800",
           icon: <Package className="h-4 w-4" />,
-          border: "border-blue-300"
+          border: "border-primary-300"
         };
       case "Delivered":
         return {
@@ -323,12 +323,12 @@ const CustomerOrders = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-primary-100">
       <CustomerSideNav />
 
       <main className={`${isMobile ? 'pb-20' : 'ml-64'}`}>
         <div className="container mx-auto px-4 py-6 space-y-6">
-          <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-2xl shadow-xl">
+          <div className="relative overflow-hidden bg-gradient-to-r from-brand via-primary-700 to-primary-900 rounded-2xl shadow-xl">
             <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent"></div>
             <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
             
@@ -338,20 +338,20 @@ const CustomerOrders = () => {
             <div className="relative px-6 py-8 md:py-12">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-blue-200 text-sm font-medium mb-4">
+                  <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-primary-200 text-sm font-medium mb-4">
                     <ShoppingBag className="h-4 w-4 mr-2" />
                     Order Management
                   </div>
                   <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
                     My Orders
                   </h1>
-                  <p className="text-blue-100 text-lg">
+                  <p className="text-primary-100 text-lg">
                     Track and manage your cafe orders
                   </p>
                 </div>
                 <div className="hidden md:block">
                   <div className="relative">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-2xl border-4 border-white/20">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center shadow-2xl border-4 border-white/20">
                       <Package className="h-12 w-12 text-white" />
                     </div>
                     <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
@@ -372,7 +372,7 @@ const CustomerOrders = () => {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 appearance-none bg-white"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300 appearance-none bg-white"
                 >
                   <option value="All">All Orders</option>
                   <option value="Pending">Pending</option>
@@ -391,17 +391,17 @@ const CustomerOrders = () => {
             <div className="flex justify-center items-center h-96">
               <div className="text-center">
                 <div className="relative mb-8">
-                  <div className="w-20 h-20 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto shadow-lg"></div>
+                  <div className="w-20 h-20 border-4 border-primary-200 border-t-brand rounded-full animate-spin mx-auto shadow-lg"></div>
                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <Package className="h-8 w-8 text-blue-600 animate-pulse" />
+                    <Package className="h-8 w-8 text-brand animate-pulse" />
                   </div>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-800 mb-3">Loading Your Orders</h3>
                 <p className="text-gray-600 text-lg">Fetching your order history...</p>
                 <div className="flex justify-center space-x-1 mt-4">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-100"></div>
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-200"></div>
+                  <div className="w-2 h-2 bg-brand rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-brand rounded-full animate-bounce delay-100"></div>
+                  <div className="w-2 h-2 bg-brand rounded-full animate-bounce delay-200"></div>
                 </div>
               </div>
             </div>
@@ -411,11 +411,11 @@ const CustomerOrders = () => {
                 <div className="w-32 h-32 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto shadow-2xl border-4 border-white">
                   <ShoppingBag className="h-14 w-14 text-gray-400" />
                 </div>
-                <div className="absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-xl animate-bounce">
+                <div className="absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br from-primary-400 to-purple-500 rounded-full flex items-center justify-center shadow-xl animate-bounce">
                   <Sparkles size={24} className="text-white" />
                 </div>
               </div>
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-700 to-blue-600 bg-clip-text text-transparent mb-4">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-700 to-brand bg-clip-text text-transparent mb-4">
                 {orders.length === 0 ? "No orders yet" : "No matching orders"}
               </h2>
               <p className="text-gray-500 text-lg mb-8 max-w-md mx-auto leading-relaxed">
@@ -427,7 +427,7 @@ const CustomerOrders = () => {
               {orders.length === 0 && (
                 <button 
                   onClick={() => navigate('/customer-buy')}
-                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-medium"
+                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-brand to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-900 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-medium"
                 >
                   <Coffee className="h-5 w-5 mr-2" />
                   Start Shopping
@@ -442,7 +442,7 @@ const CustomerOrders = () => {
                 
                 return (
                   <div key={order._id} className="bg-white rounded-2xl shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
-                    <div className="p-6 bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
+                    <div className="p-6 bg-gradient-to-r from-gray-50 to-primary-100 border-b border-gray-100">
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="space-y-1">
                           <p className="text-sm font-medium text-gray-500 flex items-center">
@@ -465,7 +465,7 @@ const CustomerOrders = () => {
                             <CreditCard className="h-4 w-4 mr-1" />
                             Total Amount
                           </p>
-                          <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                          <p className="text-2xl font-bold bg-gradient-to-r from-brand to-primary-700 bg-clip-text text-transparent">
                             ₱{order.total.toFixed(2)}
                           </p>
                         </div>
@@ -499,15 +499,15 @@ const CustomerOrders = () => {
                     </div>
 
                     <div 
-                      className="px-6 py-4 flex justify-between items-center cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300"
+                      className="px-6 py-4 flex justify-between items-center cursor-pointer hover:bg-gradient-to-r hover:from-primary-100 hover:to-purple-50 transition-all duration-300"
                       onClick={() => toggleOrderDetails(order._id)}
                     >
                       <div className="flex items-center space-x-4">
                         <div className="relative">
-                          <div className="bg-gradient-to-br from-blue-100 to-blue-200 p-3 rounded-xl group-hover:from-blue-200 group-hover:to-blue-300 transition-all duration-300">
-                            <Package className="h-6 w-6 text-blue-700" />
+                          <div className="bg-gradient-to-br from-primary-100 to-primary-200 p-3 rounded-xl group-hover:from-primary-200 group-hover:to-primary-300 transition-all duration-300">
+                            <Package className="h-6 w-6 text-primary-800" />
                           </div>
-                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg">
+                          <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-brand to-primary-700 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg">
                             {order.items?.length || 0}
                           </div>
                         </div>
@@ -522,7 +522,7 @@ const CustomerOrders = () => {
                         </div>
                       </div>
                       
-                      <div className="flex items-center text-blue-600 font-medium group-hover:text-blue-700 transition-colors">
+                      <div className="flex items-center text-brand font-medium group-hover:text-primary-700 transition-colors">
                         {isExpanded ? (
                           <>
                             <span className="text-sm mr-2">Hide Details</span>
@@ -538,10 +538,10 @@ const CustomerOrders = () => {
                     </div>
 
                     {isExpanded && (
-                      <div className="px-6 py-6 bg-gradient-to-r from-gray-50 to-blue-50 border-t border-gray-100">
+                      <div className="px-6 py-6 bg-gradient-to-r from-gray-50 to-primary-100 border-t border-gray-100">
                         <div className="mb-6">
                           <h3 className="font-bold text-gray-900 mb-4 text-lg flex items-center">
-                            <Coffee className="h-5 w-5 mr-2 text-blue-600" />
+                            <Coffee className="h-5 w-5 mr-2 text-brand" />
                             Order Items
                           </h3>
                           <div className="space-y-3">
@@ -555,7 +555,7 @@ const CustomerOrders = () => {
                                       <img 
                                         src={productInfo.image} 
                                         alt={productInfo.name} 
-                                        className="w-16 h-16 object-cover rounded-xl mr-4 border-2 border-gray-200 group-hover:border-blue-300 transition-colors"
+                                        className="w-16 h-16 object-cover rounded-xl mr-4 border-2 border-gray-200 group-hover:border-primary-300 transition-colors"
                                         onError={(e) => {
                                           e.target.style.display = 'none';
                                           e.target.nextSibling.style.display = 'flex';
@@ -581,7 +581,7 @@ const CustomerOrders = () => {
                                       </p>
                                     </div>
                                   </div>
-                                  <p className="font-bold text-xl text-blue-600">₱{((item.price || 0) * (item.quantity || 0)).toFixed(2)}</p>
+                                  <p className="font-bold text-xl text-brand">₱{((item.price || 0) * (item.quantity || 0)).toFixed(2)}</p>
                                 </div>
                               );
                             }) : (
@@ -596,12 +596,12 @@ const CustomerOrders = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                           <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-4 text-lg flex items-center">
-                              <MapPin className="h-5 w-5 mr-2 text-blue-600" />
+                              <MapPin className="h-5 w-5 mr-2 text-brand" />
                               Delivery Information
                             </h3>
                             <div className="flex items-start space-x-3">
-                              <div className="bg-blue-100 p-2 rounded-lg">
-                                <Truck className="h-5 w-5 text-blue-600" />
+                              <div className="bg-primary-100 p-2 rounded-lg">
+                                <Truck className="h-5 w-5 text-brand" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium text-gray-700 mb-1">Delivery Address:</p>
@@ -612,8 +612,8 @@ const CustomerOrders = () => {
                             </div>
 
                             <div className="flex items-start space-x-3 mt-4 pt-4 border-t border-gray-200">
-                              <div className="bg-indigo-100 p-2 rounded-lg">
-                                <MessageCircle className="h-5 w-5 text-indigo-600" />
+                              <div className="bg-primary-100 p-2 rounded-lg">
+                                <MessageCircle className="h-5 w-5 text-brand" />
                               </div>
                               <div>
                                 <p className="text-sm font-medium text-gray-700 mb-1">Assigned Driver:</p>
@@ -641,7 +641,7 @@ const CustomerOrders = () => {
                           
                           <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
                             <h3 className="font-bold text-gray-900 mb-4 text-lg flex items-center">
-                              <Clock className="h-5 w-5 mr-2 text-blue-600" />
+                              <Clock className="h-5 w-5 mr-2 text-brand" />
                               Order Timeline
                             </h3>
                             <div className="space-y-3">
@@ -657,7 +657,7 @@ const CustomerOrders = () => {
                               
                               {order.status !== "Pending" && (
                                 <div className="flex items-start space-x-3">
-                                  <div className="bg-blue-100 p-2 rounded-lg">
+                                  <div className="bg-primary-100 p-2 rounded-lg">
                                     {statusStyle.icon}
                                   </div>
                                   <div>
@@ -700,7 +700,7 @@ const CustomerOrders = () => {
                               <span className="flex items-center">
                                 Delivery Fee
                                 {order.deliveryDistance && order.deliveryDistance > 0 && (
-                                  <span className="ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                                  <span className="ml-2 text-xs text-primary-800 bg-primary-100 px-2 py-0.5 rounded-full">
                                     {order.deliveryDistance.toFixed(2)} km
                                   </span>
                                 )}
@@ -723,7 +723,7 @@ const CustomerOrders = () => {
                             <div className="border-t pt-3">
                               <div className="flex justify-between items-center">
                                 <span className="text-xl font-bold text-gray-900">Total Amount</span>
-                                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                                <span className="text-2xl font-bold bg-gradient-to-r from-brand to-primary-700 bg-clip-text text-transparent">
                                   ₱{(order.total || 0).toFixed(2)}
                                 </span>
                               </div>
@@ -733,7 +733,7 @@ const CustomerOrders = () => {
                           <div className="mt-6 pt-4 border-t border-gray-200 flex flex-wrap gap-3">
                             <button
                               onClick={() => navigate(`/customer-message?orderId=${order._id}&thread=admin`)}
-                              className="inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-semibold shadow hover:from-blue-700 hover:to-indigo-800 transition-all duration-300"
+                              className="inline-flex items-center px-4 py-2 rounded-lg bg-gradient-to-r from-brand to-primary-900 text-white font-semibold shadow hover:from-primary-700 hover:to-primary-900 transition-all duration-300"
                             >
                               <MessageCircle className="h-4 w-4 mr-2" />
                               Message Store Owner
@@ -765,14 +765,14 @@ const CustomerOrders = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white rounded-t-2xl">
+            <div className="bg-gradient-to-r from-brand to-primary-700 p-6 text-white rounded-t-2xl">
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-2xl font-bold flex items-center">
                     <Star className="h-6 w-6 mr-2" fill="currentColor" />
                     Rate Your Experience
                   </h3>
-                  <p className="text-blue-100 text-sm mt-1">
+                  <p className="text-primary-100 text-sm mt-1">
                     Order #{selectedOrderForRating._id.slice(-8)}
                   </p>
                 </div>
@@ -826,7 +826,7 @@ const CustomerOrders = () => {
               {/* Feedback Text Area */}
               <div className="mb-6">
                 <label className="text-gray-700 font-bold mb-2 flex items-center">
-                  <MessageSquare className="h-5 w-5 mr-2 text-blue-600" />
+                  <MessageSquare className="h-5 w-5 mr-2 text-brand" />
                   Share Your Feedback
                 </label>
                 <textarea
@@ -834,7 +834,7 @@ const CustomerOrders = () => {
                   onChange={(e) => setFeedback(e.target.value)}
                   placeholder="Tell us about your experience... What did you love? What could we improve?"
                   rows="5"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 resize-none"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-brand focus:border-transparent transition-all duration-300 resize-none"
                   maxLength={500}
                 />
                 <div className="flex justify-between items-center mt-2">
@@ -853,7 +853,7 @@ const CustomerOrders = () => {
               <button
                 onClick={handleSubmitRating}
                 disabled={isSubmittingRating || rating === 0 || !feedback.trim()}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
+                className="w-full bg-gradient-to-r from-brand to-primary-700 text-white py-4 rounded-xl font-bold text-lg hover:from-primary-700 hover:to-primary-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
               >
                 {isSubmittingRating ? (
                   <>

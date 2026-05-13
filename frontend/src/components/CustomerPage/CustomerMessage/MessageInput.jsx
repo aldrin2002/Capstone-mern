@@ -53,7 +53,7 @@ const MessageInput = ({
             className={`p-2 rounded-lg transition-colors flex-shrink-0 ${
               isSending 
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-50 hover:bg-blue-100 text-blue-600'
+                : 'bg-primary-100 hover:bg-primary-200 text-brand'
             }`}
             title="Attach image"
           >
@@ -70,13 +70,13 @@ const MessageInput = ({
                 handleTyping();
               }}
               placeholder="Type your message..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
               disabled={isSending}
             />
             
             {/* Upload progress indicator */}
             {uploadProgress > 0 && uploadProgress < 100 && (
-              <div className="absolute left-0 bottom-0 h-1 bg-blue-500 transition-all duration-300 rounded-b-lg" 
+              <div className="absolute left-0 bottom-0 h-1 bg-brand transition-all duration-300 rounded-b-lg" 
                    style={{ width: `${uploadProgress}%` }}>
               </div>
             )}
@@ -89,7 +89,7 @@ const MessageInput = ({
             className={`p-3 rounded-lg text-white flex-shrink-0 transition-all ${
               isSending || (!newMessage.trim() && !imageFile)
                 ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-blue-500 hover:bg-blue-600 hover:shadow-md'
+                : 'bg-brand hover:bg-primary-700 hover:shadow-md'
             }`}
             title="Send message"
           >

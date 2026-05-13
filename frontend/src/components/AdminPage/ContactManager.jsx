@@ -66,7 +66,7 @@ const ContactManager = () => {
                 icon: 'error',
                 title: 'Load Failed',
                 text: 'Failed to load contact information',
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#F13E93',
             });
         } finally {
             setIsLoading(false);
@@ -109,7 +109,7 @@ const ContactManager = () => {
                 icon: 'warning',
                 title: 'Required Fields Missing',
                 text: 'Please fill in all required fields (Email, Address, and Business Hours)',
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#F13E93',
             });
             return;
         }
@@ -121,7 +121,7 @@ const ContactManager = () => {
                 icon: 'warning',
                 title: 'Invalid Email',
                 text: 'Please enter a valid email address',
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#F13E93',
             });
             return;
         }
@@ -132,7 +132,7 @@ const ContactManager = () => {
                 icon: 'warning',
                 title: 'Invalid Website URL',
                 text: 'Website URL should start with http:// or https://',
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#F13E93',
             });
             return;
         }
@@ -169,7 +169,7 @@ const ContactManager = () => {
                 icon: 'error',
                 title: 'Save Failed',
                 text: error.response?.data?.message || 'Failed to update contact information',
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#F13E93',
             });
         } finally {
             setIsLoading(false);
@@ -187,7 +187,7 @@ const ContactManager = () => {
                 text: 'Any unsaved changes will be lost',
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#F13E93',
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Yes, discard',
                 cancelButtonText: 'No, keep editing'
@@ -208,9 +208,9 @@ const ContactManager = () => {
             <div className="p-6 h-full flex justify-center items-center">
                 <div className="text-center">
                     <div className="relative">
-                        <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+                        <div className="w-16 h-16 border-4 border-primary-200 border-t-brand rounded-full animate-spin mx-auto"></div>
                         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                            <div className="w-8 h-8 bg-blue-600 rounded-full animate-pulse"></div>
+                            <div className="w-8 h-8 bg-brand rounded-full animate-pulse"></div>
                         </div>
                     </div>
                     <p className="mt-4 text-gray-600 font-medium">Loading contact information...</p>
@@ -220,12 +220,12 @@ const ContactManager = () => {
     }
     
     return (
-        <div className={`p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-full ${isMobile ? 'pb-28' : ''}`}>
+        <div className={`p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-primary-100 min-h-full ${isMobile ? 'pb-28' : ''}`}>
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
                 <div>
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center">
-                        <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full mr-3"></div>
+                        <div className="w-2 h-8 bg-gradient-to-b from-brand to-primary-700 rounded-full mr-3"></div>
                         Contact Management
                     </h2>
                     <p className="text-gray-600 mt-1">Manage your cafe contact information</p>
@@ -233,7 +233,7 @@ const ContactManager = () => {
                 {!isEditing && (
                     <button
                         onClick={() => setIsEditing(true)}
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-2xl flex items-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                        className="bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-6 py-3 rounded-2xl flex items-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                     >
                         <Edit2 className="h-5 w-5" />
                         <span className="font-medium">Edit Information</span>
@@ -244,7 +244,7 @@ const ContactManager = () => {
             {/* Contact Information Display/Edit */}
             {isEditing ? (
                 <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+                    <div className="bg-gradient-to-r from-brand to-primary-700 p-6 text-white">
                         <div className="flex justify-between items-center">
                             <h3 className="text-xl font-bold">Edit Contact Information</h3>
                             <button
@@ -272,7 +272,7 @@ const ContactManager = () => {
                                         name="phone"
                                         value={formData.phone}
                                         onChange={handleChange}
-                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
                                         placeholder="+1 (123) 456-7890"
                                     />
                                 </div>
@@ -292,7 +292,7 @@ const ContactManager = () => {
                                         name="email"
                                         value={formData.email}
                                         onChange={handleChange}
-                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
                                         placeholder="contact@yourcafe.com"
                                         required
                                     />
@@ -313,7 +313,7 @@ const ContactManager = () => {
                                         name="address"
                                         value={formData.address}
                                         onChange={handleChange}
-                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
                                         placeholder="123 Main Street, City, State 12345"
                                         required
                                     />
@@ -334,7 +334,7 @@ const ContactManager = () => {
                                         name="hours"
                                         value={formData.hours}
                                         onChange={handleChange}
-                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
                                         placeholder="Mon-Fri: 8am-8pm, Sat-Sun: 9am-5pm"
                                         required
                                     />
@@ -355,7 +355,7 @@ const ContactManager = () => {
                                         name="website"
                                         value={formData.website}
                                         onChange={handleChange}
-                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                        className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
                                         placeholder="https://yourcafe.com"
                                     />
                                 </div>
@@ -365,7 +365,7 @@ const ContactManager = () => {
                         {/* Social Media Section */}
                         <div className="mt-8">
                             <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                                <Users className="h-5 w-5 mr-2 text-blue-600" />
+                                <Users className="h-5 w-5 mr-2 text-brand" />
                                 Social Media Links
                             </h4>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -376,14 +376,14 @@ const ContactManager = () => {
                                     </label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <Facebook className="h-5 w-5 text-blue-600" />
+                                            <Facebook className="h-5 w-5 text-brand" />
                                         </div>
                                         <input
                                             type="text"
                                             name="socialMedia.facebook"
                                             value={formData.socialMedia.facebook}
                                             onChange={handleChange}
-                                            className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                            className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
                                             placeholder="https://facebook.com/yourpage"
                                         />
                                     </div>
@@ -403,7 +403,7 @@ const ContactManager = () => {
                                             name="socialMedia.instagram"
                                             value={formData.socialMedia.instagram}
                                             onChange={handleChange}
-                                            className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                            className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
                                             placeholder="https://instagram.com/yourhandle"
                                         />
                                     </div>
@@ -416,14 +416,14 @@ const ContactManager = () => {
                                     </label>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <Twitter className="h-5 w-5 text-blue-400" />
+                                            <Twitter className="h-5 w-5 text-brand" />
                                         </div>
                                         <input
                                             type="text"
                                             name="socialMedia.twitter"
                                             value={formData.socialMedia.twitter}
                                             onChange={handleChange}
-                                            className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+                                            className="pl-12 w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
                                             placeholder="https://twitter.com/yourhandle"
                                         />
                                     </div>
@@ -443,7 +443,7 @@ const ContactManager = () => {
                             </button>
                             <button
                                 type="submit"
-                                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
+                                className="px-6 py-3 bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white rounded-xl font-medium transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center space-x-2"
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
@@ -464,11 +464,11 @@ const ContactManager = () => {
                         {/* Phone Card */}
                         <div className="bg-white rounded-2xl shadow-lg p-6 group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                             <div className="flex items-center space-x-4">
-                                <div className="p-3 bg-blue-50 rounded-xl group-hover:bg-blue-100 group-hover:scale-110 transition-all duration-300">
-                                    <Phone className="h-6 w-6 text-blue-600" />
+                                <div className="p-3 bg-primary-100 rounded-xl group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
+                                    <Phone className="h-6 w-6 text-brand" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-gray-800 group-hover:text-blue-600 transition-colors">Phone</h3>
+                                    <h3 className="font-bold text-gray-800 group-hover:text-brand transition-colors">Phone</h3>
                                     <p className="text-gray-600">{contactInfo.phone || "Not set"}</p>
                                 </div>
                             </div>
@@ -517,16 +517,16 @@ const ContactManager = () => {
                         {contactInfo.website && (
                             <div className="bg-white rounded-2xl shadow-lg p-6 group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 md:col-span-2">
                                 <div className="flex items-center space-x-4">
-                                    <div className="p-3 bg-indigo-50 rounded-xl group-hover:bg-indigo-100 group-hover:scale-110 transition-all duration-300">
-                                        <Globe className="h-6 w-6 text-indigo-600" />
+                                    <div className="p-3 bg-primary-100 rounded-xl group-hover:bg-primary-200 group-hover:scale-110 transition-all duration-300">
+                                        <Globe className="h-6 w-6 text-brand" />
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-gray-800 group-hover:text-indigo-600 transition-colors">Website</h3>
+                                        <h3 className="font-bold text-gray-800 group-hover:text-brand transition-colors">Website</h3>
                                         <a 
                                             href={contactInfo.website} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
-                                            className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                                            className="text-brand hover:text-primary-800 hover:underline transition-colors"
                                         >
                                             {contactInfo.website}
                                         </a>
@@ -540,7 +540,7 @@ const ContactManager = () => {
                     {(contactInfo.socialMedia?.facebook || contactInfo.socialMedia?.instagram || contactInfo.socialMedia?.twitter) && (
                         <div className="bg-white rounded-2xl shadow-lg p-6">
                             <h3 className="text-xl font-bold text-gray-800 mb-6 flex items-center">
-                                <Users className="h-6 w-6 mr-3 text-blue-600" />
+                                <Users className="h-6 w-6 mr-3 text-brand" />
                                 Social Media
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -549,10 +549,10 @@ const ContactManager = () => {
                                         href={contactInfo.socialMedia.facebook} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
-                                        className="flex items-center space-x-3 p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-all duration-300 transform hover:scale-105"
+                                        className="flex items-center space-x-3 p-4 bg-primary-100 rounded-xl hover:bg-primary-200 transition-all duration-300 transform hover:scale-105"
                                     >
-                                        <Facebook className="h-6 w-6 text-blue-600" />
-                                        <span className="font-medium text-blue-800">Facebook</span>
+                                        <Facebook className="h-6 w-6 text-brand" />
+                                        <span className="font-medium text-primary-800">Facebook</span>
                                     </a>
                                 )}
                                 {contactInfo.socialMedia?.instagram && (
@@ -571,10 +571,10 @@ const ContactManager = () => {
                                         href={contactInfo.socialMedia.twitter} 
                                         target="_blank" 
                                         rel="noopener noreferrer"
-                                        className="flex items-center space-x-3 p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-all duration-300 transform hover:scale-105"
+                                        className="flex items-center space-x-3 p-4 bg-primary-100 rounded-xl hover:bg-primary-200 transition-all duration-300 transform hover:scale-105"
                                     >
-                                        <Twitter className="h-6 w-6 text-blue-400" />
-                                        <span className="font-medium text-blue-800">Twitter</span>
+                                        <Twitter className="h-6 w-6 text-brand" />
+                                        <span className="font-medium text-primary-800">Twitter</span>
                                     </a>
                                 )}
                             </div>

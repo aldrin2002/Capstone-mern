@@ -5,13 +5,13 @@ const DashboardHeader = ({ activeComponent, user }) => {
   return (
     <header className="bg-white shadow-md z-10">
       <div className="px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-blue-800">
+        <h1 className="text-xl font-bold text-primary-800">
           {activeComponent.charAt(0).toUpperCase() + activeComponent.slice(1)}
         </h1>
         <div className="flex items-center space-x-4">
           <div className="flex items-center">
-            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-              <User className="h-6 w-6 text-blue-600" />
+            <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
+              <User className="h-6 w-6 text-brand" />
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-700">{user.name}</p>

@@ -30,7 +30,7 @@ const LoginPage = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center bg-gradient-to-r from-blue-500 to-blue-700"
+      className="fixed inset-0 flex items-center justify-center bg-gradient-to-r from-brand to-primary-800"
     >
       {/* Meteor Effect */}
       <div className="fixed inset-0 pointer-events-none">
@@ -58,7 +58,7 @@ const LoginPage = () => {
           <h2 className="text-3xl font-bold mb-6 text-center text-white">
             Welcome Admin!
           </h2>
-          <div className="h-1 w-20 bg-blue-500 mx-auto mb-8"></div>
+          <div className="h-1 w-20 bg-brand mx-auto mb-8"></div>
 
           <form onSubmit={handleLogin}>
             <Input
@@ -83,14 +83,14 @@ const LoginPage = () => {
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? (
-                  <EyeOff size={18} className="text-blue-300" />
+                  <EyeOff size={18} className="text-primary-200" />
                 ) : (
-                  <Eye size={18} className="text-blue-300" />
+                  <Eye size={18} className="text-primary-200" />
                 )}
               </button>
             </div>
             <button
-              className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"
+              className="w-full py-3 px-4 bg-brand text-white font-semibold rounded-md shadow-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 transition duration-200"
               type="submit"
               disabled={isLoading}
             >
@@ -101,7 +101,7 @@ const LoginPage = () => {
         <div className="px-8 py-4 bg-gray-50 bg-opacity-20 flex justify-center">
           <p className="text-sm text-white">
             Don't have an account?{" "}
-            <Link to="/signup" className="text-blue-300 font-medium hover:underline">
+            <Link to="/signup" className="text-primary-200 font-medium hover:underline">
               Sign up
             </Link>
           </p>

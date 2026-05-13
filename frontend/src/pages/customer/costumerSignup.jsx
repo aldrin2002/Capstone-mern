@@ -134,14 +134,14 @@ const CostumerSignUpPage = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-500 to-blue-700 p-4 sm:p-6 lg:p-8 overflow-y-auto"
+      className="min-h-screen flex items-center justify-center bg-gradient-to-r from-brand to-primary-800 p-4 sm:p-6 lg:p-8 overflow-y-auto"
     >
       <div className="w-full max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-4xl bg-white bg-opacity-20 backdrop-filter backdrop-blur-lg rounded-lg shadow-lg overflow-hidden border border-gray-200 my-8">
         <div className="p-4 sm:p-6 md:p-8 lg:p-10">
           <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-center text-white mb-2 sm:mb-4">
             Create Customer Account
           </h2>
-          <div className="h-1 w-12 sm:w-16 md:w-20 lg:w-24 bg-blue-500 mx-auto mb-4 sm:mb-6 md:mb-8"></div>
+          <div className="h-1 w-12 sm:w-16 md:w-20 lg:w-24 bg-brand mx-auto mb-4 sm:mb-6 md:mb-8"></div>
 
           <form onSubmit={handleSignUp} className="space-y-3 sm:space-y-4 md:space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -215,8 +215,8 @@ const CostumerSignUpPage = () => {
             </div>
 
             <button
-              className="w-full py-2 sm:py-3 px-4 bg-blue-600 text-white font-semibold rounded-md shadow-md 
-                        hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+              className="w-full py-2 sm:py-3 px-4 bg-brand text-white font-semibold rounded-md shadow-md 
+                        hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2
                         transition duration-200 text-xs sm:text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
               type="submit"
               disabled={isLoading}
@@ -234,14 +234,14 @@ const CostumerSignUpPage = () => {
                 By signing up, you agree to our{" "}
                 <Link
                   to="/terms-conditions"
-                  className="text-blue-200 hover:text-blue-100 underline font-medium transition-colors duration-200"
+                  className="text-primary-200 hover:text-primary-100 underline font-medium transition-colors duration-200"
                 >
                   Terms & Conditions
                 </Link>{" "}
                 and{" "}
                 <Link
                   to="/privacy-policy"
-                  className="text-blue-200 hover:text-blue-100 underline font-medium transition-colors duration-200"
+                  className="text-primary-200 hover:text-primary-100 underline font-medium transition-colors duration-200"
                 >
                   Privacy Policy
                 </Link>
@@ -256,7 +256,7 @@ const CostumerSignUpPage = () => {
             Already have an account?{" "}
             <Link
               to="/costumerLogin"
-              className="text-blue-300 font-medium hover:underline"
+              className="text-primary-200 font-medium hover:underline"
             >
               Login
             </Link>
@@ -274,16 +274,16 @@ const CostumerSignUpPage = () => {
             onChange={(e)=>setCode(e.target.value.replace(/\D/g,'').slice(0,6))}
             maxLength={6}
             placeholder="123456"
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 tracking-widest text-center font-mono"
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand tracking-widest text-center font-mono"
           />
           <div className="flex items-center justify-between text-sm">
-            <button type="button" onClick={handleResend} className="text-blue-600 hover:underline">Resend code</button>
+            <button type="button" onClick={handleResend} className="text-brand hover:underline">Resend code</button>
             <button type="button" onClick={()=>{setShowVerify(false); setCode("");}} className="text-gray-500 hover:underline">Cancel</button>
           </div>
           <button
             onClick={handleVerify}
             disabled={code.length !== 6}
-            className="w-full py-2 rounded-lg bg-blue-600 text-white font-semibold disabled:opacity-40"
+            className="w-full py-2 rounded-lg bg-brand text-white font-semibold disabled:opacity-40"
           >Verify</button>
         </div>
       </div>

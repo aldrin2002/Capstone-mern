@@ -65,7 +65,7 @@ const DeliverySettingsManager = () => {
         title: "Settings Updated!",
         text: "Delivery fee settings have been updated successfully",
         icon: "success",
-        confirmButtonColor: "#3B82F6"
+        confirmButtonColor: "#F13E93"
       });
 
       setSettings(response.data.settings);
@@ -86,7 +86,7 @@ const DeliverySettingsManager = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader className="animate-spin h-8 w-8 text-blue-600" />
+        <Loader className="animate-spin h-8 w-8 text-brand" />
       </div>
     );
   }
@@ -96,7 +96,7 @@ const DeliverySettingsManager = () => {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center mb-4">
-          <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mr-4 shadow-lg">
+          <div className="p-3 bg-gradient-to-br from-brand to-primary-700 rounded-2xl mr-4 shadow-lg">
             <Truck className="h-8 w-8 text-white" />
           </div>
           <div>
@@ -127,7 +127,7 @@ const DeliverySettingsManager = () => {
                 onChange={handleChange}
                 min="0"
                 step="5"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand"
               />
               <p className="text-xs text-gray-500 mt-1">Minimum delivery fee charged regardless of distance</p>
             </div>
@@ -144,7 +144,7 @@ const DeliverySettingsManager = () => {
                 onChange={handleChange}
                 min="0"
                 step="1"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand"
               />
               <p className="text-xs text-gray-500 mt-1">Additional charge per kilometer traveled</p>
             </div>
@@ -161,7 +161,7 @@ const DeliverySettingsManager = () => {
                 onChange={handleChange}
                 min="1"
                 step="1"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand"
               />
               <p className="text-xs text-gray-500 mt-1">Maximum distance for delivery service</p>
             </div>
@@ -170,7 +170,7 @@ const DeliverySettingsManager = () => {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? (
                 <>
@@ -190,7 +190,7 @@ const DeliverySettingsManager = () => {
         {/* Preview & Examples */}
         <div className="space-y-6">
           {/* Current Formula */}
-          <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-6 border-2 border-purple-200">
+          <div className="bg-gradient-to-br from-purple-50 to-primary-100 rounded-2xl p-6 border-2 border-purple-200">
             <h3 className="text-lg font-bold text-purple-900 mb-4 flex items-center">
               <TrendingUp className="h-5 w-5 mr-2" />
               Pricing Formula
@@ -208,17 +208,17 @@ const DeliverySettingsManager = () => {
           {/* Example Calculations */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-              <MapPin className="h-5 w-5 mr-2 text-blue-600" />
+              <MapPin className="h-5 w-5 mr-2 text-brand" />
               Example Delivery Fees
             </h3>
             <div className="space-y-3">
               {[1, 3, 5, 10, 15].map(distance => (
-                <div key={distance} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors">
+                <div key={distance} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-primary-100 transition-colors">
                   <div className="flex items-center">
                     <MapPin className="h-4 w-4 text-gray-400 mr-2" />
                     <span className="text-sm font-medium text-gray-700">{distance} km</span>
                   </div>
-                  <span className="text-sm font-bold text-blue-600">₱{calculateExample(distance)}</span>
+                  <span className="text-sm font-bold text-brand">₱{calculateExample(distance)}</span>
                 </div>
               ))}
             </div>

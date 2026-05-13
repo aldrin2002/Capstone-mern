@@ -357,8 +357,8 @@ const DashboardHome = ({ user, setActiveComponent }) => {
       {
         label:"Orders",
         data: report.bucket.ordersSeries,
-        borderColor:"#2563eb",
-        backgroundColor:"rgba(37,99,235,0.15)",
+        borderColor:"#F13E93",
+        backgroundColor:"rgba(241,62,147,0.15)",
         tension:0.35,
         fill:true
       },
@@ -378,7 +378,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
     datasets:[{
       label:"Quantity Sold",
       data: report.products.slice(0,8).map(p => p.quantity),
-      backgroundColor:"rgba(37,99,235,0.6)"
+      backgroundColor:"rgba(241,62,147,0.6)"
     }]
   }) : null, [report]);
 
@@ -393,7 +393,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
         report.statusCounts.Cancelled || 0
       ],
       backgroundColor:[
-        "#fbbf24","#3b82f6","#8b5cf6","#10b981","#ef4444"
+        "#fbbf24","#F13E93","#8b5cf6","#10b981","#ef4444"
       ],
       borderColor:"#ffffff",
       borderWidth:2
@@ -413,9 +413,9 @@ const DashboardHome = ({ user, setActiveComponent }) => {
       <div className="flex items-center justify-center h-full min-h-[400px]">
         <div className="text-center">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <div className="w-16 h-16 border-4 border-primary-200 border-t-brand rounded-full animate-spin mx-auto"></div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-              <div className="w-8 h-8 bg-blue-600 rounded-full animate-pulse"></div>
+              <div className="w-8 h-8 bg-brand rounded-full animate-pulse"></div>
             </div>
           </div>
           <p className="mt-4 text-gray-600 font-medium">Preparing sales report...</p>
@@ -425,16 +425,16 @@ const DashboardHome = ({ user, setActiveComponent }) => {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-full">
+    <div className="p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-primary-100 min-h-full">
       {/* Header */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white flex items-center space-x-4">
+        <div className="bg-gradient-to-r from-brand to-primary-700 p-6 text-white flex items-center space-x-4">
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
             <Users className="w-8 h-8" />
           </div>
           <div>
             <h2 className="text-2xl font-bold">Sales & Analytics Report</h2>
-            <p className="text-blue-100 text-lg">{user.name}</p>
+            <p className="text-primary-100 text-lg">{user.name}</p>
           </div>
         </div>
         <div className="p-6 space-y-6">
@@ -447,7 +447,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                 onClick={() => { setTimeframe(t.key); setStartDate(""); setEndDate(""); }}
                 className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
                   timeframe === t.key && !startDate && !endDate
-                    ? "bg-blue-600 text-white shadow-md"
+                    ? "bg-brand text-white shadow-md"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
@@ -457,14 +457,14 @@ const DashboardHome = ({ user, setActiveComponent }) => {
 
             {/* Modern minimalist date range picker */}
             <div className="group flex items-center gap-3 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl px-3 py-2 shadow-sm hover:shadow transition">
-              <Calendar className="w-4 h-4 text-blue-600" />
+              <Calendar className="w-4 h-4 text-brand" />
               <div className="flex items-center gap-2">
                 <div className="relative">
                   <input
                     type="date"
                     value={startDate}
                     onChange={e => setStartDate(e.target.value)}
-                    className="peer appearance-none bg-transparent px-2 py-1 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white border border-gray-200 hover:border-gray-300 transition"
+                    className="peer appearance-none bg-transparent px-2 py-1 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:bg-white border border-gray-200 hover:border-gray-300 transition"
                   />
                   <label className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 rounded opacity-0 peer-focus:opacity-100 peer-valid:opacity-100 transition">Start</label>
                 </div>
@@ -474,7 +474,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                     type="date"
                     value={endDate}
                     onChange={e => setEndDate(e.target.value)}
-                    className="peer appearance-none bg-transparent px-2 py-1 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white border border-gray-200 hover:border-gray-300 transition"
+                    className="peer appearance-none bg-transparent px-2 py-1 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:bg-white border border-gray-200 hover:border-gray-300 transition"
                   />
                   <label className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 rounded opacity-0 peer-focus:opacity-100 peer-valid:opacity-100 transition">End</label>
                 </div>
@@ -492,7 +492,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
               <button
                 onClick={() => generateReport()}
                 disabled={!startDate || !endDate}
-                className="ml-1 px-3 py-1.5 rounded-md text-xs font-medium bg-blue-600 text-white disabled:opacity-40 hover:bg-blue-700 transition"
+                className="ml-1 px-3 py-1.5 rounded-md text-xs font-medium bg-brand text-white disabled:opacity-40 hover:bg-primary-700 transition"
               >
                 Apply
               </button>
@@ -511,7 +511,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
           {/* KPI Cards */}
             {report && (
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <KpiCard label="Total Orders" value={report.totalOrders} color="blue" icon={<ShoppingCart className="w-5 h-5" />} />
+                <KpiCard label="Total Orders" value={report.totalOrders} color="primary" icon={<ShoppingCart className="w-5 h-5" />} />
                 <KpiCard label="Successful" value={(report.statusCounts.Completed||0)+(report.statusCounts.Delivered||0)} color="green" icon={<CheckIcon />} />
                 <KpiCard label="Cancelled" value={report.statusCounts.Cancelled||0} color="red" icon={<CancelIcon />} />
                 <KpiCard label="Pending" value={report.statusCounts.Pending||0} color="yellow" icon={<Clock className="w-5 h-5" />} />
@@ -521,9 +521,9 @@ const DashboardHome = ({ user, setActiveComponent }) => {
 
           {/* Most Popular Product */}
           {report?.mostPopular && (
-            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border rounded-2xl p-5 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-primary-100 to-primary-200 border rounded-2xl p-5 flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div className="w-14 h-14 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow">
+                <div className="w-14 h-14 rounded-xl bg-brand text-white flex items-center justify-center shadow">
                   <Award className="w-7 h-7" />
                 </div>
                 <div>
@@ -549,7 +549,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
               {/* Top Products Bar (moved to top, full width) */}
               <div className="bg-white rounded-2xl shadow-md border p-5 lg:col-span-3 h-80">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center">
-                  <Package className="w-5 h-5 mr-2 text-blue-600" />Top Products (Quantity)
+                  <Package className="w-5 h-5 mr-2 text-brand" />Top Products (Quantity)
                 </h3>
                 {topProductsBarData && <Bar data={topProductsBarData} options={chartOptionsBar} />}
               </div>
@@ -580,7 +580,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
 
           {/* Product Sales Table */}
           <div className="bg-white rounded-2xl shadow-md overflow-hidden border">
-            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-blue-50 border-b">
+            <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-primary-100 border-b">
               <h3 className="font-bold text-gray-700 text-sm">
                 Product Sales ({report?.products.length || 0})
               </h3>
@@ -597,7 +597,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                 <tbody>
                   {report?.products.length ? (
                     report.products.map(p => (
-                      <tr key={p.productId} className="border-t hover:bg-blue-50/50">
+                      <tr key={p.productId} className="border-t hover:bg-primary-100/50">
                         <td className="px-6 py-3 font-medium text-gray-800">{p.name}</td>
                         <td className="px-6 py-3 text-right text-gray-700">{p.quantity}</td>
                         <td className="px-6 py-3 text-right text-gray-700">{p.revenue.toFixed(2)}</td>
@@ -719,7 +719,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center space-x-3">
                           {/* Customer Avatar */}
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          <div className="w-12 h-12 bg-gradient-to-br from-brand to-primary-700 rounded-full flex items-center justify-center text-white font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
                             {rating.customer?.name?.charAt(0).toUpperCase() || 'C'}
                           </div>
                           
@@ -756,9 +756,9 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                       </div>
 
                       {/* Feedback Text */}
-                      <div className="ml-15 pl-3 border-l-4 border-blue-200 group-hover:border-blue-400 transition-colors duration-300">
+                      <div className="ml-15 pl-3 border-l-4 border-primary-200 group-hover:border-primary-400 transition-colors duration-300">
                         <div className="flex items-start space-x-2">
-                          <MessageSquare className="w-5 h-5 text-blue-600 mt-1 flex-shrink-0" />
+                          <MessageSquare className="w-5 h-5 text-brand mt-1 flex-shrink-0" />
                           <p className="text-gray-700 leading-relaxed">
                             "{rating.feedback}"
                           </p>
@@ -790,7 +790,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
 
             {/* Footer Stats */}
             {ratings.length > 0 && (
-              <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-blue-50 border-t">
+              <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-primary-100 border-t">
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center space-x-6">
                     <div className="flex items-center space-x-2">
@@ -810,7 +810,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                   </div>
                   <button
                     onClick={fetchRatings}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg font-medium text-sm"
+                    className="px-4 py-2 bg-gradient-to-r from-brand to-primary-700 text-white rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-300 transform hover:scale-105 shadow-lg font-medium text-sm"
                   >
                     Refresh Ratings
                   </button>
@@ -823,7 +823,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
           <div className="mt-8">
             <h4 className="text-sm font-semibold text-gray-600 mb-3">Quick Actions</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <QuickButton icon={<ShoppingCart className="w-5 h-5 text-blue-600" />} label="Orders" onClick={() => setActiveComponent("orders")} />
+              <QuickButton icon={<ShoppingCart className="w-5 h-5 text-brand" />} label="Orders" onClick={() => setActiveComponent("orders")} />
               <QuickButton icon={<Package className="w-5 h-5 text-purple-600" />} label="Products" onClick={() => setActiveComponent("products")} />
               <QuickButton icon={<Users className="w-5 h-5 text-orange-600" />} label="Users" onClick={() => setActiveComponent("users")} />
               <QuickButton icon={<Package className="w-5 h-5 text-green-600" />} label="Gallery" onClick={() => setActiveComponent("gallery")} />
@@ -838,7 +838,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
 // --- Reusable UI pieces ----------------------------------------------
 const KpiCard = ({ label, value, color, icon }) => {
   const colorMap = {
-    blue:"from-blue-500 to-blue-600",
+    primary:"from-brand to-primary-700",
     green:"from-green-500 to-green-600",
     red:"from-red-500 to-red-600",
     yellow:"from-yellow-500 to-yellow-600",
@@ -850,7 +850,7 @@ const KpiCard = ({ label, value, color, icon }) => {
         <p className="text-xs font-medium text-gray-500">{label}</p>
         <p className="text-xl font-bold text-gray-800 mt-1">{value}</p>
       </div>
-      <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${colorMap[color] || colorMap.blue} flex items-center justify-center text-white shadow`}>
+      <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${colorMap[color] || colorMap.primary} flex items-center justify-center text-white shadow`}>
         {icon}
       </div>
     </div>
@@ -863,7 +863,7 @@ const QuickButton = ({ icon, label, onClick }) => (
     className="p-4 bg-white border rounded-xl hover:shadow group transition flex items-center space-x-2"
   >
     {icon}
-    <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600">{label}</span>
+    <span className="text-sm font-medium text-gray-700 group-hover:text-brand">{label}</span>
   </button>
 );
 

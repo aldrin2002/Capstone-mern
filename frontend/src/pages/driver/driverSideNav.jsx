@@ -59,7 +59,7 @@ const DriverSideNav = () => {
           {isExpanded && (
             <Link
               to="/driver-messages"
-              className="p-4 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all"
+              className="p-4 bg-gradient-to-r from-brand to-primary-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all"
             >
               <MessageCircle size={22} />
             </Link>
@@ -67,14 +67,14 @@ const DriverSideNav = () => {
           {/* Toggle */}
           <button
             onClick={() => setIsExpanded(prev => !prev)}
-            className="p-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-full shadow-xl hover:shadow-2xl transition-all"
+            className="p-4 bg-gradient-to-r from-brand to-primary-700 text-white rounded-full shadow-xl hover:shadow-2xl transition-all"
           >
             <Truck size={22} />
           </button>
         </div>
 
         {/* Bottom nav bar */}
-        <nav className="fixed bottom-0 left-0 right-0 bg-blue-900 bg-opacity-90 backdrop-blur text-white border-t border-blue-700 z-40">
+        <nav className="fixed bottom-0 left-0 right-0 bg-primary-900 bg-opacity-90 backdrop-blur text-white border-t border-primary-700 z-40">
           <div className="flex items-center justify-around p-3">
             {bottomNavItems.map(item => {
               const active = location.pathname + location.hash === item.path || location.pathname === item.path;
@@ -82,7 +82,7 @@ const DriverSideNav = () => {
                 <Link
                   key={item.label}
                   to={item.path}
-                  className={`flex flex-col items-center text-xs ${active ? "text-blue-200" : "text-white"} transition`}
+                  className={`flex flex-col items-center text-xs ${active ? "text-primary-200" : "text-white"} transition`}
                 >
                   {item.icon}
                   <span className="mt-1">{item.label}</span>
@@ -97,13 +97,13 @@ const DriverSideNav = () => {
 
   // Desktop
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 z-20 bg-blue-800 bg-opacity-90 backdrop-blur text-white flex flex-col shadow-xl">
-      <div className="p-6 border-b border-blue-700">
+    <aside className="fixed left-0 top-0 h-screen w-64 z-20 bg-primary-900 bg-opacity-90 backdrop-blur text-white flex flex-col shadow-xl">
+      <div className="p-6 border-b border-primary-700">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Truck className="w-6 h-6 text-blue-300" />
+          <Truck className="w-6 h-6 text-primary-200" />
           Driver
         </h2>
-        <p className="text-sm text-blue-300 mt-1 flex items-center gap-1">
+        <p className="text-sm text-primary-200 mt-1 flex items-center gap-1">
           <User className="w-4 h-4" /> {user?.name || "Driver"}
         </p>
       </div>
@@ -117,7 +117,7 @@ const DriverSideNav = () => {
               to={item.path}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                 active
-                  ? "bg-white/15 text-blue-100 border border-white/20"
+                  ? "bg-white/15 text-primary-100 border border-white/20"
                   : "hover:bg-white/10"
               }`}
             >
@@ -128,7 +128,7 @@ const DriverSideNav = () => {
         })}
       </nav>
 
-      <div className="p-4 border-t border-blue-700/50">
+      <div className="p-4 border-t border-primary-700/50">
         <button
           onClick={handleLogout}
           className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 rounded-lg shadow-md transition"

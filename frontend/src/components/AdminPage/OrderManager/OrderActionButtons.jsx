@@ -22,7 +22,7 @@ const OrderActionButtons = ({
       text: "Status will be changed to Preparing Food",
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#2563eb',
+      confirmButtonColor: '#F13E93',
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes, start preparing!',
       customClass: { popup: 'rounded-lg' }
@@ -57,7 +57,7 @@ const OrderActionButtons = ({
       text: "Confirm that this order has been delivered to the customer",
       icon: 'info',
       showCancelButton: true,
-      confirmButtonColor: '#0ea5e9',
+      confirmButtonColor: '#F13E93',
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes, delivered!',
       customClass: { popup: 'rounded-lg' }
@@ -127,7 +127,7 @@ const OrderActionButtons = ({
         {selectedOrder.status === "Pending" && (
           <div className="grid grid-cols-2 gap-3">
             <button 
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              className="bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-4 py-3 rounded-xl font-bold flex items-center justify-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
               onClick={handleStartPreparingFood}
               disabled={isLoading}
             >
@@ -227,7 +227,7 @@ const OrderActionButtons = ({
           {selectedOrder.status === "Pending" && (
             <>
               <button 
-                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-bold flex items-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                className="bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-6 py-3 rounded-xl font-bold flex items-center transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                 onClick={handleStartPreparingFood}
                 disabled={isLoading}
               >

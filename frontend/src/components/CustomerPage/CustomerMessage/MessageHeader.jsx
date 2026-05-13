@@ -3,7 +3,7 @@ import { User, MessageCircle, Wifi, WifiOff } from "lucide-react";
 
 const MessageHeader = ({ adminOnlineCount, isConnected, partnerLabel = "Store Owner", partnerStatus = "Available to chat" }) => {
   return (
-    <div className="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white p-4 shrink-0 shadow-lg backdrop-blur-xl border-b border-white/10">
+    <div className="relative bg-gradient-to-r from-brand via-primary-700 to-primary-900 text-white p-4 shrink-0 shadow-lg backdrop-blur-xl border-b border-white/10">
       {/* Header background pattern */}
       <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent"></div>
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
@@ -12,14 +12,14 @@ const MessageHeader = ({ adminOnlineCount, isConnected, partnerLabel = "Store Ow
         <div className="flex items-center space-x-3">
           {/* Enhanced admin avatar */}
           <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg border-2 border-white/20">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center shadow-lg border-2 border-white/20">
               <User size={20} className="text-white" />
             </div>
           </div>
           
           <div>
             <h1 className="text-xl font-bold">{partnerLabel}</h1>
-            <p className="text-xs text-blue-100 flex items-center">
+            <p className="text-xs text-primary-100 flex items-center">
               <MessageCircle size={12} className="mr-1" />
               {partnerStatus || (adminOnlineCount > 0 ? 'Available to chat' : 'Offline')}
             </p>

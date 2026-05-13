@@ -49,7 +49,7 @@ const MessageGroup = ({ dateMessages, API_BASE_URL }) => {
         
         {/* Avatar for customer (right side) */}
         {isCustomer && (
-          <div className="h-8 w-8 rounded-full bg-blue-500 flex-shrink-0 flex items-center justify-center">
+          <div className="h-8 w-8 rounded-full bg-brand flex-shrink-0 flex items-center justify-center">
             <User size={16} className="text-white" />
           </div>
         )}

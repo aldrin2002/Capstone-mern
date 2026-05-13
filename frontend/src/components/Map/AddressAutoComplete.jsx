@@ -147,7 +147,7 @@ const AddressAutocomplete = ({
           onChange={handleInputChange}
           onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
           placeholder={placeholder}
-          className="w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+          className="w-full pl-10 pr-10 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-brand focus:border-brand transition-all"
           autoComplete="off"
         />
         
@@ -170,10 +170,10 @@ const AddressAutocomplete = ({
               key={index}
               type="button"
               onClick={() => handleSelectAddress(suggestion)}
-              className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0"
+              className="w-full text-left px-4 py-3 hover:bg-primary-100 transition-colors border-b border-gray-100 last:border-b-0"
             >
               <div className="flex items-start space-x-2">
-                <MapPin className="h-4 w-4 text-blue-500 mt-1 flex-shrink-0" />
+                <MapPin className="h-4 w-4 text-brand mt-1 flex-shrink-0" />
                 <div className="flex-1">
                   <p className="text-sm text-gray-900 font-medium line-clamp-2">
                     {suggestion.display_name}

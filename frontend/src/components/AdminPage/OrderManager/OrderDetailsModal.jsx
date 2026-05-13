@@ -51,11 +51,11 @@ const OrderDetailsModal = ({
       case "Ready for Delivery":
         return <Truck className="h-5 w-5 text-cyan-600" />;
       case "Preparing Food":
-        return <Clock className="h-5 w-5 text-indigo-500" />;
+        return <Clock className="h-5 w-5 text-brand" />;
       case "Delivered":
-        return <Truck className="h-5 w-5 text-blue-500" />;
+        return <Truck className="h-5 w-5 text-brand" />;
       case "Processing":
-        return <Clock className="h-5 w-5 text-blue-500" />;
+        return <Clock className="h-5 w-5 text-brand" />;
       case "Pending":
         return <Clock className="h-5 w-5 text-yellow-500" />;
       default:
@@ -72,11 +72,11 @@ const OrderDetailsModal = ({
       case "Ready for Delivery":
         return "bg-gradient-to-r from-cyan-100 to-teal-200 text-cyan-900 border-cyan-300";
       case "Preparing Food":
-        return "bg-gradient-to-r from-indigo-100 to-blue-200 text-indigo-900 border-indigo-300";
+        return "bg-gradient-to-r from-primary-100 to-primary-200 text-primary-900 border-primary-300";
       case "Delivered":
-        return "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300";
+        return "bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800 border-primary-300";
       case "Processing":
-        return "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300";
+        return "bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800 border-primary-300";
       case "Pending":
         return "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300";
       default:
@@ -173,7 +173,7 @@ const OrderDetailsModal = ({
         `,
         icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: "#3B82F6",
+        confirmButtonColor: "#F13E93",
         cancelButtonColor: "#6B7280",
         confirmButtonText: "Yes, restore inventory",
         cancelButtonText: "Cancel"
@@ -203,7 +203,7 @@ const OrderDetailsModal = ({
             </div>
           `,
           icon: "success",
-          confirmButtonColor: "#3B82F6"
+          confirmButtonColor: "#F13E93"
         });
       }
     } catch (error) {
@@ -216,11 +216,11 @@ const OrderDetailsModal = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-4 md:px-6 md:py-5">
+        <div className="bg-gradient-to-r from-brand to-primary-700 text-white px-4 py-4 md:px-6 md:py-5">
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-lg md:text-xl font-bold">Order Details</h3>
-              <p className="text-blue-100 text-sm">Order #{selectedOrder._id.slice(-8)}</p>
+              <p className="text-primary-100 text-sm">Order #{selectedOrder._id.slice(-8)}</p>
             </div>
             <button 
               onClick={() => setSelectedOrder(null)}
@@ -237,29 +237,29 @@ const OrderDetailsModal = ({
             {/* Customer & Order Info Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
               {/* Customer Information Card */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200">
+              <div className="bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl p-6 border border-primary-200">
                 <div className="flex items-center mb-4">
-                  <div className="bg-blue-500 p-3 rounded-xl mr-3 shadow-lg">
+                  <div className="bg-brand p-3 rounded-xl mr-3 shadow-lg">
                     <Users className="h-5 w-5 text-white" />
                   </div>
-                  <h4 className="font-bold text-blue-900 text-lg">Customer Information</h4>
+                  <h4 className="font-bold text-primary-900 text-lg">Customer Information</h4>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3">
-                    <Users className="h-4 w-4 text-blue-600" />
-                    <span className="text-blue-700 text-sm font-medium">Name:</span>
-                    <span className="font-bold text-blue-900">{selectedOrder.customer.name || 'N/A'}</span>
+                    <Users className="h-4 w-4 text-brand" />
+                    <span className="text-primary-700 text-sm font-medium">Name:</span>
+                    <span className="font-bold text-primary-900">{selectedOrder.customer.name || 'N/A'}</span>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <Mail className="h-4 w-4 text-blue-600" />
-                    <span className="text-blue-700 text-sm font-medium">Email:</span>
-                    <span className="text-blue-800">{selectedOrder.customer.email || 'N/A'}</span>
+                    <Mail className="h-4 w-4 text-brand" />
+                    <span className="text-primary-700 text-sm font-medium">Email:</span>
+                    <span className="text-primary-800">{selectedOrder.customer.email || 'N/A'}</span>
                   </div>
                   {selectedOrder.customer.phone && (
                     <div className="flex items-center space-x-3">
-                      <Phone className="h-4 w-4 text-blue-600" />
-                      <span className="text-blue-700 text-sm font-medium">Phone:</span>
-                      <span className="text-blue-800">{selectedOrder.customer.phone}</span>
+                      <Phone className="h-4 w-4 text-brand" />
+                      <span className="text-primary-700 text-sm font-medium">Phone:</span>
+                      <span className="text-primary-800">{selectedOrder.customer.phone}</span>
                     </div>
                   )}
                 </div>
@@ -351,12 +351,12 @@ const OrderDetailsModal = ({
 
             {/* Route Map Section */}
             {selectedOrder.customer?.location && user?.location && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 mb-6">
+              <div className="bg-gradient-to-r from-primary-100 to-primary-200 border-2 border-primary-200 rounded-2xl p-6 mb-6">
                 <div className="flex items-center mb-4">
-                  <div className="bg-blue-500 p-2 rounded-xl mr-3 shadow-lg">
+                  <div className="bg-brand p-2 rounded-xl mr-3 shadow-lg">
                     <Navigation className="h-5 w-5 text-white" />
                   </div>
-                  <h4 className="font-bold text-blue-800 text-lg">Delivery Route</h4>
+                  <h4 className="font-bold text-primary-800 text-lg">Delivery Route</h4>
                 </div>
                 
                 <RouteMap
@@ -383,14 +383,14 @@ const OrderDetailsModal = ({
 
             {/* GCash Reference Number Section
             {paymentReferenceNumber && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6 mb-6">
+              <div className="bg-gradient-to-r from-primary-100 to-primary-200 border-2 border-primary-200 rounded-2xl p-6 mb-6">
                 <div className="flex items-center mb-3">
-                  <div className="bg-blue-500 p-2 rounded-xl mr-3 shadow-lg">
+                  <div className="bg-brand p-2 rounded-xl mr-3 shadow-lg">
                     <Image className="h-4 w-4 text-white" />
                   </div>
-                  <h4 className="font-bold text-blue-800 text-lg">GCash Reference Number</h4>
+                  <h4 className="font-bold text-primary-800 text-lg">GCash Reference Number</h4>
                 </div>
-                <p className="text-blue-700 bg-blue-100 p-4 rounded-xl border border-blue-200 font-mono text-lg">{paymentReferenceNumber}</p>
+                <p className="text-primary-700 bg-primary-100 p-4 rounded-xl border border-primary-200 font-mono text-lg">{paymentReferenceNumber}</p>
               </div>
             )} */}
 
@@ -501,15 +501,15 @@ const OrderDetailsModal = ({
             
             {/* Order Items */}
             <div className="bg-white border-2 border-gray-200 rounded-2xl overflow-hidden shadow-lg">
-              <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b-2 border-gray-200">
+              <div className="bg-gradient-to-r from-gray-50 to-primary-100 px-6 py-4 border-b-2 border-gray-200">
                 <h4 className="font-bold text-gray-900 text-lg flex items-center">
-                  <ShoppingCart className="h-5 w-5 mr-3 text-blue-600" />
+                  <ShoppingCart className="h-5 w-5 mr-3 text-brand" />
                   Order Items ({selectedOrder.items?.length || 0})
                 </h4>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full">
-                  <thead className="bg-gradient-to-r from-gray-50 to-blue-50">
+                  <thead className="bg-gradient-to-r from-gray-50 to-primary-100">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Item</th>
                       <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Qty</th>
@@ -519,10 +519,10 @@ const OrderDetailsModal = ({
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-100">
                     {(selectedOrder.items || []).map((item, index) => (
-                      <tr key={index} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                      <tr key={index} className={`hover:bg-gradient-to-r hover:from-primary-100 hover:to-primary-200 transition-all duration-300 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
                         <td className="px-6 py-4 text-sm font-bold text-gray-900">{item.name}</td>
                         <td className="px-6 py-4 text-center">
-                          <span className="bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                          <span className="bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
                             {item.quantity}
                           </span>
                         </td>

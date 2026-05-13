@@ -173,15 +173,15 @@ const DriverMessages = () => {
       {/* make main control overflow; panes manage their own scroll */}
       <main className={`flex-1 ${isMobile ? "pb-20" : "ml-64"} overflow-hidden flex flex-col`}>
         {/* Header */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-2xl shadow-xl m-4">
+        <div className="relative overflow-hidden bg-gradient-to-r from-brand via-primary-700 to-primary-800 rounded-2xl shadow-xl m-4">
           <div className="relative px-6 py-6 flex items-center justify-between text-white">
             <div>
-              <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-blue-200 text-sm font-medium mb-2">
+              <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-primary-200 text-sm font-medium mb-2">
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Driver Messages
               </div>
               <h1 className="text-2xl md:text-3xl font-bold">Customer Conversations</h1>
-              <p className="text-blue-100 text-sm">Chat with customers in real-time</p>
+              <p className="text-primary-100 text-sm">Chat with customers in real-time</p>
             </div>
           </div>
         </div>
@@ -228,7 +228,7 @@ const DriverMessages = () => {
                     key={c._id}
                     onClick={() => setSelectedConversation(c)}
                     className={`w-full text-left px-4 py-3 hover:bg-gray-50 ${
-                      selectedConversation?._id === c._id ? "bg-blue-50" : ""
+                      selectedConversation?._id === c._id ? "bg-primary-100" : ""
                     }`}
                   >
                     <div className="font-semibold text-gray-900">{c.customer?.name || "Customer"}</div>
@@ -303,6 +303,7 @@ const DriverMessages = () => {
                     onRemoveAttachment={onRemoveAttachment}
                     isMobile={isMobile}
                     fileInputRef={fileInputRef}
+                    hideAttachmentButton
                   />
                 </div>
               </>

@@ -129,20 +129,20 @@ const RouteMap = ({ cafeCoords, customerCoords, cafeAddress, customerAddress }) 
     <div className="space-y-4">
       {/* Route Info Cards */}
       {isLoadingRoute ? (
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 text-center">
+        <div className="bg-primary-100 border-2 border-primary-200 rounded-xl p-6 text-center">
           <div className="flex items-center justify-center space-x-2">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="text-blue-700 font-medium">Calculating route...</span>
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+            <span className="text-primary-700 font-medium">Calculating route...</span>
           </div>
         </div>
       ) : routeInfo ? (
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
+          <div className="bg-primary-100 border-2 border-primary-200 rounded-xl p-4">
             <div className="flex items-center mb-2">
-              <Ruler className="h-5 w-5 text-blue-600 mr-2" />
-              <h4 className="font-bold text-blue-800">Distance</h4>
+              <Ruler className="h-5 w-5 text-primary-700 mr-2" />
+              <h4 className="font-bold text-primary-800">Distance</h4>
             </div>
-            <p className="text-2xl font-bold text-blue-600">{routeInfo.distance} km</p>
+            <p className="text-2xl font-bold text-brand">{routeInfo.distance} km</p>
           </div>
           
           <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
@@ -194,7 +194,7 @@ const RouteMap = ({ cafeCoords, customerCoords, cafeAddress, customerAddress }) 
           {routeGeometry && (
             <Polyline 
               positions={routeGeometry} 
-              color="#3B82F6" 
+              color="#F13E93" 
               weight={5} 
               opacity={0.7}
             />
@@ -209,7 +209,7 @@ const RouteMap = ({ cafeCoords, customerCoords, cafeAddress, customerAddress }) 
           <span className="text-sm text-gray-700">Cafe</span>
         </div>
         <div className="flex items-center">
-          <div className="w-1 h-8 bg-blue-500 mr-2"></div>
+          <div className="w-1 h-8 bg-brand mr-2"></div>
           <span className="text-sm text-gray-700">Route</span>
         </div>
         <div className="flex items-center">
@@ -221,7 +221,7 @@ const RouteMap = ({ cafeCoords, customerCoords, cafeAddress, customerAddress }) 
       {/* Mapbox Attribution */}
       <div className="text-center">
         <p className="text-xs text-gray-500">
-          Powered by <a href="https://www.mapbox.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Mapbox</a>
+          Powered by <a href="https://www.mapbox.com/" target="_blank" rel="noopener noreferrer" className="text-brand hover:underline">Mapbox</a>
         </p>
       </div>
     </div>

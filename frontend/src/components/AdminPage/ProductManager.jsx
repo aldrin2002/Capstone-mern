@@ -88,7 +88,7 @@ const ProductManager = () => {
         icon: 'warning',
         title: 'Name Required',
         text: 'Please enter a product name',
-        confirmButtonColor: '#3085d6',
+        confirmButtonColor: '#F13E93',
       });
       return;
     }
@@ -102,7 +102,7 @@ const ProductManager = () => {
         icon: 'warning',
         title: 'Invalid Price',
         text: 'Please enter a valid price greater than zero',
-        confirmButtonColor: '#3085d6',
+        confirmButtonColor: '#F13E93',
       });
       return;
     }
@@ -114,7 +114,7 @@ const ProductManager = () => {
         icon: 'warning',
         title: 'Image Required',
         text: 'Please select an image for the product',
-        confirmButtonColor: '#3085d6',
+        confirmButtonColor: '#F13E93',
       });
       return;
     }
@@ -128,7 +128,7 @@ const ProductManager = () => {
           icon: 'error',
           title: 'Invalid Image',
           text: validation.error,
-          confirmButtonColor: '#3085d6',
+          confirmButtonColor: '#F13E93',
         });
         return;
       }
@@ -322,7 +322,7 @@ const ProductManager = () => {
         icon: "warning",
         title: "No Products Selected",
         text: "Select at least one product to update quantity.",
-        confirmButtonColor: "#3085d6",
+        confirmButtonColor: "#F13E93",
       });
       return;
     }
@@ -338,7 +338,7 @@ const ProductManager = () => {
         text: bulkAction === "set"
           ? "Set quantity must be 0 or greater."
           : "Adjustment quantity must be greater than 0.",
-        confirmButtonColor: "#3085d6",
+        confirmButtonColor: "#F13E93",
       });
       return;
     }
@@ -370,7 +370,7 @@ const ProductManager = () => {
         icon: "info",
         title: "No Changes Needed",
         text: "Selected products already have the target quantity.",
-        confirmButtonColor: "#3085d6",
+        confirmButtonColor: "#F13E93",
       });
       return;
     }
@@ -380,7 +380,7 @@ const ProductManager = () => {
       title: "Confirm Bulk Quantity Update",
       html: `Apply <strong>${bulkAction}</strong> with value <strong>${parsedValue}</strong> to <strong>${updates.length}</strong> product(s)?`,
       showCancelButton: true,
-      confirmButtonColor: "#3085d6",
+      confirmButtonColor: "#F13E93",
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes, update quantities",
       cancelButtonText: "Cancel",
@@ -451,9 +451,9 @@ const ProductManager = () => {
       <div className="p-6 h-full flex justify-center items-center">
         <div className="text-center">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <div className="w-16 h-16 border-4 border-primary-200 border-t-brand rounded-full animate-spin mx-auto"></div>
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="w-8 h-8 bg-blue-600 rounded-full animate-pulse"></div>
+              <div className="w-8 h-8 bg-brand rounded-full animate-pulse"></div>
             </div>
           </div>
           <p className="mt-4 text-gray-600 font-medium">Loading products...</p>
@@ -463,12 +463,12 @@ const ProductManager = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-full pb-28">
+    <div className="p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-primary-100 min-h-full pb-28">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center">
-            <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full mr-3"></div>
+            <div className="w-2 h-8 bg-gradient-to-b from-brand to-primary-700 rounded-full mr-3"></div>
             Product Management
           </h2>
           <p className="text-gray-600 mt-1">Manage your cafe menu items</p>
@@ -491,7 +491,7 @@ const ProductManager = () => {
               console.log("➕ Add Product button clicked");
               setShowModal(true);
             }}
-            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-2xl flex items-center justify-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            className="bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-6 py-3 rounded-2xl flex items-center justify-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
           >
             <Plus className="h-5 w-5" />
             <span className="font-medium">Add Product</span>
@@ -514,7 +514,7 @@ const ProductManager = () => {
       />
 
       {bulkMode && (
-        <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 border border-blue-100">
+        <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 border border-primary-100">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <h3 className="text-lg font-bold text-gray-800">Bulk Quantity Update</h3>
@@ -549,7 +549,7 @@ const ProductManager = () => {
             <select
               value={bulkAction}
               onChange={(e) => setBulkAction(e.target.value)}
-              className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+              className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
             >
               <option value="set">Set quantity to</option>
               <option value="increase">Increase by</option>
@@ -561,7 +561,7 @@ const ProductManager = () => {
               min="0"
               value={bulkValue}
               onChange={(e) => setBulkValue(e.target.value)}
-              className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+              className="w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
               placeholder="Enter quantity"
             />
 

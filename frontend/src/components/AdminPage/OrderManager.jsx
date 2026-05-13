@@ -137,7 +137,7 @@ const OrderManager = () => {
                 icon: 'error',
                 title: 'Load Failed',
                 text: 'Failed to load orders',
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#F13E93',
             });
         } finally {
             setIsLoading(false);
@@ -168,7 +168,7 @@ const OrderManager = () => {
                 icon: 'error',
                 title: 'Load Failed',
                 text: `Failed to load ${status.toLowerCase()} orders`,
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#F13E93',
             });
         } finally {
             setIsLoading(false);
@@ -207,7 +207,7 @@ const OrderManager = () => {
                 title: "Cancel Order?",
                 html: `
                   <p class="text-gray-600 mb-2">Are you sure you want to cancel this order?</p>
-                  <p class="text-sm text-blue-600 bg-blue-50 p-3 rounded-lg">
+                                                                        <p class="text-sm text-brand bg-primary-100 p-3 rounded-lg">
                     ℹ️ Product quantities will be automatically restored to inventory
                   </p>
                 `,
@@ -285,7 +285,7 @@ const OrderManager = () => {
                 icon: 'error',
                 title: 'Update Failed',
                 text: error.response?.data?.message || 'Failed to update order status',
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#F13E93',
             });
         } finally {
             setIsLoading(false);
@@ -329,7 +329,7 @@ const OrderManager = () => {
                 icon: 'error',
                 title: 'Delete Failed',
                 text: error.response?.data?.message || 'Failed to delete order',
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#F13E93',
             });
         } finally {
             setIsLoading(false);
@@ -354,7 +354,7 @@ const OrderManager = () => {
                 icon: 'error',
                 title: 'Load Failed',
                 text: 'Failed to fetch order details',
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#F13E93',
             });
         } finally {
             setIsLoading(false);
@@ -372,9 +372,9 @@ const OrderManager = () => {
             <div className="p-6 h-full flex justify-center items-center">
                 <div className="text-center">
                     <div className="relative">
-                        <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+                        <div className="w-16 h-16 border-4 border-primary-200 border-t-brand rounded-full animate-spin mx-auto"></div>
                         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                            <div className="w-8 h-8 bg-blue-600 rounded-full animate-pulse"></div>
+                            <div className="w-8 h-8 bg-brand rounded-full animate-pulse"></div>
                         </div>
                     </div>
                     <p className="mt-4 text-gray-600 font-medium">Loading orders...</p>
@@ -384,12 +384,12 @@ const OrderManager = () => {
     }
     
     return (
-        <div className="p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-full pb-28">
+        <div className="p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-primary-100 min-h-full pb-28">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
                 <div>
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center">
-                        <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full mr-3"></div>
+                        <div className="w-2 h-8 bg-gradient-to-b from-brand to-primary-700 rounded-full mr-3"></div>
                         Order Management
                     </h2>
                     <p className="text-gray-600 mt-1">Monitor and manage customer orders</p>

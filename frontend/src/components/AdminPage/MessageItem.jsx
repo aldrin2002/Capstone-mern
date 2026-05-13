@@ -77,7 +77,7 @@ const MessageItem = ({
       <div 
         className={`px-4 py-2 rounded-xl inline-block ${  // Add inline-block here
           isAdmin 
-            ? 'bg-blue-500 text-white' 
+            ? 'bg-brand text-white' 
             : 'bg-gray-200 text-gray-800'
         }`}
       >
@@ -98,7 +98,7 @@ const MessageItem = ({
         
         {/* Message time */}
         <div className={`text-xs mt-1 ${
-          isAdmin ? 'text-blue-100' : 'text-gray-500'
+          isAdmin ? 'text-primary-100' : 'text-gray-500'
         }`}>
           {formatTime(message.timestamp || message.createdAt)}
         </div>

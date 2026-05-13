@@ -257,9 +257,9 @@ const DriverOrdersPage = () => {
       case "Completed": return <CheckCircle className="h-5 w-5 text-green-500" />;
       case "Cancelled": return <XCircle className="h-5 w-5 text-red-500" />;
       case "Ready for Delivery": return <Truck className="h-5 w-5 text-cyan-600" />;
-      case "Preparing Food": return <Clock className="h-5 w-5 text-indigo-500" />;
-      case "Delivered": return <Truck className="h-5 w-5 text-blue-500" />;
-      case "Processing": return <Clock className="h-5 w-5 text-blue-500" />;
+      case "Preparing Food": return <Clock className="h-5 w-5 text-brand" />;
+      case "Delivered": return <Truck className="h-5 w-5 text-brand" />;
+      case "Processing": return <Clock className="h-5 w-5 text-brand" />;
       case "Pending": return <Clock className="h-5 w-5 text-yellow-500" />;
       default: return null;
     }
@@ -269,9 +269,9 @@ const DriverOrdersPage = () => {
       case "Completed": return "bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300";
       case "Cancelled": return "bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300";
       case "Ready for Delivery": return "bg-gradient-to-r from-cyan-100 to-teal-200 text-cyan-900 border-cyan-300";
-      case "Preparing Food": return "bg-gradient-to-r from-indigo-100 to-blue-200 text-indigo-900 border-indigo-300";
-      case "Delivered": return "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300";
-      case "Processing": return "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300";
+      case "Preparing Food": return "bg-gradient-to-r from-primary-100 to-primary-200 text-primary-900 border-primary-300";
+      case "Delivered": return "bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800 border-primary-300";
+      case "Processing": return "bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800 border-primary-300";
       case "Pending": return "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300";
       default: return "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300";
     }
@@ -319,17 +319,17 @@ const DriverOrdersPage = () => {
       <main className={`flex-1 ${isMobile ? 'pb-20' : 'ml-64'} overflow-y-auto`}>
         <div className="container mx-auto px-4 py-6 space-y-6">
           {/* Header */}
-          <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 rounded-2xl shadow-xl">
+          <div className="relative overflow-hidden bg-gradient-to-r from-brand via-primary-700 to-primary-900 rounded-2xl shadow-xl">
             <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent"></div>
             <div className="relative px-6 py-6 md:py-8">
-              <div className="inline-flex items-center px-3 py-1.5 md:px-4 md:py-2 bg-white/10 backdrop-blur-sm rounded-full text-blue-200 text-xs md:text-sm font-medium mb-3 md:mb-4">
+              <div className="inline-flex items-center px-3 py-1.5 md:px-4 md:py-2 bg-white/10 backdrop-blur-sm rounded-full text-primary-200 text-xs md:text-sm font-medium mb-3 md:mb-4">
                 <ClipboardList className="h-4 w-4 mr-2" />
                 Order Notifications
               </div>
               <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
                 <div>
                   <h1 className="text-2xl md:text-4xl font-bold text-white mb-1 md:mb-2">Orders</h1>
-                  <p className="text-blue-100 text-sm md:text-lg">Tap an order to view full details</p>
+                  <p className="text-primary-100 text-sm md:text-lg">Tap an order to view full details</p>
                 </div>
                 {/* ADD: Status filter */}
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-2 md:p-3 text-black">
@@ -354,13 +354,13 @@ const DriverOrdersPage = () => {
           <div className={`${isMobile ? 'grid grid-cols-1' : 'grid grid-cols-1 lg:grid-cols-3'} gap-4 md:gap-6`}>
             {/* Orders list */}
             <div className="bg-white rounded-2xl shadow-lg border">
-              <div className="px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-gray-50 to-blue-50 border-b">
+              <div className="px-4 md:px-6 py-3 md:py-4 bg-gradient-to-r from-gray-50 to-primary-100 border-b">
                 <h3 className="font-bold text-gray-900 text-base md:text-lg">Orders</h3>
               </div>
               <div className="divide-y max-h-[70vh] overflow-y-auto">
                 {isLoading ? (
                   <div className="p-6 text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
                   </div>
                 ) : (
                   // APPLY FILTER
@@ -389,7 +389,7 @@ const DriverOrdersPage = () => {
                           }}
                           role="button"
                           tabIndex={0}
-                          className={`w-full text-left px-4 md:px-5 py-4 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${selectedOrder?._id === o._id && !isMobile ? 'bg-blue-50' : ''}`}
+                          className={`w-full text-left px-4 md:px-5 py-4 hover:bg-gradient-to-r hover:from-primary-100 hover:to-purple-50 transition group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${selectedOrder?._id === o._id && !isMobile ? 'bg-primary-100' : ''}`}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0 space-y-1">
@@ -419,7 +419,7 @@ const DriverOrdersPage = () => {
                                     handleAcceptOrder(o);
                                   }}
                                   disabled={isAccepting}
-                                  className="mt-2 inline-flex items-center justify-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                                  className="mt-2 inline-flex items-center justify-center bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-900 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
                                   {isAccepting ? "Accepting..." : "Accept Order"}
                                 </button>
@@ -440,38 +440,38 @@ const DriverOrdersPage = () => {
               <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg border overflow-hidden">
                 {selectedOrder ? (
                   <>
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 flex items-center justify-between">
+                    <div className="bg-gradient-to-r from-brand to-primary-700 text-white px-6 py-4 flex items-center justify-between">
                       <div>
                         <h3 className="text-lg font-bold">Order Details</h3>
-                        <p className="text-blue-100 text-sm">Order #{selectedOrder._id.slice(-8)}</p>
+                        <p className="text-primary-100 text-sm">Order #{selectedOrder._id.slice(-8)}</p>
                       </div>
                     </div>
                     <div className="p-6 space-y-6">
                       {/* Customer Info & Order Info */}
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200">
+                        <div className="bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl p-6 border border-primary-200">
                           <div className="flex items-center mb-4">
-                            <div className="bg-blue-500 p-3 rounded-xl mr-3 shadow-lg">
+                            <div className="bg-brand p-3 rounded-xl mr-3 shadow-lg">
                               <Users className="h-5 w-5 text-white" />
                             </div>
-                            <h4 className="font-bold text-blue-900 text-lg">Customer Information</h4>
+                            <h4 className="font-bold text-primary-900 text-lg">Customer Information</h4>
                           </div>
                           <div className="space-y-3">
                             <div className="flex items-center space-x-3">
-                              <Users className="h-4 w-4 text-blue-600" />
-                              <span className="text-blue-700 text-sm font-medium">Name:</span>
-                              <span className="font-bold text-blue-900">{selectedOrder.customer?.name}</span>
+                              <Users className="h-4 w-4 text-primary-700" />
+                              <span className="text-primary-700 text-sm font-medium">Name:</span>
+                              <span className="font-bold text-primary-900">{selectedOrder.customer?.name}</span>
                             </div>
                             <div className="flex items-center space-x-3">
-                              <Mail className="h-4 w-4 text-blue-600" />
-                              <span className="text-blue-700 text-sm font-medium">Email:</span>
-                              <span className="text-blue-800">{selectedOrder.customer?.email}</span>
+                              <Mail className="h-4 w-4 text-primary-700" />
+                              <span className="text-primary-700 text-sm font-medium">Email:</span>
+                              <span className="text-primary-800">{selectedOrder.customer?.email}</span>
                             </div>
                             {selectedOrder.customer?.phone && (
                               <div className="flex items-center space-x-3">
-                                <Phone className="h-4 w-4 text-blue-600" />
-                                <span className="text-blue-700 text-sm font-medium">Phone:</span>
-                                <span className="text-blue-800">{selectedOrder.customer?.phone}</span>
+                                <Phone className="h-4 w-4 text-primary-700" />
+                                <span className="text-primary-700 text-sm font-medium">Phone:</span>
+                                <span className="text-primary-800">{selectedOrder.customer?.phone}</span>
                               </div>
                             )}
                           </div>
@@ -514,14 +514,14 @@ const DriverOrdersPage = () => {
                               <button
                                 onClick={() => handleAcceptOrder(selectedOrder)}
                                 disabled={isAccepting}
-                                className="w-full mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                                className="w-full mt-3 bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-900 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                               >
                                 {isAccepting ? "Accepting..." : "Accept Order"}
                               </button>
                             )}
 
                             {isAssignedToOtherDriver && (
-                              <div className="mt-3 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                              <div className="mt-3 text-xs text-primary-700 bg-primary-100 border border-primary-200 rounded-lg px-3 py-2">
                                 Assigned to another driver.
                               </div>
                             )}
@@ -557,13 +557,13 @@ const DriverOrdersPage = () => {
                             </div>
 
                             {canSubmitDelivered && (
-                              <div className="mt-4 p-3 border border-blue-200 rounded-xl bg-blue-50 space-y-3">
-                                <p className="text-xs font-semibold text-blue-700">Delivery Proof (required)</p>
+                              <div className="mt-4 p-3 border border-primary-200 rounded-xl bg-primary-100 space-y-3">
+                                <p className="text-xs font-semibold text-primary-700">Delivery Proof (required)</p>
                                 <input
                                   type="file"
                                   accept="image/*"
                                   onChange={handleDeliveryProofChange}
-                                  className="block w-full text-xs text-blue-800"
+                                  className="block w-full text-xs text-primary-800"
                                 />
                                 {deliveryProofPreview && (
                                   <img
@@ -606,12 +606,12 @@ const DriverOrdersPage = () => {
 
                      {/* ✅ NEW: Delivery Route (replaces Schedule) */}
                      {selectedOrder.customer?.location && user?.location && (
-                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-2xl p-6">
+                       <div className="bg-gradient-to-r from-primary-100 to-primary-200 border-2 border-primary-200 rounded-2xl p-6">
                          <div className="flex items-center mb-4">
-                           <div className="bg-blue-500 p-2 rounded-xl mr-3 shadow-lg">
+                           <div className="bg-brand p-2 rounded-xl mr-3 shadow-lg">
                              <Navigation className="h-5 w-5 text-white" />
                            </div>
-                           <h4 className="font-bold text-blue-800 text-lg">Delivery Route</h4>
+                           <h4 className="font-bold text-primary-800 text-lg">Delivery Route</h4>
                          </div>
                          <RouteMap
                            cafeCoords={user.location}
@@ -657,15 +657,15 @@ const DriverOrdersPage = () => {
                       )}
                       {/* Items */}
                       <div className="bg-white border-2 border-gray-200 rounded-2xl overflow-hidden shadow-lg">
-                        <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 border-b-2 border-gray-200">
+                        <div className="bg-gradient-to-r from-gray-50 to-primary-100 px-6 py-4 border-b-2 border-gray-200">
                           <h4 className="font-bold text-gray-900 text-lg flex items-center">
-                            <ShoppingCart className="h-5 w-5 mr-3 text-blue-600" />
+                            <ShoppingCart className="h-5 w-5 mr-3 text-primary-700" />
                             Items ({selectedOrder.items?.length || 0})
                           </h4>
                         </div>
                         <div className="overflow-x-auto">
                           <table className="min-w-full">
-                            <thead className="bg-gradient-to-r from-gray-50 to-blue-50">
+                            <thead className="bg-gradient-to-r from-gray-50 to-primary-100">
                               <tr>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Item</th>
                                 <th className="px-6 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">Qty</th>
@@ -675,10 +675,10 @@ const DriverOrdersPage = () => {
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-100">
                               {(selectedOrder.items || []).map((item, index) => (
-                                <tr key={index} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
+                                <tr key={index} className={`hover:bg-gradient-to-r hover:from-primary-100 hover:to-purple-50 transition-all duration-300 ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`}>
                                   <td className="px-6 py-4 text-sm font-bold text-gray-900">{item.name}</td>
                                   <td className="px-6 py-4 text-center">
-                                    <span className="bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                                    <span className="bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800 px-3 py-1 rounded-full text-xs font-bold shadow-sm">
                                       {item.quantity}
                                     </span>
                                   </td>
@@ -707,10 +707,10 @@ const DriverOrdersPage = () => {
           <div className="absolute inset-0 bg-black/50" onClick={closeMobileModal} />
           <div className="absolute inset-x-0 bottom-0 top-0 bg-white rounded-t-2xl shadow-2xl flex flex-col overflow-hidden">
             {/* Modal header */}
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-3 flex items-center justify-between sticky top-0">
+            <div className="bg-gradient-to-r from-brand to-primary-700 text-white px-4 py-3 flex items-center justify-between sticky top-0">
               <div>
                 <h3 className="text-base font-bold">Order #{selectedOrder._id.slice(-8)}</h3>
-                <p className="text-blue-100 text-xs">{formatDate(selectedOrder.createdAt)}</p>
+                <p className="text-primary-100 text-xs">{formatDate(selectedOrder.createdAt)}</p>
               </div>
               <button
                 onClick={closeMobileModal}
@@ -723,29 +723,29 @@ const DriverOrdersPage = () => {
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {/* Customer Info */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+              <div className="bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl p-4 border border-primary-200">
                 <div className="flex items-center mb-3">
-                  <div className="bg-blue-500 p-2 rounded-lg mr-3 shadow">
+                  <div className="bg-brand p-2 rounded-lg mr-3 shadow">
                     <Users className="h-4 w-4 text-white" />
                   </div>
-                  <h4 className="font-bold text-blue-900 text-base">Customer</h4>
+                  <h4 className="font-bold text-primary-900 text-base">Customer</h4>
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-blue-600" />
-                    <span className="text-blue-700 font-medium">Name:</span>
-                    <span className="font-semibold text-blue-900">{selectedOrder.customer?.name}</span>
+                    <Users className="h-4 w-4 text-primary-700" />
+                    <span className="text-primary-700 font-medium">Name:</span>
+                    <span className="font-semibold text-primary-900">{selectedOrder.customer?.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-blue-600" />
-                    <span className="text-blue-700 font-medium">Email:</span>
-                    <span className="text-blue-800">{selectedOrder.customer?.email}</span>
+                    <Mail className="h-4 w-4 text-primary-700" />
+                    <span className="text-primary-700 font-medium">Email:</span>
+                    <span className="text-primary-800">{selectedOrder.customer?.email}</span>
                   </div>
                   {selectedOrder.customer?.phone && (
                     <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-blue-600" />
-                      <span className="text-blue-700 font-medium">Phone:</span>
-                      <span className="text-blue-800">{selectedOrder.customer?.phone}</span>
+                      <Phone className="h-4 w-4 text-primary-700" />
+                      <span className="text-primary-700 font-medium">Phone:</span>
+                      <span className="text-primary-800">{selectedOrder.customer?.phone}</span>
                     </div>
                   )}
                 </div>
@@ -782,14 +782,14 @@ const DriverOrdersPage = () => {
                     <button
                       onClick={() => handleAcceptOrder(selectedOrder)}
                       disabled={isAccepting}
-                      className="w-full mt-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="w-full mt-3 bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-900 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {isAccepting ? "Accepting..." : "Accept Order"}
                     </button>
                   )}
 
                   {isAssignedToOtherDriver && (
-                    <div className="mt-3 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                    <div className="mt-3 text-xs text-primary-700 bg-primary-100 border border-primary-200 rounded-lg px-3 py-2">
                       Assigned to another driver.
                     </div>
                   )}
@@ -824,13 +824,13 @@ const DriverOrdersPage = () => {
                   </div>
 
                   {canSubmitDelivered && (
-                    <div className="mt-3 p-3 border border-blue-200 rounded-xl bg-blue-50 space-y-2">
-                      <p className="text-xs font-semibold text-blue-700">Delivery Proof (required)</p>
+                    <div className="mt-3 p-3 border border-primary-200 rounded-xl bg-primary-100 space-y-2">
+                      <p className="text-xs font-semibold text-primary-700">Delivery Proof (required)</p>
                       <input
                         type="file"
                         accept="image/*"
                         onChange={handleDeliveryProofChange}
-                        className="block w-full text-xs text-blue-800"
+                        className="block w-full text-xs text-primary-800"
                       />
                       {deliveryProofPreview && (
                         <img
@@ -872,12 +872,12 @@ const DriverOrdersPage = () => {
 
              {/* ✅ NEW: Delivery Route (mobile) */}
              {selectedOrder.customer?.location && user?.location && (
-               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
+               <div className="bg-gradient-to-r from-primary-100 to-primary-200 border border-primary-200 rounded-xl p-4">
                  <div className="flex items-center mb-3">
-                   <div className="bg-blue-500 p-2 rounded-lg mr-3 shadow">
+                   <div className="bg-brand p-2 rounded-lg mr-3 shadow">
                      <Navigation className="h-4 w-4 text-white" />
                    </div>
-                   <h4 className="font-bold text-blue-800 text-base">Delivery Route</h4>
+                   <h4 className="font-bold text-primary-800 text-base">Delivery Route</h4>
                  </div>
                  <RouteMap
                    cafeCoords={user.location}
@@ -942,9 +942,9 @@ const DriverOrdersPage = () => {
 
               {/* Items */}
               <div className="bg-white border rounded-xl overflow-hidden shadow">
-                <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-4 py-3 border-b">
+                <div className="bg-gradient-to-r from-gray-50 to-primary-100 px-4 py-3 border-b">
                   <h4 className="font-bold text-gray-900 text-base flex items-center">
-                    <ShoppingCart className="h-5 w-5 mr-2 text-blue-600" />
+                    <ShoppingCart className="h-5 w-5 mr-2 text-primary-700" />
                     Items ({selectedOrder.items?.length || 0})
                   </h4>
                 </div>

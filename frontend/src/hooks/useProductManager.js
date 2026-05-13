@@ -60,7 +60,7 @@ export const useProductManager = () => {
         icon: 'error',
         title: 'Error',
         text: 'Failed to load products',
-        confirmButtonColor: '#3085d6',
+        confirmButtonColor: '#F13E93',
       });
     } finally {
       setIsLoading(false);
@@ -107,7 +107,7 @@ export const useProductManager = () => {
         icon: 'error',
         title: 'Save Failed',
         text: error.response?.data?.message || "Failed to save product",
-        confirmButtonColor: '#3085d6',
+        confirmButtonColor: '#F13E93',
       });
     } finally {
       setIsLoading(false);
@@ -154,7 +154,7 @@ export const useProductManager = () => {
         icon: 'error',
         title: 'Update Failed',
         text: error.response?.data?.message || "Failed to update product",
-        confirmButtonColor: '#3085d6',
+        confirmButtonColor: '#F13E93',
       });
     } finally {
       setIsLoading(false);
@@ -167,7 +167,7 @@ export const useProductManager = () => {
         icon: 'warning',
         title: 'No Products Selected',
         text: 'Please select products to update.',
-        confirmButtonColor: '#3085d6',
+        confirmButtonColor: '#F13E93',
       });
       return false;
     }
@@ -198,7 +198,7 @@ export const useProductManager = () => {
           icon: 'warning',
           title: 'Bulk Update Partially Completed',
           text: `${successCount} product(s) updated, ${failed.length} failed.`,
-          confirmButtonColor: '#3085d6',
+          confirmButtonColor: '#F13E93',
         });
         return false;
       }
@@ -217,7 +217,7 @@ export const useProductManager = () => {
         icon: 'error',
         title: 'Bulk Update Failed',
         text: error.response?.data?.message || 'Failed to update selected product quantities.',
-        confirmButtonColor: '#3085d6',
+        confirmButtonColor: '#F13E93',
       });
       return false;
     } finally {
@@ -232,7 +232,7 @@ export const useProductManager = () => {
       html: `Are you sure you want to delete <strong>${productName}</strong>?<br><span class="text-red-600 text-sm">This action cannot be undone!</span>`,
       showCancelButton: true,
       confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
+      cancelButtonColor: '#F13E93',
       confirmButtonText: 'Yes, delete it!',
       cancelButtonText: 'Cancel'
     });
@@ -276,7 +276,7 @@ export const useProductManager = () => {
         icon: 'error',
         title: 'Delete Failed',
         text: 'Failed to delete product',
-        confirmButtonColor: '#3085d6',
+        confirmButtonColor: '#F13E93',
       });
     } finally {
       setIsLoading(false);

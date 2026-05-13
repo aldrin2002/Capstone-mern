@@ -20,7 +20,7 @@ const SearchAndFilter = ({
             </div>
             <input
               type="text"
-              className="pl-12 w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+              className="pl-12 w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
               placeholder="Search products by name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -35,7 +35,7 @@ const SearchAndFilter = ({
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="border-2 border-gray-200 rounded-xl p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+              className="border-2 border-gray-200 rounded-xl p-2 focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
             >
               {categories.map(category => (
                 <option key={category} value={category}>{category}</option>
@@ -49,7 +49,7 @@ const SearchAndFilter = ({
               onClick={() => setViewMode("grid")}
               className={`p-2 rounded-lg transition-all duration-300 ${
                 viewMode === "grid" 
-                  ? "bg-blue-500 text-white shadow-md" 
+                  ? "bg-brand text-white shadow-md" 
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -59,7 +59,7 @@ const SearchAndFilter = ({
               onClick={() => setViewMode("list")}
               className={`p-2 rounded-lg transition-all duration-300 ${
                 viewMode === "list" 
-                  ? "bg-blue-500 text-white shadow-md" 
+                  ? "bg-brand text-white shadow-md" 
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >

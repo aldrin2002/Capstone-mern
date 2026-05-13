@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Home, Info, Image, Coffee, Phone, ShoppingBag, LogOut, Plus, MessageCircle, ShoppingCart } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { useNavigate } from "react-router-dom";
-import logoImage from "../../assets/1.png";
+import logoImage from "../../assets/cafe-delicity-logo.jpg";
 import Swal from "sweetalert2";
 import { useCustomerMessages } from "../../context/CustomerMessageContext";
 
@@ -30,11 +30,11 @@ const CustomerSideNav = () => {
             text: "You will be logged out of your account",
             icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: "#3085d6",
+            confirmButtonColor: "#F13E93",
             cancelButtonColor: "#d33",
             confirmButtonText: "Yes, logout",
             background: "rgba(255, 255, 255, 0.9)",
-            backdrop: `rgba(0, 0, 123, 0.4)`
+            backdrop: `rgba(241, 62, 147, 0.4)`
         }).then((result) => {
             if (result.isConfirmed) {
                 logout();
@@ -119,7 +119,7 @@ const CustomerSideNav = () => {
                     {isExpanded && (
                         <Link 
                             to="/customer-messages"
-                            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform animate-fadeIn hover:scale-110 relative"
+                            className="bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform animate-fadeIn hover:scale-110 relative"
                         >
                             <MessageCircle size={24} />
                             {unreadCount > 0 && (
@@ -146,7 +146,7 @@ const CustomerSideNav = () => {
                     {isExpanded && (
                         <Link 
                             to="/customer-buy"
-                            className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-blue-900 p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform animate-fadeIn hover:scale-110"
+                            className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-gray-900 p-3 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform animate-fadeIn hover:scale-110"
                         >
                             <ShoppingCart size={24} />
                         </Link>
@@ -158,7 +158,7 @@ const CustomerSideNav = () => {
                         className={`p-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform ${
                             isExpanded 
                                 ? "bg-gradient-to-r from-gray-600 to-gray-700 text-white rotate-45 scale-110" 
-                                : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white hover:scale-110"
+                                : "bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white hover:scale-110"
                         }`}
                     >
                         <Plus size={24} />
@@ -167,11 +167,11 @@ const CustomerSideNav = () => {
                 
                 {/* Enhanced Bottom Navigation */}
                 <div 
-                    className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-blue-800 via-blue-900 to-indigo-900 text-white z-40 backdrop-blur-sm border-t border-blue-700/50"
+                    className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-primary-800 via-primary-900 to-primary-900 text-white z-40 backdrop-blur-sm border-t border-primary-700/50"
                     style={{ height: `${MOBILE_NAV_HEIGHT}px` }}
                 >
                     {/* Subtle glow effect */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-blue-600/20 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary-600/20 to-transparent"></div>
                     
                     <div className="relative flex justify-around items-center h-full">
                         {bottomNavItems.map((item) => (
@@ -181,7 +181,7 @@ const CustomerSideNav = () => {
                                 className={`relative flex flex-col items-center justify-center w-full h-full transition-all duration-300 transform ${
                                     isActive(item.path) 
                                         ? "text-amber-400 scale-110" 
-                                        : "text-white hover:text-blue-200 hover:scale-105"
+                                        : "text-white hover:text-primary-200 hover:scale-105"
                                 }`}
                             >
                                 {/* Active indicator */}
@@ -208,9 +208,9 @@ const CustomerSideNav = () => {
 
     // FIXED Desktop sidebar - NO SCROLLING
     return (
-        <aside className="fixed left-0 top-0 w-64 h-screen bg-gradient-to-b from-blue-800 via-blue-900 to-indigo-900 text-white z-20 shadow-2xl">
+        <aside className="fixed left-0 top-0 w-64 h-screen bg-gradient-to-b from-primary-800 via-primary-900 to-primary-900 text-white z-20 shadow-2xl">
             {/* Logo Section - Fixed at top */}
-            <div className="p-6 border-b border-blue-700/50">
+            <div className="p-6 border-b border-primary-700/50">
                 <div className="text-center">
                     <div className="relative mx-auto mb-4 w-16 h-16">
                         <div className="w-full h-full rounded-full overflow-hidden border-2 border-white/20 shadow-lg">
@@ -218,7 +218,7 @@ const CustomerSideNav = () => {
                         </div>
                     </div>
                     <h1 className="text-xl font-bold text-white">CafeX</h1>
-                    <p className="text-blue-200 text-sm">Customer Portal</p>
+                    <p className="text-primary-200 text-sm">Customer Portal</p>
                 </div>
             </div>
 
@@ -232,7 +232,7 @@ const CustomerSideNav = () => {
                             className={`group relative flex items-center text-sm font-medium transition-all duration-200 ${
                                 isActive(item.path) 
                                     ? "text-amber-400 bg-white/10" 
-                                    : "text-white hover:text-blue-200 hover:bg-white/5"
+                                    : "text-white hover:text-primary-200 hover:bg-white/5"
                             } p-3 rounded-lg`}
                         >
                             {/* Active indicator */}
@@ -252,7 +252,7 @@ const CustomerSideNav = () => {
                 {/* Action Buttons */}
                 <div className="mt-6 space-y-3">
                     <Link to="/customer-buy" className="block w-full">
-                        <button className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-blue-900 font-bold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center">
+                        <button className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-gray-900 font-bold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center">
                             <ShoppingBag className="mr-2" size={18} />
                             <span>BUY NOW</span>
                         </button>
@@ -269,12 +269,12 @@ const CustomerSideNav = () => {
             </div>
 
             {/* Footer - Fixed at bottom */}
-            <div className="p-4 border-t border-blue-700/50 bg-blue-900/50">
+            <div className="p-4 border-t border-primary-700/50 bg-primary-900/50">
                 <div className="bg-white/5 rounded-lg p-3">
                     {contactInfo ? (
-                        <div className="space-y-1 text-xs text-blue-200">
+                        <div className="space-y-1 text-xs text-primary-200">
                             <div className="flex items-start">
-                                <div className="w-1 h-1 bg-blue-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
+                                <div className="w-1 h-1 bg-primary-400 rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
                                 <p className="leading-tight">{contactInfo.address}</p>
                             </div>
                             <div className="flex items-center">
@@ -287,8 +287,8 @@ const CustomerSideNav = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="flex items-center text-xs text-blue-200">
-                            <div className="animate-spin rounded-full h-3 w-3 border-b border-blue-400 mr-2"></div>
+                        <div className="flex items-center text-xs text-primary-200">
+                            <div className="animate-spin rounded-full h-3 w-3 border-b border-primary-400 mr-2"></div>
                             <p>Loading...</p>
                         </div>
                     )}

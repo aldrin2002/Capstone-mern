@@ -20,10 +20,10 @@ const MessagesList = forwardRef(({
       <div className="flex justify-center items-center h-full">
         <div className="flex flex-col items-center space-y-4">
           <div className="relative">
-            <Loader className="h-8 w-8 text-blue-500 animate-spin" />
+            <Loader className="h-8 w-8 text-brand animate-spin" />
             <div className="absolute inset-0 h-8 w-8 border-4 border-purple-500/30 rounded-full animate-ping"></div>
           </div>
-          <p className="text-sm font-medium bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <p className="text-sm font-medium bg-gradient-to-r from-brand to-purple-600 bg-clip-text text-transparent">
             Loading messages...
           </p>
         </div>
@@ -34,14 +34,14 @@ const MessagesList = forwardRef(({
   if (messages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-gray-500">
-        <div className="p-6 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-full mb-6 shadow-xl backdrop-blur-sm transform hover:scale-110 transition-all duration-500">
-          <Send className="h-12 w-12 text-blue-400 animate-pulse" />
+        <div className="p-6 bg-gradient-to-br from-primary-100/50 to-purple-100/50 rounded-full mb-6 shadow-xl backdrop-blur-sm transform hover:scale-110 transition-all duration-500">
+          <Send className="h-12 w-12 text-brand animate-pulse" />
         </div>
-        <h3 className="text-xl font-bold bg-gradient-to-r from-gray-600 to-blue-600 bg-clip-text text-transparent mb-2">
+        <h3 className="text-xl font-bold bg-gradient-to-r from-gray-600 to-brand bg-clip-text text-transparent mb-2">
           No messages yet
         </h3>
         <p className="text-gray-400 text-center">Start the conversation and see your messages here!</p>
-        <div className="mt-4 flex items-center space-x-2 text-blue-400">
+        <div className="mt-4 flex items-center space-x-2 text-brand">
           <Sparkles className="h-4 w-4 animate-pulse" />
           <span className="text-sm font-medium">Begin chatting</span>
           <Sparkles className="h-4 w-4 animate-pulse delay-1000" />
@@ -66,7 +66,7 @@ const MessagesList = forwardRef(({
             {/* Enhanced date divider */}
             <div className="flex justify-center my-4">
               <div className="relative">
-                <span className="px-4 py-1 bg-gradient-to-r from-blue-100/80 to-purple-100/80 backdrop-blur-sm rounded-full text-xs text-gray-600 font-semibold border border-white/50 shadow-md">
+                <span className="px-4 py-1 bg-gradient-to-r from-primary-100/80 to-purple-100/80 backdrop-blur-sm rounded-full text-xs text-gray-600 font-semibold border border-white/50 shadow-md">
                   {formatDate(date)}
                 </span>
               </div>
@@ -119,7 +119,7 @@ const MessagesList = forwardRef(({
                   
                   {/* Admin avatar (only show for first message in group) */}
                   {isAdmin && (
-                    <div className="h-8 w-8 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center">
+                    <div className="h-8 w-8 rounded-full bg-brand flex-shrink-0 flex items-center justify-center">
                       <User size={16} className="text-white" />
                     </div>
                   )}
@@ -160,12 +160,12 @@ const MessagesList = forwardRef(({
         }
         
         .overflow-y-auto::-webkit-scrollbar-thumb {
-          background: rgba(59, 130, 246, 0.3);
+          background: rgba(241, 62, 147, 0.3);
           border-radius: 3px;
         }
         
         .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-          background: rgba(59, 130, 246, 0.5);
+          background: rgba(241, 62, 147, 0.5);
         }
       `}</style>
     </div>

@@ -279,9 +279,9 @@ const PaymentModal = ({
         text: "Your order has been successfully placed.",
         icon: "success",
         confirmButtonText: "View Orders",
-        confirmButtonColor: "#3B82F6",
+        confirmButtonColor: "#F13E93",
         background: "rgba(255, 255, 255, 0.9)",
-        backdrop: `rgba(59, 130, 246, 0.4)`
+        backdrop: `rgba(241, 62, 147, 0.4)`
       }).then((result) => {
         if (result.isConfirmed) {
           navigate("/customer-orders");
@@ -344,15 +344,15 @@ const PaymentModal = ({
 
           {/* ✅ NEW: Delivery Info Card */}
           {deliveryCoordinates && deliverySettings && (
-            <div className="mb-4 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-4">
-              <h3 className="font-bold text-blue-900 mb-2 flex items-center">
+            <div className="mb-4 bg-gradient-to-br from-primary-100 to-primary-200 border-2 border-primary-200 rounded-xl p-4">
+              <h3 className="font-bold text-primary-900 mb-2 flex items-center">
                 <Truck className="h-5 w-5 mr-2" />
                 Delivery Information
               </h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-blue-700">Distance:</span>
-                  <span className="font-bold text-blue-900">{deliveryDistance.toFixed(2)} km</span>
+                  <span className="text-primary-700">Distance:</span>
+                  <span className="font-bold text-primary-900">{deliveryDistance.toFixed(2)} km</span>
                 </div>
                 {deliveryFee === 0 ? (
                   <div className="bg-green-100 border border-green-300 rounded-lg p-2 text-center">
@@ -364,12 +364,12 @@ const PaymentModal = ({
                 ) : (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-blue-700">Base Rate:</span>
-                      <span className="text-blue-900">₱{deliverySettings.baseRate.toFixed(2)}</span>
+                      <span className="text-primary-700">Base Rate:</span>
+                      <span className="text-primary-900">₱{deliverySettings.baseRate.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-blue-700">Distance Charge:</span>
-                      <span className="text-blue-900">
+                      <span className="text-primary-700">Distance Charge:</span>
+                      <span className="text-primary-900">
                         ₱{(deliveryDistance * deliverySettings.perKmRate).toFixed(2)}
                       </span>
                     </div>
@@ -392,7 +392,7 @@ const PaymentModal = ({
             <textarea
               value={deliveryAddress}
               onChange={(e) => setDeliveryAddress(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand text-sm md:text-base"
               rows="2"
               placeholder="Enter your complete delivery address"
               required
@@ -400,15 +400,15 @@ const PaymentModal = ({
           </div>
 
           {/* GCash Payment Section */}
-          <div className="border rounded-md p-3 md:p-4 mb-3 md:mb-4 bg-blue-50">
+          <div className="border rounded-md p-3 md:p-4 mb-3 md:mb-4 bg-primary-100">
             <div className="flex items-center mb-3">
-              <CreditCard className="w-5 h-5 text-blue-600 mr-2" />
-              <h3 className="font-medium text-blue-900 text-sm md:text-base">GCash Payment</h3>
+              <CreditCard className="w-5 h-5 text-brand mr-2" />
+              <h3 className="font-medium text-primary-900 text-sm md:text-base">GCash Payment</h3>
             </div>
             
             <p className="text-xs md:text-sm text-gray-600 mb-3">
               Please send your payment to: <br />
-              <span className="font-medium text-blue-900">0912 345 6789</span> (CafeX Official)
+              <span className="font-medium text-primary-900">0912 345 6789</span> (CafeX Official)
             </p>
 
             <div className="mb-3">
@@ -419,7 +419,7 @@ const PaymentModal = ({
                 type="text"
                 value={gcashReference}
                 onChange={(e) => setGcashReference(e.target.value)}
-                className="w-full px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-2 md:px-3 py-1 md:py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand text-sm"
                 placeholder="Enter GCash reference number"
                 required
               />
@@ -498,7 +498,7 @@ const PaymentModal = ({
           <button
             onClick={submitOrder}
             disabled={isProcessingOrder || isCalculatingFee || !deliveryCoordinates}
-            className="w-full bg-blue-600 text-white py-2 md:py-3 rounded-md font-semibold hover:bg-blue-700 flex items-center justify-center text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-brand text-white py-2 md:py-3 rounded-md font-semibold hover:bg-primary-700 flex items-center justify-center text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isProcessingOrder ? (
               <>

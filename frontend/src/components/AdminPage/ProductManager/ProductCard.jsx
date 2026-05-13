@@ -25,7 +25,7 @@ const ProductCard = ({
     <div
       className={`bg-white rounded-2xl shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${
         viewMode === "list" ? "flex items-center p-4" : ""
-      } ${bulkMode && isSelected ? "ring-2 ring-blue-400" : ""}`}
+      } ${bulkMode && isSelected ? "ring-2 ring-brand" : ""}`}
     >
       <div className={`${viewMode === "list" ? "w-24 h-24 flex-shrink-0 mr-4" : "h-48"} bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden ${viewMode === "grid" ? "rounded-t-2xl" : "rounded-xl"}`}>
         {bulkMode && (
@@ -35,7 +35,7 @@ const ProductCard = ({
                 type="checkbox"
                 checked={isSelected}
                 onChange={() => onToggleSelect(product._id)}
-                className="h-4 w-4 accent-blue-600"
+                className="h-4 w-4 accent-brand"
               />
             </label>
           </div>
@@ -47,7 +47,7 @@ const ProductCard = ({
             {!imageLoaded && (
               <div className="w-full h-full flex items-center justify-center bg-gray-100 absolute inset-0 z-10">
                 <div className="flex flex-col items-center space-y-2">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand"></div>
                   <span className="text-xs text-gray-500">Loading image...</span>
                 </div>
               </div>
@@ -78,7 +78,7 @@ const ProductCard = ({
             <div className="flex space-x-3">
               <button
                 onClick={() => onEdit(product)}
-                className="p-3 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transform hover:scale-110 transition-all duration-300"
+                className="p-3 bg-brand hover:bg-primary-700 text-white rounded-full shadow-lg transform hover:scale-110 transition-all duration-300"
                 title="Edit Product"
               >
                 <Edit2 className="h-4 w-4" />
@@ -119,10 +119,10 @@ const ProductCard = ({
 
       <div className={`${viewMode === "list" ? "flex-1" : "p-6"}`}>
         <div className="flex justify-between items-start mb-3">
-          <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300 line-clamp-1">
+          <h3 className="text-lg font-bold text-gray-900 group-hover:text-brand transition-colors duration-300 line-clamp-1">
             {product.name}
           </h3>
-          <span className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-bold rounded-full shadow-lg ml-2 whitespace-nowrap">
+          <span className="px-4 py-2 bg-gradient-to-r from-brand to-primary-700 text-white text-sm font-bold rounded-full shadow-lg ml-2 whitespace-nowrap">
             ₱{product.price.toFixed(2)}
           </span>
         </div>
@@ -140,7 +140,7 @@ const ProductCard = ({
             <div className="flex space-x-2">
               <button
                 onClick={() => onEdit(product)}
-                className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl transition-all duration-300 hover:scale-105"
+                className="p-2 bg-primary-100 hover:bg-primary-200 text-brand rounded-xl transition-all duration-300 hover:scale-105"
                 title="Edit Product"
               >
                 <Edit2 className="h-4 w-4" />

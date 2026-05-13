@@ -10,7 +10,8 @@ const MessageInput = ({
   isSending, 
   attachment,
   onFileChange,
-  isMobile 
+  isMobile,
+  hideAttachmentButton = false
 }) => {
   const fileInputRef = useRef(null);
 
@@ -32,7 +33,7 @@ const MessageInput = ({
         <div className="mb-3 p-3 bg-gray-50 rounded-lg border">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-500 rounded-lg">
+              <div className="p-2 bg-brand rounded-lg">
                 <Image size={16} className="text-white" />
               </div>
               <span className="text-sm font-medium text-gray-700">Image attached</span>
@@ -67,21 +68,25 @@ const MessageInput = ({
           />
           
           {/* File upload button */}
-          <button 
-            type="button" 
-            onClick={() => fileInputRef.current?.click()}
-            className="ml-2 p-2 text-gray-400 hover:text-blue-500 rounded-lg"
-          >
-            <Image size={18} />
-          </button>
-          
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={onFileChange}
-            className="hidden"
-          />
+          {!hideAttachmentButton && (
+            <>
+              <button 
+                type="button" 
+                onClick={() => fileInputRef.current?.click()}
+                className="ml-2 p-2 text-gray-400 hover:text-brand rounded-lg"
+              >
+                <Image size={18} />
+              </button>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={onFileChange}
+                className="hidden"
+              />
+            </>
+          )}
         </div>
 
         {/* Send button */}
@@ -90,7 +95,7 @@ const MessageInput = ({
           className={`p-3 rounded-lg text-white flex items-center justify-center ${
             isSending || (!newMessage.trim() && !attachment)
               ? 'bg-gray-400 cursor-not-allowed' 
-              : 'bg-blue-500 hover:bg-blue-600'
+              : 'bg-brand hover:bg-primary-700'
           }`}
           disabled={isSending || (!newMessage.trim() && !attachment)}
         >

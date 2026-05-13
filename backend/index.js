@@ -23,6 +23,7 @@ import userRoutes from "./routes/user.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import deliverySettingsRoutes from "./routes/deliverySettings.routes.js"; // ✅ ADD THIS
 import visitRoutes from "./routes/visit.routes.js";
+import categoryRoutes from "./routes/category.routes.js";
 
 dotenv.config();
 
@@ -124,6 +125,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/delivery-settings", deliverySettingsRoutes); // ✅ ADD THIS
 app.use("/api/visits", visitRoutes); 
+app.use("/api/categories", categoryRoutes);
 
 // Socket.IO connection handling
 const connectedUsers = new Map();

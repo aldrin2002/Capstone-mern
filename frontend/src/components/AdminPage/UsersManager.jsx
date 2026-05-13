@@ -213,9 +213,9 @@ const UsersManager = () => {
       <div className="p-6 h-full flex justify-center items-center">
         <div className="text-center">
           <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <div className="w-16 h-16 border-4 border-primary-200 border-t-brand rounded-full animate-spin mx-auto"></div>
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="w-8 h-8 bg-blue-600 rounded-full animate-pulse"></div>
+              <div className="w-8 h-8 bg-brand rounded-full animate-pulse"></div>
             </div>
           </div>
           <p className="mt-4 text-gray-600 font-medium">Loading users...</p>
@@ -225,12 +225,12 @@ const UsersManager = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-blue-50 min-h-full pb-28">
+    <div className="p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-primary-100 min-h-full pb-28">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center">
-            <div className="w-2 h-8 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full mr-3"></div>
+            <div className="w-2 h-8 bg-gradient-to-b from-brand to-primary-700 rounded-full mr-3"></div>
             Users Management
           </h2>
           <p className="text-gray-600 mt-1">Manage and monitor user accounts</p>
@@ -243,12 +243,12 @@ const UsersManager = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Total Users</p>
-              <p className="text-2xl md:text-3xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 group-hover:text-brand transition-colors">
                 {stats.total}
               </p>
             </div>
-            <div className="p-3 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition-colors">
-              <Users className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-primary-100 rounded-xl group-hover:bg-primary-200 transition-colors">
+              <Users className="w-6 h-6 text-brand" />
             </div>
           </div>
         </div>
@@ -286,12 +286,12 @@ const UsersManager = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500">Drivers</p>
-              <p className="text-2xl md:text-3xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+              <p className="text-2xl md:text-3xl font-bold text-gray-900 group-hover:text-brand transition-colors">
                 {stats.drivers}
               </p>
             </div>
-            <div className="p-3 bg-blue-50 rounded-xl group-hover:bg-blue-100 transition-colors">
-              <Truck className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-primary-100 rounded-xl group-hover:bg-primary-200 transition-colors">
+              <Truck className="w-6 h-6 text-brand" />
             </div>
           </div>
         </div>
@@ -321,7 +321,7 @@ const UsersManager = () => {
           </div>
           <input
             type="text"
-            className="pl-12 w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+            className="pl-12 w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
             placeholder="Search users by name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -379,17 +379,17 @@ const UsersManager = () => {
                   {filteredUsers.map((user, index) => (
                     <tr
                       key={user._id}
-                      className={`group hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-300 ${
+                      className={`group hover:bg-gradient-to-r hover:from-primary-100 hover:to-purple-50 transition-all duration-300 ${
                         index % 2 === 0 ? "bg-gray-50" : "bg-white"
                       }`}
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-4">
-                          <div className="h-12 w-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <div className="h-12 w-12 bg-gradient-to-br from-primary-400 to-primary-700 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                             <User className="h-6 w-6 text-white" />
                           </div>
                           <div>
-                            <div className="text-sm font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
+                            <div className="text-sm font-bold text-gray-900 group-hover:text-brand transition-colors">
                               {user.name}
                             </div>
                             <div className="text-xs text-gray-500">
@@ -423,7 +423,7 @@ const UsersManager = () => {
                             user.role === "admin"
                               ? "bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 group-hover:from-purple-200 group-hover:to-purple-300"
                               : user.role === "driver"
-                              ? "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 group-hover:from-blue-200 group-hover:to-blue-300"
+                              ? "bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800 group-hover:from-primary-200 group-hover:to-primary-300"
                               : "bg-gradient-to-r from-green-100 to-green-200 text-green-800 group-hover:from-green-200 group-hover:to-green-300"
                           }`}
                         >
@@ -437,7 +437,7 @@ const UsersManager = () => {
                       <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => getUserDetails(user._id)}
-                          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-xl inline-flex items-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                          className="bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-4 py-2 rounded-xl inline-flex items-center space-x-2 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                         >
                           <Eye className="h-4 w-4" />
                           <span className="font-medium">View</span>
@@ -459,7 +459,7 @@ const UsersManager = () => {
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-3">
-                    <div className="h-12 w-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
+                    <div className="h-12 w-12 bg-gradient-to-br from-primary-400 to-primary-700 rounded-full flex items-center justify-center">
                       <User className="h-6 w-6 text-white" />
                     </div>
                     <div>
@@ -474,7 +474,7 @@ const UsersManager = () => {
                       user.role === "admin"
                         ? "bg-purple-100 text-purple-800"
                         : user.role === "driver"
-                        ? "bg-blue-100 text-blue-800"
+                        ? "bg-primary-100 text-primary-800"
                         : "bg-green-100 text-green-800"
                     }`}
                   >
@@ -503,7 +503,7 @@ const UsersManager = () => {
 
                 <button
                   onClick={() => getUserDetails(user._id)}
-                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-2 rounded-xl flex items-center justify-center space-x-2 transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-brand to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white py-2 rounded-xl flex items-center justify-center space-x-2 transition-all duration-300"
                 >
                   <Eye className="h-4 w-4" />
                   <span className="font-medium">View Details</span>
@@ -518,7 +518,7 @@ const UsersManager = () => {
       {selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white rounded-t-2xl">
+            <div className="bg-gradient-to-r from-brand to-primary-700 p-6 text-white rounded-t-2xl">
               <div className="flex justify-between items-center">
                 <h3 className="text-xl font-bold">User Profile</h3>
                 <button
@@ -532,7 +532,7 @@ const UsersManager = () => {
 
             <div className="p-6">
               <div className="flex justify-center mb-6">
-                <div className="h-24 w-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                <div className="h-24 w-24 bg-gradient-to-br from-primary-400 to-primary-700 rounded-full flex items-center justify-center shadow-lg">
                   <User className="h-12 w-12 text-white" />
                 </div>
               </div>
@@ -547,7 +547,7 @@ const UsersManager = () => {
                       selectedUser.role === "admin"
                         ? "bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800"
                         : selectedUser.role === "driver"
-                        ? "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800"
+                        ? "bg-gradient-to-r from-primary-100 to-primary-200 text-primary-800"
                         : "bg-gradient-to-r from-green-100 to-green-200 text-green-800"
                     }`}
                   >
@@ -563,7 +563,7 @@ const UsersManager = () => {
               <div className="space-y-4">
                 <div className="bg-gray-50 rounded-xl p-4">
                   <div className="flex items-center space-x-3 mb-2">
-                    <Mail className="h-5 w-5 text-blue-600" />
+                    <Mail className="h-5 w-5 text-brand" />
                     <p className="text-sm font-medium text-gray-500">Email</p>
                   </div>
                   <p className="font-semibold text-gray-900 break-all ml-8">

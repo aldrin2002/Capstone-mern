@@ -48,12 +48,12 @@ const ProductsSection = ({
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-10 space-y-6 lg:space-y-0">
         <div className="space-y-3">
           <div className="flex items-center space-x-3">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg">
+            <div className="p-3 bg-gradient-to-br from-brand to-primary-700 rounded-2xl shadow-lg">
               <div className="text-white">
                 {getCategoryIcon(activeCategory)}
               </div>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent">
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 to-brand bg-clip-text text-transparent">
               {activeCategory}
             </h2>
           </div>
@@ -79,18 +79,18 @@ const ProductsSection = ({
         <div className="flex justify-center items-center h-96">
           <div className="text-center">
             <div className="relative mb-8">
-              <div className="w-20 h-20 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto shadow-lg"></div>
+              <div className="w-20 h-20 border-4 border-primary-200 border-t-brand rounded-full animate-spin mx-auto shadow-lg"></div>
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <ShoppingCart className="h-8 w-8 text-blue-600 animate-pulse" />
+                <ShoppingCart className="h-8 w-8 text-brand animate-pulse" />
               </div>
               <div className="absolute inset-0 w-20 h-20 border-2 border-purple-300 rounded-full animate-ping mx-auto opacity-30"></div>
             </div>
             <h3 className="text-2xl font-bold text-gray-800 mb-3">Loading Products</h3>
             <p className="text-gray-600 text-lg">Preparing delicious items...</p>
             <div className="flex justify-center space-x-1 mt-4">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-100"></div>
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-200"></div>
+              <div className="w-2 h-2 bg-brand rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-brand rounded-full animate-bounce delay-100"></div>
+              <div className="w-2 h-2 bg-brand rounded-full animate-bounce delay-200"></div>
             </div>
           </div>
         </div>
@@ -101,7 +101,7 @@ const ProductsSection = ({
               <div className="w-32 h-32 bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto shadow-2xl border-4 border-white">
                 <ShoppingCart className="h-14 w-14 text-gray-400" />
               </div>
-              <div className="absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center shadow-xl animate-bounce-gentle">
+              <div className="absolute -top-4 -right-4 w-12 h-12 bg-gradient-to-br from-brand to-purple-500 rounded-full flex items-center justify-center shadow-xl animate-bounce-gentle">
                 <Coffee size={24} className="text-white" />
               </div>
               <div className="absolute -bottom-2 -left-2 w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
@@ -109,7 +109,7 @@ const ProductsSection = ({
               </div>
             </div>
             
-            <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent mb-6">No Products Available</h3>
+            <h3 className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-brand bg-clip-text text-transparent mb-6">No Products Available</h3>
             <p className="text-gray-600 leading-relaxed text-lg">
               No products available in the {activeCategory} category at the moment. Try exploring other categories!
             </p>

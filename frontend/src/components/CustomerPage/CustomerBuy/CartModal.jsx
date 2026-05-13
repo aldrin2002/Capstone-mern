@@ -16,7 +16,7 @@ const CartModal = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 md:p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm md:max-w-md max-h-[90vh] overflow-hidden mx-2 md:mx-0">
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 md:p-6 relative">
+        <div className="bg-gradient-to-r from-brand to-primary-700 text-white p-4 md:p-6 relative">
           <button 
             onClick={() => setShowCartModal(false)}
             className="absolute top-3 md:top-4 right-3 md:right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1.5 md:p-2 transition-all duration-200"
@@ -27,7 +27,7 @@ const CartModal = ({
             <ShoppingBag className="w-5 h-5 md:w-6 md:h-6 mr-2 md:mr-3" />
             <h2 className="text-lg md:text-xl font-bold">Your Cart</h2>
           </div>
-          <p className="text-blue-100 text-xs md:text-sm mt-1">
+          <p className="text-primary-100 text-xs md:text-sm mt-1">
             {cart.length === 0 ? "No items yet" : `${cart.reduce((total, item) => total + item.quantity, 0)} items`}
           </p>
         </div>
@@ -74,7 +74,7 @@ const CartModal = ({
                       {/* Item Details */}
                       <div className="flex-1 min-w-0 mr-2">
                         <h3 className="font-semibold text-gray-900 truncate text-sm md:text-base">{item.name}</h3>
-                        <p className="text-blue-600 font-bold text-sm md:text-base">₱{item.price.toFixed(2)}</p>
+                        <p className="text-brand font-bold text-sm md:text-base">₱{item.price.toFixed(2)}</p>
                       </div>
                       
                       {/* Quantity Controls */}
@@ -115,7 +115,7 @@ const CartModal = ({
                 {/* ✅ FIXED: Show TBD instead of hardcoded ₱50.00 */}
                 <div className="flex justify-between items-center mb-3 md:mb-4">
                   <span className="text-gray-600 text-sm md:text-base">Delivery Fee:</span>
-                  <span className="font-semibold text-sm md:text-base text-blue-600">
+                  <span className="font-semibold text-sm md:text-base text-brand">
                     To be calculated
                   </span>
                 </div>
@@ -123,14 +123,14 @@ const CartModal = ({
                 {/* ✅ FIXED: Remove total calculation here */}
                 <div className="flex justify-between items-center mb-4 md:mb-6 text-base md:text-lg font-bold border-t pt-2">
                   <span>Estimated Total:</span>
-                  <span className="text-blue-600">₱{cartTotal.toFixed(2)} + delivery</span>
+                  <span className="text-brand">₱{cartTotal.toFixed(2)} + delivery</span>
                 </div>
                 
                 {/* Action Buttons */}
                 <div className="space-y-2 md:space-y-3">
                   <button 
                     onClick={openPaymentModal}
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2.5 md:py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105 text-sm md:text-base"
+                    className="w-full bg-gradient-to-r from-brand to-primary-700 text-white py-2.5 md:py-3 rounded-xl font-semibold hover:from-primary-700 hover:to-primary-800 transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105 text-sm md:text-base"
                   >
                     <Check className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                     Proceed to Checkout

@@ -299,7 +299,7 @@ const CustomerMessage = () => {
   }, [socket, activeOrderConversation, API_URL]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-primary-100 to-primary-200">
       {/* Invisible button to help initialize audio immediately */}
       <button 
         className="sr-only"
@@ -336,8 +336,8 @@ const CustomerMessage = () => {
               onClick={() => switchThread("admin")}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 ${
                 selectedThreadType === "admin"
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
+                  ? "bg-brand text-white border-brand"
+                  : "bg-primary-100 text-primary-800 border-primary-200 hover:bg-primary-200"
               }`}
             >
               Store Owner
@@ -365,12 +365,12 @@ const CustomerMessage = () => {
               const extraCount = Math.max(0, (order.items?.length || 0) - 1);
               const productLabel = extraCount > 0 ? `${firstName} +${extraCount} more` : firstName;
               const imageSrc = summaryProduct?.image ||
-                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect width="80" height="80" fill="%23eef2ff"/><path d="M10 60 L30 40 L45 55 L60 35 L70 60 Z" fill="%2393c5fd"/><circle cx="28" cy="28" r="8" fill="%2373a6f5"/></svg>';
+                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect width="80" height="80" fill="%23FFE4F3"/><path d="M10 60 L30 40 L45 55 L60 35 L70 60 Z" fill="%23FF8CD9"/><circle cx="28" cy="28" r="8" fill="%23FF34BF"/></svg>';
               const statusColorMap = {
                 Pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-                'Preparing Food': 'bg-indigo-100 text-indigo-800 border-indigo-300',
+                'Preparing Food': 'bg-primary-100 text-primary-800 border-primary-300',
                 'Ready for Delivery': 'bg-cyan-100 text-cyan-800 border-cyan-300',
-                Processing: 'bg-blue-100 text-blue-800 border-blue-300',
+                Processing: 'bg-primary-100 text-primary-800 border-primary-300',
                 Delivered: 'bg-purple-100 text-purple-800 border-purple-300',
                 Completed: 'bg-green-100 text-green-800 border-green-300',
                 Cancelled: 'bg-red-100 text-red-800 border-red-300'
@@ -382,14 +382,14 @@ const CustomerMessage = () => {
                     <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shadow-sm">
                       <img src={imageSrc} alt={firstName} className="w-full h-full object-cover" />
                     </div>
-                    <span className="absolute -bottom-2 left-1 text-[10px] px-2 py-0.5 rounded-full bg-blue-600 text-white shadow select-none">{itemsCount} item{itemsCount!==1?'s':''}</span>
+                    <span className="absolute -bottom-2 left-1 text-[10px] px-2 py-0.5 rounded-full bg-brand text-white shadow select-none">{itemsCount} item{itemsCount!==1?'s':''}</span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
                       <div className="text-[11px] font-semibold tracking-wide text-gray-600 uppercase">Order Details</div>
                       <button
                         onClick={() => navigate('/customer-orders')}
-                        className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 transition"
+                        className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-md bg-gradient-to-r from-brand to-primary-700 text-white shadow hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-1 transition"
                         aria-label="View all orders"
                       >
                         <span>View Orders</span>

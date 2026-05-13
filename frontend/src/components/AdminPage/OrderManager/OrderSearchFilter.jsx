@@ -18,7 +18,7 @@ const OrderSearchFilter = ({
           <input
             type="text"
             placeholder="Search by order ID or customer name..."
-            className="pl-12 w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+            className="pl-12 w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -29,7 +29,7 @@ const OrderSearchFilter = ({
             <Filter className="h-5 w-5 text-gray-400" />
           </div>
           <select 
-            className="pl-12 w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
+            className="pl-12 w-full border-2 border-gray-200 rounded-xl p-3 focus:ring-2 focus:ring-brand focus:border-brand transition-all duration-300"
             value={statusFilter}
             onChange={handleStatusFilterChange}
           >
