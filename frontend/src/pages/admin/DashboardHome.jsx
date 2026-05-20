@@ -425,11 +425,11 @@ const DashboardHome = ({ user, setActiveComponent }) => {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-primary-100 min-h-full">
+    <div className="p-3 sm:p-4 md:p-6 space-y-6 bg-gradient-to-br from-gray-50 to-primary-100 min-h-full">
       {/* Header */}
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-brand to-primary-700 p-6 text-white flex items-center space-x-4">
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+        <div className="bg-gradient-to-r from-brand to-primary-700 p-4 sm:p-6 text-white flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center shrink-0">
             <Users className="w-8 h-8" />
           </div>
           <div>
@@ -437,15 +437,15 @@ const DashboardHome = ({ user, setActiveComponent }) => {
             <p className="text-primary-100 text-lg">{user.name}</p>
           </div>
         </div>
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
 
           {/* Controls */}
-          <div className="flex flex-wrap gap-3 items-center">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:items-center">
             {timeframeOptions.map(t => (
               <button
                 key={t.key}
                 onClick={() => { setTimeframe(t.key); setStartDate(""); setEndDate(""); }}
-                className={`px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+                className={`w-full sm:w-auto px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
                   timeframe === t.key && !startDate && !endDate
                     ? "bg-brand text-white shadow-md"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -456,25 +456,25 @@ const DashboardHome = ({ user, setActiveComponent }) => {
             ))}
 
             {/* Modern minimalist date range picker */}
-            <div className="group flex items-center gap-3 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl px-3 py-2 shadow-sm hover:shadow transition">
+            <div className="group w-full sm:w-auto flex flex-col sm:flex-row sm:items-center gap-3 bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl px-3 py-2 shadow-sm hover:shadow transition">
               <Calendar className="w-4 h-4 text-brand" />
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                 <div className="relative">
                   <input
                     type="date"
                     value={startDate}
                     onChange={e => setStartDate(e.target.value)}
-                    className="peer appearance-none bg-transparent px-2 py-1 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:bg-white border border-gray-200 hover:border-gray-300 transition"
+                    className="peer w-full appearance-none bg-transparent px-2 py-1 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:bg-white border border-gray-200 hover:border-gray-300 transition"
                   />
                   <label className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 rounded opacity-0 peer-focus:opacity-100 peer-valid:opacity-100 transition">Start</label>
                 </div>
-                <span className="text-gray-400 text-xs">→</span>
+                <span className="text-gray-400 text-xs hidden sm:inline">→</span>
                 <div className="relative">
                   <input
                     type="date"
                     value={endDate}
                     onChange={e => setEndDate(e.target.value)}
-                    className="peer appearance-none bg-transparent px-2 py-1 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:bg-white border border-gray-200 hover:border-gray-300 transition"
+                    className="peer w-full appearance-none bg-transparent px-2 py-1 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:bg-white border border-gray-200 hover:border-gray-300 transition"
                   />
                   <label className="absolute -top-2 left-2 bg-white px-1 text-[10px] text-gray-500 rounded opacity-0 peer-focus:opacity-100 peer-valid:opacity-100 transition">End</label>
                 </div>
@@ -483,7 +483,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                 <button
                   type="button"
                   onClick={() => { setStartDate(""); setEndDate(""); }}
-                  className="ml-1 inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 hover:bg-red-500 hover:text-white text-gray-500 transition"
+                  className="sm:ml-1 inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 hover:bg-red-500 hover:text-white text-gray-500 transition"
                   title="Clear range"
                 >
                   <X className="w-3 h-3" />
@@ -492,7 +492,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
               <button
                 onClick={() => generateReport()}
                 disabled={!startDate || !endDate}
-                className="ml-1 px-3 py-1.5 rounded-md text-xs font-medium bg-brand text-white disabled:opacity-40 hover:bg-primary-700 transition"
+                className="sm:ml-1 w-full sm:w-auto px-3 py-1.5 rounded-md text-xs font-medium bg-brand text-white disabled:opacity-40 hover:bg-primary-700 transition"
               >
                 Apply
               </button>
@@ -501,7 +501,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
             <button
               onClick={downloadCSV}
               disabled={!report}
-              className="flex items-center space-x-2 px-5 py-2.5 rounded-full text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-all disabled:opacity-50"
+              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 rounded-full text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-all disabled:opacity-50"
             >
               <Download className="w-4 h-4" />
               <span>Export CSV</span>
@@ -510,7 +510,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
 
           {/* KPI Cards */}
             {report && (
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                 <KpiCard label="Total Orders" value={report.totalOrders} color="primary" icon={<ShoppingCart className="w-5 h-5" />} />
                 <KpiCard label="Successful" value={(report.statusCounts.Completed||0)+(report.statusCounts.Delivered||0)} color="green" icon={<CheckIcon />} />
                 <KpiCard label="Cancelled" value={report.statusCounts.Cancelled||0} color="red" icon={<CancelIcon />} />
@@ -521,9 +521,9 @@ const DashboardHome = ({ user, setActiveComponent }) => {
 
           {/* Most Popular Product */}
           {report?.mostPopular && (
-            <div className="bg-gradient-to-r from-primary-100 to-primary-200 border rounded-2xl p-5 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-primary-100 to-primary-200 border rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center space-x-4">
-                <div className="w-14 h-14 rounded-xl bg-brand text-white flex items-center justify-center shadow">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-brand text-white flex items-center justify-center shadow shrink-0">
                   <Award className="w-7 h-7" />
                 </div>
                 <div>
@@ -534,7 +534,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                   </p>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <p className="text-xs text-gray-500">Date Range</p>
                 <p className="text-sm font-medium text-gray-800">
                   {report?.range?.start ? formatDate(report.range.start) : "--"} – {report?.range?.end ? formatDate(report.range.end) : "--"}
@@ -547,7 +547,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
           {report && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Top Products Bar (moved to top, full width) */}
-              <div className="bg-white rounded-2xl shadow-md border p-5 lg:col-span-3 h-80">
+              <div className="bg-white rounded-2xl shadow-md border p-4 sm:p-5 lg:col-span-3 h-72 sm:h-80">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center">
                   <Package className="w-5 h-5 mr-2 text-brand" />Top Products (Quantity)
                 </h3>
@@ -555,7 +555,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
               </div>
 
               {/* Sales Trend (moved below) */}
-              <div className="bg-white rounded-2xl shadow-md border p-5 lg:col-span-2 h-80">
+              <div className="bg-white rounded-2xl shadow-md border p-4 sm:p-5 lg:col-span-2 h-72 sm:h-80">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-bold text-gray-800 flex items-center">
                     <TrendingUp className="w-5 h-5 mr-2 text-green-600" />
@@ -569,7 +569,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
               </div>
 
               {/* Order Status Pie (moved below) */}
-              <div className="bg-white rounded-2xl shadow-md border p-5 h-80">
+              <div className="bg-white rounded-2xl shadow-md border p-4 sm:p-5 h-72 sm:h-80">
                 <h3 className="font-bold text-gray-800 mb-3 flex items-center">
                   <PieChart className="w-5 h-5 mr-2 text-purple-600" />Order Status
                 </h3>
@@ -630,7 +630,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
           <div className="bg-white rounded-2xl shadow-md overflow-hidden border">
             {/* Header */}
             <div className="px-6 py-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-b">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
                     <Star className="w-5 h-5 text-white" fill="white" />
@@ -645,7 +645,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                 
                 {/* Average Rating Badge */}
                 {ratingsStats.total > 0 && (
-                  <div className="flex items-center space-x-2 bg-gradient-to-r from-yellow-100 to-orange-100 px-4 py-2 rounded-xl border-2 border-yellow-300">
+                  <div className="w-full sm:w-auto flex items-center justify-center sm:justify-start space-x-2 bg-gradient-to-r from-yellow-100 to-orange-100 px-4 py-2 rounded-xl border-2 border-yellow-300">
                     <Star className="w-6 h-6 text-yellow-600" fill="currentColor" />
                     <div className="text-center">
                       <div className="text-2xl font-bold text-gray-800">
@@ -661,7 +661,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
             {/* Rating Distribution */}
             {ratingsStats.total > 0 && (
               <div className="px-6 py-4 bg-gray-50 border-b">
-                <div className="grid grid-cols-5 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                   {[5, 4, 3, 2, 1].map((star) => {
                     const count = ratingsStats.distribution[star] || 0;
                     const percentage = ratingsStats.total > 0 
@@ -693,7 +693,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
             )}
 
             {/* Ratings List */}
-            <div className="max-h-[600px] overflow-y-auto">
+            <div className="max-h-[70vh] sm:max-h-[600px] overflow-y-auto">
               {isLoadingRatings ? (
                 <div className="flex justify-center items-center py-12">
                   <div className="text-center">
@@ -716,19 +716,19 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                       key={rating._id} 
                       className="p-6 hover:bg-gradient-to-r hover:from-yellow-50 hover:to-orange-50 transition-all duration-300 group"
                     >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center space-x-3">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+                        <div className="flex items-center space-x-3 min-w-0">
                           {/* Customer Avatar */}
                           <div className="w-12 h-12 bg-gradient-to-br from-brand to-primary-700 rounded-full flex items-center justify-center text-white font-bold shadow-lg group-hover:scale-110 transition-transform duration-300">
                             {rating.customer?.name?.charAt(0).toUpperCase() || 'C'}
                           </div>
                           
                           {/* Customer Info */}
-                          <div>
+                          <div className="min-w-0">
                             <h4 className="font-bold text-gray-800 text-lg">
                               {rating.customer?.name || 'Anonymous'}
                             </h4>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-gray-500 break-words">
                               Order #{rating._id.slice(-8)} • {new Date(rating.ratedAt).toLocaleDateString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
@@ -741,7 +741,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                         </div>
 
                         {/* Star Rating */}
-                        <div className="flex items-center space-x-1 bg-gradient-to-r from-yellow-100 to-orange-100 px-3 py-2 rounded-full border-2 border-yellow-300 group-hover:scale-110 transition-transform duration-300">
+                        <div className="self-start sm:self-auto flex items-center space-x-1 bg-gradient-to-r from-yellow-100 to-orange-100 px-3 py-2 rounded-full border-2 border-yellow-300 group-hover:scale-110 transition-transform duration-300">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <Star
                               key={star}
@@ -756,7 +756,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                       </div>
 
                       {/* Feedback Text */}
-                      <div className="ml-15 pl-3 border-l-4 border-primary-200 group-hover:border-primary-400 transition-colors duration-300">
+                      <div className="ml-0 sm:ml-14 pl-3 border-l-4 border-primary-200 group-hover:border-primary-400 transition-colors duration-300">
                         <div className="flex items-start space-x-2">
                           <MessageSquare className="w-5 h-5 text-brand mt-1 flex-shrink-0" />
                           <p className="text-gray-700 leading-relaxed">
@@ -766,7 +766,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                       </div>
 
                       {/* Rating Emotion Badge */}
-                      <div className="ml-15 mt-3 inline-flex items-center px-3 py-1 bg-gray-100 rounded-full text-sm">
+                      <div className="ml-0 sm:ml-14 mt-3 inline-flex items-center px-3 py-1 bg-gray-100 rounded-full text-sm">
                         <span className="mr-2">
                           {rating.rating === 5 && "🤩"}
                           {rating.rating === 4 && "😊"}
@@ -791,8 +791,8 @@ const DashboardHome = ({ user, setActiveComponent }) => {
             {/* Footer Stats */}
             {ratings.length > 0 && (
               <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-primary-100 border-t">
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center space-x-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
                     <div className="flex items-center space-x-2">
                       <ThumbsUp className="w-5 h-5 text-green-600" />
                       <span className="text-gray-700">
@@ -810,7 +810,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
                   </div>
                   <button
                     onClick={fetchRatings}
-                    className="px-4 py-2 bg-gradient-to-r from-brand to-primary-700 text-white rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-300 transform hover:scale-105 shadow-lg font-medium text-sm"
+                    className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-brand to-primary-700 text-white rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all duration-300 transform sm:hover:scale-105 shadow-lg font-medium text-sm"
                   >
                     Refresh Ratings
                   </button>
@@ -845,7 +845,7 @@ const KpiCard = ({ label, value, color, icon }) => {
     purple:"from-purple-500 to-purple-600"
   };
   return (
-    <div className="bg-white rounded-2xl shadow p-4 border flex items-center justify-between group hover:shadow-md transition">
+    <div className="bg-white rounded-2xl shadow p-3 sm:p-4 border flex items-center justify-between gap-3 group hover:shadow-md transition">
       <div>
         <p className="text-xs font-medium text-gray-500">{label}</p>
         <p className="text-xl font-bold text-gray-800 mt-1">{value}</p>
