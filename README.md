@@ -1,4 +1,4 @@
-# CafeX - Coffee Shop Ordering and Delivery System
+# CafeX - A Centralize Platfrom for Cafe
 
 CafeX is a web-based coffee shop ordering and delivery platform developed to help customers browse available products, place orders, and track their deliveries. The system provides a convenient way for customers to order coffee and food items online while allowing the business to manage products, orders, and delivery status.
 
@@ -28,7 +28,7 @@ CafeX is a web-based coffee shop ordering and delivery platform developed to hel
 ## Technologies Used
 
 ### Frontend
-- React.js / Angular *(ilagay ang ginamit mo)*
+- React.js
 - HTML5
 - CSS3
 - JavaScript
@@ -37,10 +37,10 @@ CafeX is a web-based coffee shop ordering and delivery platform developed to hel
 ### Backend
 - Node.js
 - Express.js
-- REST API *(kung ginamit)*
+- REST API
 
 ### Database
-- MongoDB / MySQL *(ilagay ang ginamit)*
+- MongoDB
 
 ## System Overview
 
@@ -73,7 +73,6 @@ Database
 - Sales analytics dashboard
 
 ## Author
-
-Karl Hienz V. Garcia
+Aldrin G. Fechalin
 
 Full-Stack Web Developer
