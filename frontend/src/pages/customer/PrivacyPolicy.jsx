@@ -26,7 +26,7 @@ const PrivacyPolicy = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const lastUpdated = "December 2024";
+  const lastUpdated = "July 2026"; // You can dynamically set this date if needed
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-100 to-primary-200">
@@ -110,11 +110,11 @@ const PrivacyPolicy = () => {
                   </h3>
                   <ul className="space-y-2 text-gray-700">
                     <li>• <strong>Messages:</strong> Customer support conversations and real-time chat messages</li>
-                    <li>• <strong>Attachments:</strong> Images or files shared through our messaging system</li>
+                    {/* <li>• <strong>Attachments:</strong> Images or files shared through our messaging system</li> */}
                   </ul>
                 </div>
 
-                <div className="bg-yellow-50 rounded-lg p-6">
+                {/* <div className="bg-yellow-50 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
                     <Eye className="h-5 w-5 mr-2 text-yellow-600" />
                     Technical Information
@@ -124,7 +124,7 @@ const PrivacyPolicy = () => {
                     <li>• <strong>Usage Data:</strong> Pages visited, time spent, click patterns</li>
                     <li>• <strong>Connection Data:</strong> Online status and real-time connection information</li>
                   </ul>
-                </div>
+                </div> */}
               </div>
             </section>
 
@@ -236,7 +236,6 @@ const PrivacyPolicy = () => {
                     <li>• Access controls and user permissions</li>
                     <li>• Secure cloud storage (Cloudinary)</li>
                     <li>• Regular data backups</li>
-                    <li>• Security monitoring and logging</li>
                   </ul>
                 </div>
               </div>

@@ -230,6 +230,26 @@ const SignUpPage = () => {
                 "Sign Up"
               )}
             </button>
+            {/* Terms and Privacy */}
+            <div className="text-center mt-3">
+              <p className="text-xs text-white">
+                By signing up, you agree to our{" "}
+                <Link
+                  to="/terms-conditions"
+                  className="text-primary-200 hover:text-primary-100 underline font-medium transition-colors duration-200"
+                >
+                  Terms & Conditions
+                </Link>{" "}
+                and{" "}
+                <Link
+                  to="/privacy-policy"
+                  className="text-primary-200 hover:text-primary-100 underline font-medium transition-colors duration-200"
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </p>
+            </div>
           </form>
         </div>
         <div className="px-4 sm:px-8 py-3 sm:py-4 bg-gray-50 bg-opacity-20 flex justify-center">

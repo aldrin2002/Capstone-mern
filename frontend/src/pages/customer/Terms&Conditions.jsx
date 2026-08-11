@@ -27,7 +27,7 @@ const TermsAndConditions = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const lastUpdated = "December 2024";
+  const lastUpdated = "July 2026";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-100 to-primary-200">
@@ -88,7 +88,7 @@ const TermsAndConditions = () => {
                   </h3>
                   <ul className="space-y-2 text-gray-700">
                     <li>• You must provide accurate, current, and complete information during registration</li>
-                    <li>• You must be at least 16(+) years old to create an account</li>
+                    <li>• You are responsible for maintaining the confidentiality of your account credentials</li>
                     <li>• You are responsible for safeguarding your account credentials</li>
                     <li>• You must notify us immediately of any unauthorized access to your account</li>
                   </ul>
@@ -138,7 +138,6 @@ const TermsAndConditions = () => {
                       <li>• Uploading malicious content or viruses</li>
                       <li>• Spamming or harassment through messaging</li>
                       <li>• Violating intellectual property rights</li>
-                      <li>• BLANK</li>
                     </ul>
                   </div>
                 </div>
@@ -169,7 +168,6 @@ const TermsAndConditions = () => {
                     <div>
                       <h4 className="font-semibold text-gray-800 mb-2">Accepted Methods:</h4>
                       <ul className="space-y-1 text-gray-700 text-sm">
-                        <li>• Cash on Delivery</li>
                         <li>• GCash (Online Payment by sending an Proof of Payment and the Reference Number)</li>
                       </ul>
                     </div>
@@ -178,7 +176,8 @@ const TermsAndConditions = () => {
                       <ul className="space-y-1 text-gray-700 text-sm">
                         <li>• Payment required before order processing</li>
                         <li>• Proof of payment required for online payments</li>
-                        <li>• Delivery fee of ₱50.00 applies to all orders</li>
+                        <li>• Refunds processed according to our refund policy</li>
+                        <li>• We are not responsible for payment errors due to user mistakes</li>
                       </ul>
                     </div>
                   </div>
@@ -223,7 +222,6 @@ const TermsAndConditions = () => {
                     <ul className="space-y-2 text-gray-700 text-sm">
                       <li>• Direct communication with cafe staff</li>
                       <li>• Real-time message delivery and notifications</li>
-                      <li>• Image and file sharing capabilities</li>
                       <li>• Message history is maintained for your convenience</li>
                     </ul>
                   </div>
@@ -271,7 +269,7 @@ const TermsAndConditions = () => {
             </section>
 
             {/* Intellectual Property */}
-            <section className="mb-8">
+            {/* <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
                 <Shield className="h-6 w-6 mr-3 text-purple-600" />
                 Intellectual Property
@@ -303,7 +301,7 @@ const TermsAndConditions = () => {
                   </div>
                 </div>
               </div>
-            </section>
+            </section> */}
 
             {/* Limitation of Liability */}
                         <section className="mb-8">
@@ -412,7 +410,7 @@ const TermsAndConditions = () => {
                     </div>
                     <div className="flex items-center">
                       <Shield className="h-4 w-4 mr-2 text-brand" />
-                      <span>Business Hours:<br />Mon-Sun 10AM-8PM <br />Weekends: 8AM-10PM</span>
+                      <span>Business Hours:<br />Mon - Sat 8:00AM-8:00PM</span>
                     </div>
                   </div>
                 </div>
