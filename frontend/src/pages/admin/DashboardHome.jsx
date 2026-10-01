@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { 
-  Loader, Users, Package, ShoppingCart, Download, FileSpreadsheet, Printer, TrendingUp, Award, PieChart, Clock, Calendar, X, Star, MessageSquare, ThumbsUp // ✅ Added Star, MessageSquare, ThumbsUp
+  Loader, Users, Package, ShoppingCart, Download, TrendingUp, Award, PieChart, Clock, Calendar, X, Star, MessageSquare, ThumbsUp // ✅ Added Star, MessageSquare, ThumbsUp
 } from "lucide-react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import ExcelJS from "exceljs";
-import logoUrl from "../../assets/cafe-delicity-logo.jpg";
 
 // Chart.js imports (ensure dependencies installed)
 import {
@@ -254,19 +252,6 @@ const DashboardHome = ({ user, setActiveComponent }) => {
   const formatDate = (d) =>
     new Date(d).toLocaleDateString("en-US", { year:"numeric", month:"short", day:"numeric" });
 
-  const getReportFilterLabel = () => {
-    const customRange = startDate && endDate ? "Custom date range" : timeframeOptions.find(option => option.key === timeframe)?.label;
-    return `${customRange}: ${formatDate(activeRange.start)} - ${formatDate(activeRange.end)}`;
-  };
-
-  const getReportKpis = () => ({
-    "Total Orders": report.totalOrders,
-    "Successful": (report.statusCounts.Completed || 0) + (report.statusCounts.Delivered || 0),
-    "Cancelled": report.statusCounts.Cancelled || 0,
-    "Pending": report.statusCounts.Pending || 0,
-    "Revenue (PHP)": report.totalRevenue
-  });
-
   // --- CSV Export (note: CSV cannot truly carry styling; we simulate structure) ----
   const downloadCSV = () => {
     if (!report) return;
@@ -327,124 +312,6 @@ const DashboardHome = ({ user, setActiveComponent }) => {
     a.download = `sales_report_${new Date().toISOString().slice(0,10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  };
-
-  const downloadExcel = async () => {
-    if (!report) return;
-
-    const kpis = getReportKpis();
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Sales Report");
-    worksheet.columns = [
-      { width: 30 }, { width: 22 }, { width: 20 }, { width: 14 }
-    ];
-    worksheet.addRows([
-      ["", "CAFE DELICITY", "", ""],
-      ["", "Sales & Analytics Report", "", ""],
-      ["Date Filter", getReportFilterLabel(), "", ""],
-      ["Generated At", new Date().toLocaleString(), "", ""],
-      [],
-      ["KPI SUMMARY", "", "", ""],
-      ...Object.entries(kpis).map(([label, value]) => [label, value, "", ""]),
-      [],
-      ["PRODUCT SALES", "", "", ""],
-      ["Product", "Quantity", "Revenue (PHP)", ""],
-      ...report.products.map(product => [product.name, product.quantity, product.revenue, ""]),
-      [],
-      ["TIME SERIES", "", "", ""],
-      ["Period", "Revenue (PHP)", "Orders", "Items"],
-      ...report.bucket.labels.map((label, index) => [
-        label,
-        report.bucket.revenueSeries[index],
-        report.bucket.ordersSeries[index],
-        report.bucket.itemsSeries[index]
-      ])
-    ]);
-    worksheet.mergeCells("B1:D1");
-    worksheet.mergeCells("B2:D2");
-    worksheet.mergeCells("A6:D6");
-    worksheet.mergeCells(`A${16 + report.products.length}:D${16 + report.products.length}`);
-
-    const plum = "581845";
-    const magenta = "E02588";
-    const palePink = "FCE4F1";
-    const styleRow = (rowNumber, fill, fontColor = "FFFFFF") => {
-      worksheet.getRow(rowNumber).eachCell({ includeEmpty: true }, cell => {
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${fill}` } };
-        cell.font = { bold: true, color: { argb: `FF${fontColor}` } };
-        cell.alignment = { horizontal: "center", vertical: "middle" };
-      });
-    };
-    [1, 2].forEach(row => styleRow(row, row === 1 ? magenta : plum));
-    [6, 13, 16 + report.products.length].forEach(row => styleRow(row, plum));
-    [14, 17 + report.products.length].forEach(row => styleRow(row, magenta));
-    [7, 8, 9, 10, 11].forEach(row => {
-      worksheet.getCell(`A${row}`).fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${palePink}` } };
-      worksheet.getCell(`A${row}`).font = { bold: true, color: { argb: `FF${plum}` } };
-    });
-    worksheet.getColumn(2).numFmt = "0.00";
-    worksheet.getColumn(3).numFmt = "0.00";
-    worksheet.getRow(1).height = 48;
-    worksheet.getRow(2).height = 28;
-
-    const logoResponse = await fetch(logoUrl);
-    const logoBuffer = await logoResponse.arrayBuffer();
-    const imageId = workbook.addImage({ buffer: logoBuffer, extension: "jpeg" });
-    worksheet.addImage(imageId, { tl: { col: 0, row: 0 }, ext: { width: 74, height: 74 } });
-
-    const fileBuffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([fileBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `cafe_delicity_sales_report_${new Date().toISOString().slice(0, 10)}.xlsx`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const escapeHtml = (value) => String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-
-  const printReport = () => {
-    if (!report) return;
-    const kpis = getReportKpis();
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      toast.error("Please allow pop-ups to print the report");
-      return;
-    }
-
-    const kpiCards = Object.entries(kpis).map(([label, value]) => `
-      <div class="kpi"><span>${escapeHtml(label)}</span><strong>${label === "Revenue (PHP)" ? `PHP ${Number(value).toFixed(2)}` : escapeHtml(value)}</strong></div>
-    `).join("");
-    const productRows = report.products.map(product => `
-      <tr><td>${escapeHtml(product.name)}</td><td>${product.quantity}</td><td>PHP ${product.revenue.toFixed(2)}</td></tr>
-    `).join("");
-    const seriesRows = report.bucket.labels.map((label, index) => `
-      <tr><td>${escapeHtml(label)}</td><td>PHP ${Number(report.bucket.revenueSeries[index]).toFixed(2)}</td><td>${report.bucket.ordersSeries[index]}</td><td>${report.bucket.itemsSeries[index]}</td></tr>
-    `).join("");
-
-    printWindow.document.open();
-    printWindow.document.write(`<!doctype html><html><head><title>Café Delicity Sales Report</title><style>
-      @page { size: A4; margin: 16mm; } * { box-sizing: border-box; } body { margin: 0; color: #2d1728; font: 12px Arial, sans-serif; }
-      header { display: flex; align-items: center; gap: 18px; padding: 18px 20px; color: #fff; background: linear-gradient(110deg, #E02588, #581845); }
-      header img { width: 74px; height: 74px; object-fit: cover; border-radius: 50%; border: 3px solid #fff; } h1 { margin: 0 0 5px; font-size: 24px; } h2 { margin: 22px 0 8px; color: #581845; border-bottom: 2px solid #E02588; padding-bottom: 5px; }
-      .meta { margin: 16px 0; padding: 10px 14px; background: #fce4f1; border-left: 4px solid #E02588; } .kpis { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; } .kpi { padding: 10px; background: #581845; color: #fff; min-height: 54px; } .kpi span { display: block; font-size: 10px; opacity: .8; } .kpi strong { display: block; margin-top: 4px; font-size: 15px; }
-      table { width: 100%; border-collapse: collapse; margin-bottom: 12px; } th { background: #E02588; color: #fff; text-align: left; } th, td { padding: 7px 8px; border: 1px solid #e7cedc; } tr:nth-child(even) { background: #fff4fa; } td:not(:first-child), th:not(:first-child) { text-align: right; } .empty { color: #777; font-style: italic; }
-      @media print { .no-print { display: none; } }
-    </style></head><body>
-      <header><img src="${escapeHtml(logoUrl)}" alt="Café Delicity logo"><div><h1>Café Delicity</h1><div>Sales &amp; Analytics Report</div></div></header>
-      <div class="meta"><strong>Date filter:</strong> ${escapeHtml(getReportFilterLabel())}<br><strong>Generated:</strong> ${escapeHtml(new Date().toLocaleString())}</div>
-      <h2>KPI Summary</h2><div class="kpis">${kpiCards}</div>
-      <h2>Product Sales</h2><table><thead><tr><th>Product</th><th>Quantity</th><th>Revenue (PHP)</th></tr></thead><tbody>${productRows || '<tr><td class="empty" colspan="3">No sales data for selected range</td></tr>'}</tbody></table>
-      <h2>Time Series</h2><table><thead><tr><th>Period</th><th>Revenue (PHP)</th><th>Orders</th><th>Items</th></tr></thead><tbody>${seriesRows || '<tr><td class="empty" colspan="4">No activity for selected range</td></tr>'}</tbody></table>
-      <script>window.onload = function () { window.focus(); window.print(); };</script>
-    </body></html>`);
-    printWindow.document.close();
   };
 
   // --- Chart Config Builders ----------------------------------------
@@ -631,32 +498,14 @@ const DashboardHome = ({ user, setActiveComponent }) => {
               </button>
             </div>
 
-            <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
-              <button
-                onClick={downloadCSV}
-                disabled={!report}
-                className="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-full text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-all disabled:opacity-50"
-              >
-                <Download className="w-4 h-4" />
-                <span>CSV</span>
-              </button>
-              <button
-                onClick={downloadExcel}
-                disabled={!report}
-                className="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-full text-sm font-medium bg-[#581845] text-white hover:bg-[#431235] transition-all disabled:opacity-50"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>Excel</span>
-              </button>
-              <button
-                onClick={printReport}
-                disabled={!report}
-                className="flex items-center justify-center space-x-2 px-4 py-2.5 rounded-full text-sm font-medium bg-[#E02588] text-white hover:bg-[#b91d6f] transition-all disabled:opacity-50"
-              >
-                <Printer className="w-4 h-4" />
-                <span>PDF / Print</span>
-              </button>
-            </div>
+            <button
+              onClick={downloadCSV}
+              disabled={!report}
+              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-5 py-2.5 rounded-full text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition-all disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export CSV</span>
+            </button>
           </div>
 
           {/* KPI Cards */}
