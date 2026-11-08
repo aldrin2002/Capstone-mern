@@ -438,7 +438,7 @@ const DashboardHome = ({ user, setActiveComponent }) => {
       @media print { .no-print { display: none; } }
     </style></head><body>
       <header><img src="${escapeHtml(logoUrl)}" alt="Café Delicity logo"><div><h1>Café Delicity</h1><div>Sales &amp; Analytics Report</div></div></header>
-      <div class="meta"><strong>Date filter:</strong> ${escapeHtml(getReportFilterLabel())}<br><strong>Generated:</strong> ${escapeHtml(new Date().toLocaleString())}</div>
+      <div class="meta"><strong>Date filter:</strong> ${escapeHtml(getReportFilterLabel())}<br><strong>Generated:</strong> ${escapeHtml(new Date().toLocaleString())}<br><strong>8 Dela Cruz Drive Ext East Tapinac Olongapo City</strong></div>
       <h2>KPI Summary</h2><div class="kpis">${kpiCards}</div>
       <h2>Product Sales</h2><table><thead><tr><th>Product</th><th>Quantity</th><th>Revenue (PHP)</th></tr></thead><tbody>${productRows || '<tr><td class="empty" colspan="3">No sales data for selected range</td></tr>'}</tbody></table>
       <h2>Time Series</h2><table><thead><tr><th>Period</th><th>Revenue (PHP)</th><th>Orders</th><th>Items</th></tr></thead><tbody>${seriesRows || '<tr><td class="empty" colspan="4">No activity for selected range</td></tr>'}</tbody></table>
